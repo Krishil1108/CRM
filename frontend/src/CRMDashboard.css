@@ -1,0 +1,417 @@
+/* CRM Dashboard Styling */
+.page-container {
+  padding: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: #f5f7fa;
+}
+
+/* CRM Header */
+.crm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: white;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.company-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.company-logo {
+  font-size: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.company-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.company-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1.2;
+}
+
+.company-tagline {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.breadcrumb {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: white;
+  color: #495057;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn.primary {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.action-btn:hover {
+  background: #f8f9fa;
+}
+
+.action-btn.primary:hover {
+  background: #0056b3;
+}
+
+/* CRM Content */
+.crm-content {
+  padding: 0;
+}
+
+/* CRM Tabs */
+.crm-tabs {
+  display: flex;
+  background: white;
+  border-bottom: 1px solid #e1e5e9;
+  padding: 0 24px;
+}
+
+.tab {
+  padding: 12px 20px;
+  color: #6c757d;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.tab.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
+.tab:hover {
+  color: #495057;
+}
+
+/* Dashboard Layout */
+.crm-dashboard {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 0;
+  min-height: calc(100vh - 120px);
+}
+
+/* Dashboard Sidebar */
+.dashboard-sidebar {
+  background: white;
+  border-right: 1px solid #e1e5e9;
+  padding: 24px;
+}
+
+.calendar-section {
+  margin-bottom: 32px;
+}
+
+.activity-section {
+  border-top: 1px solid #e1e5e9;
+  padding-top: 24px;
+}
+
+.activity-section h3 {
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.activity-entry {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.activity-time {
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.activity-entry p {
+  color: #495057;
+  font-size: 14px;
+  margin: 8px 0 0 0;
+  line-height: 1.4;
+}
+
+/* Dashboard Main */
+.dashboard-main {
+  padding: 24px;
+  background: #f5f7fa;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.metric-card {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.metric-card.blue::before {
+  background: #17a2b8;
+}
+
+.metric-card.blue-dark::before {
+  background: #0066cc;
+}
+
+.metric-card.orange::before {
+  background: #fd7e14;
+}
+
+.metric-card.green::before {
+  background: #28a745;
+}
+
+.metric-header {
+  margin-bottom: 12px;
+}
+
+.metric-label {
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.metric-number {
+  font-size: 32px;
+  font-weight: 700;
+  color: #495057;
+  margin-bottom: 12px;
+}
+
+.metric-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metric-footer span:first-child {
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.metric-status {
+  color: #495057;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Overview Section */
+.overview-section {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h3 {
+  color: #495057;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.section-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: #f8f9fa;
+}
+
+.progress-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.progress-label {
+  flex: 1;
+  color: #495057;
+  font-size: 14px;
+}
+
+.progress-bar {
+  flex: 0 0 120px;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #28a745;
+  transition: width 0.3s ease;
+}
+
+.progress-value {
+  flex: 0 0 40px;
+  text-align: right;
+  color: #495057;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.overview-notes {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.overview-notes p {
+  color: #495057;
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+}
+
+/* Next Steps */
+.next-steps {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.next-steps h4 {
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.step-item:last-child {
+  border-bottom: none;
+}
+
+.step-icon {
+  font-size: 16px;
+}
+
+.step-item span:last-child {
+  color: #495057;
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .crm-dashboard {
+    grid-template-columns: 250px 1fr;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .crm-dashboard {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #e1e5e9;
+  }
+  
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .crm-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

@@ -1,0 +1,269 @@
+/* CRM Calendar */
+.crm-calendar {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Calendar Header */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.nav-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  color: #6c757d;
+}
+
+.nav-btn:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.month-year {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Day Headers */
+.calendar-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.day-header {
+  padding: 8px 4px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+}
+
+/* Calendar Grid */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: #e9ecef;
+}
+
+.calendar-day {
+  background: white;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+  background: #f8f9fa;
+}
+
+.calendar-day.empty {
+  background: #f8f9fa;
+  cursor: default;
+}
+
+.calendar-day.today {
+  background: #007bff;
+  color: white;
+}
+
+.calendar-day.today:hover {
+  background: #0056b3;
+}
+
+.calendar-day.has-event {
+  background: #e3f2fd;
+}
+
+.calendar-day.has-event.today {
+  background: #007bff;
+}
+
+.day-number {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.event-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  background: #fd7e14;
+  border-radius: 50%;
+}
+
+.calendar-day.today .event-indicator {
+  background: white;
+}
+
+/* Upcoming Events */
+.upcoming-events {
+  padding: 16px;
+  border-top: 1px solid #e9ecef;
+}
+
+.upcoming-events h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.upcoming-events ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.upcoming-events li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.event-date {
+  font-weight: 600;
+  color: #007bff;
+  min-width: 36px;
+}
+
+
+
+.event-dot {
+  width: 6px;
+  height: 6px;
+  background: #3b82f6;
+  border-radius: 50%;
+}
+
+/* Event Styles */
+.event {
+  background: #e0f2fe;
+  border: 1px solid #0ea5e9;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin: 2px 0;
+  font-size: 12px;
+}
+
+.sample-event {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border-color: #0ea5e9;
+}
+
+.event-title {
+  font-weight: 600;
+  color: #0c4a6e;
+  line-height: 1.2;
+}
+
+.event-time {
+  color: #075985;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.month-event {
+  background: #e0f2fe;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.month-event .event-title {
+  color: #0c4a6e;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .calendar-header {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+  
+  .calendar-navigation {
+    order: 2;
+  }
+  
+  .calendar-controls {
+    order: 1;
+  }
+  
+  .current-date h2 {
+    font-size: 1.2rem;
+  }
+  
+  .view-btn .view-label {
+    display: none;
+  }
+  
+  .calendar-content {
+    padding: 16px;
+  }
+  
+  .time-column {
+    width: 60px;
+  }
+  
+  .time-label {
+    font-size: 10px;
+  }
+  
+  .calendar-day {
+    min-height: 80px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .day-schedule,
+  .week-grid {
+    height: 400px;
+  }
+  
+  .calendar-day {
+    min-height: 60px;
+  }
+  
+  .hour-slot {
+    height: 40px;
+  }
+  
+  .time-slot {
+    height: 40px;
+  }
+}
