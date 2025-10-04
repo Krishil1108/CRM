@@ -9,6 +9,8 @@ const ClientsPage = () => {
   const [sortBy, setSortBy] = useState('name');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddPopup, setShowAddPopup] = useState(false);
+  const [showEditPopup, setShowEditPopup] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
   const [clientData, setClientData] = useState({
     name: '',
     email: '',
@@ -52,6 +54,23 @@ const ClientsPage = () => {
         console.error('Error deleting client:', error);
       }
     }
+  };
+
+  const handleEdit = (client) => {
+    setEditingClient(client);
+    setClientData({
+      name: client.name || '',
+      email: client.email || '',
+      phone: client.phone || '',
+      company: client.company || '',
+      address: client.address || '',
+      city: client.city || '',
+      state: client.state || '',
+      zipCode: client.zipCode || '',
+      notes: client.notes || ''
+    });
+    setShowEditPopup(true);
+    setError('');
   };
 
   const handleStatusChange = async (clientId, newStatus) => {
@@ -121,8 +140,59 @@ const ClientsPage = () => {
     }
   };
 
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setLoading(true);
+      setError('');
+      
+      // Create full address from components
+      const fullAddress = `${clientData.address}, ${clientData.city}, ${clientData.state} ${clientData.zipCode}`.replace(/^,\s*|,\s*$/g, '');
+      
+      const updatedClientData = {
+        name: clientData.name,
+        email: clientData.email,
+        phone: clientData.phone,
+        company: clientData.company,
+        address: fullAddress,
+        notes: clientData.notes
+      };
+      
+      const updatedClient = await ClientService.updateClient(editingClient._id, updatedClientData);
+      setClients(clients.map(client => 
+        client._id === editingClient._id ? updatedClient : client
+      ));
+      
+      // Reset form and close popup
+      setClientData({
+        name: '',
+        email: '',
+        phone: '',
+        company: '',
+        address: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        notes: ''
+      });
+      
+      setShowEditPopup(false);
+      setEditingClient(null);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      setError('Failed to update client. Please try again.');
+      console.error('Error updating client:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleClosePopup = () => {
     setShowAddPopup(false);
+    setShowEditPopup(false);
+    setEditingClient(null);
     setClientData({
       name: '',
       email: '',
@@ -197,14 +267,20 @@ const ClientsPage = () => {
         </div>
         <div className="header-actions">
           <button 
-            className="export-btn"
+            className="export-btn enhanced-export-btn"
             onClick={handleExportToExcel}
-            title="Export to Excel"
+            title="Export client data to Excel spreadsheet"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-            </svg>
-            Export to Excel ({filteredClients.length} clients)
+            <div className="btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                <path d="M9,14H7V16H9V14M11,14H13V16H11V14M15,14H17V16H15V14M9,10H7V12H9V10M11,10H13V12H11V10M15,10H17V12H15V10" opacity="0.7"/>
+              </svg>
+            </div>
+            <div className="btn-content">
+              <span className="btn-text">Export to Excel</span>
+              <span className="btn-count">({filteredClients.length} clients)</span>
+            </div>
           </button>
           <button 
             className="add-client-btn"
@@ -371,6 +447,15 @@ const ClientsPage = () => {
                     <td>
                       <div className="action-buttons">
                         <button
+                          className="edit-btn"
+                          onClick={() => handleEdit(client)}
+                          title="Edit Client"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                          </svg>
+                        </button>
+                        <button
                           className="delete-btn"
                           onClick={() => handleDelete(client._id)}
                           title="Delete Client"
@@ -533,6 +618,140 @@ const ClientsPage = () => {
                     <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                   </svg>
                   Add Client
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Client Popup */}
+      {showEditPopup && (
+        <div className="popup-overlay">
+          <div className="popup-container">
+            <div className="popup-header">
+              <h2>Edit Client</h2>
+              <button className="close-btn" onClick={handleClosePopup}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="popup-form">
+              <div className="form-section">
+                <h3>Personal Information</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="edit-name">Full Name *</label>
+                    <input
+                      type="text"
+                      id="edit-name"
+                      value={clientData.name}
+                      onChange={(e) => setClientData({...clientData, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-email">Email *</label>
+                    <input
+                      type="email"
+                      id="edit-email"
+                      value={clientData.email}
+                      onChange={(e) => setClientData({...clientData, email: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="edit-phone">Phone</label>
+                    <input
+                      type="tel"
+                      id="edit-phone"
+                      value={clientData.phone}
+                      onChange={(e) => setClientData({...clientData, phone: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-company">Company</label>
+                    <input
+                      type="text"
+                      id="edit-company"
+                      value={clientData.company}
+                      onChange={(e) => setClientData({...clientData, company: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3>Address Information</h3>
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label htmlFor="edit-address">Street Address</label>
+                    <input
+                      type="text"
+                      id="edit-address"
+                      value={clientData.address}
+                      onChange={(e) => setClientData({...clientData, address: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="edit-city">City</label>
+                    <input
+                      type="text"
+                      id="edit-city"
+                      value={clientData.city}
+                      onChange={(e) => setClientData({...clientData, city: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-state">State</label>
+                    <input
+                      type="text"
+                      id="edit-state"
+                      value={clientData.state}
+                      onChange={(e) => setClientData({...clientData, state: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-zipCode">ZIP Code</label>
+                    <input
+                      type="text"
+                      id="edit-zipCode"
+                      value={clientData.zipCode}
+                      onChange={(e) => setClientData({...clientData, zipCode: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3>Additional Information</h3>
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label htmlFor="edit-notes">Notes</label>
+                    <textarea
+                      id="edit-notes"
+                      rows="3"
+                      value={clientData.notes}
+                      onChange={(e) => setClientData({...clientData, notes: e.target.value})}
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
+              {error && <div className="error-message">{error}</div>}
+
+              <div className="form-actions">
+                <button type="button" className="cancel-btn" onClick={handleClosePopup}>
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn" disabled={loading}>
+                  {loading ? 'Updating...' : 'Update Client'}
                 </button>
               </div>
             </form>

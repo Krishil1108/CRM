@@ -43,6 +43,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+  min-height: 44px;
 }
 
 .add-client-btn:hover {
@@ -650,17 +651,25 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  gap: 16px;
+  margin-bottom: 30px;
+  gap: 24px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 100%);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
 }
 
 .search-section {
   flex: 1;
+  max-width: 500px;
 }
 
 .search-box {
   position: relative;
-  max-width: 400px;
+  width: 100%;
 }
 
 .search-box svg {
@@ -673,24 +682,39 @@
 
 .search-box input {
   width: 100%;
-  padding: 12px 16px 12px 44px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
+  padding: 14px 18px 14px 48px;
+  border: 2px solid #e8ebf0;
+  border-radius: 10px;
   font-size: 1rem;
+  background: #fafbfc;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: #667eea;
   background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.search-box input::placeholder {
+  color: #9ca3af;
+  font-size: 0.95rem;
 }
 
 /* Search Input Container for Inventory Page */
 .search-input-container {
   position: relative;
-  max-width: 400px;
+  width: 100%;
   display: flex;
   align-items: center;
 }
 
 .search-input-container svg {
   position: absolute;
-  left: 12px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: #6c757d;
@@ -699,19 +723,21 @@
 
 .search-input-container input {
   width: 100%;
-  padding: 12px 16px 12px 44px;
-  border: 1px solid #ced4da;
-  border-radius: 8px;
+  padding: 14px 18px 14px 48px;
+  border: 2px solid #e8ebf0;
+  border-radius: 10px;
   font-size: 1rem;
-  background: white;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #fafbfc;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .search-input-container input:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
 }
 
 .search-input-container input::placeholder {
@@ -721,15 +747,37 @@
 
 .filter-section {
   display: flex;
-  gap: 12px;
+  gap: 16px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .filter-section select {
-  padding: 8px 12px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
+  padding: 12px 16px;
+  border: 2px solid #e8ebf0;
+  border-radius: 10px;
+  background: #fafbfc;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  min-width: 140px;
+}
+
+.filter-section select:hover {
+  border-color: #d1d5db;
   background: white;
-  font-size: 0.9rem;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.filter-section select:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .client-stats {
@@ -1472,29 +1520,133 @@
 }
 
 /* Export Button Styles */
-.export-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+/* Enhanced Export Button Styling - Multiple selectors for better coverage */
+.page-content .export-btn,
+.page-content .enhanced-export-btn,
+.header-actions .export-btn,
+.header-actions .enhanced-export-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 12px !important;
+  background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2) !important;
+  white-space: nowrap !important;
+  height: auto !important;
+  min-height: 32px !important;
+  text-transform: none !important;
+  letter-spacing: 0.3px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-.export-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+.page-content .export-btn::before,
+.page-content .enhanced-export-btn::before,
+.header-actions .export-btn::before,
+.header-actions .enhanced-export-btn::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent) !important;
+  transition: left 0.5s ease !important;
 }
 
-.export-btn:active {
-  transform: translateY(0);
+.page-content .export-btn .btn-icon,
+.page-content .enhanced-export-btn .btn-icon,
+.header-actions .export-btn .btn-icon,
+.header-actions .enhanced-export-btn .btn-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  transition: transform 0.3s ease !important;
+}
+
+.page-content .export-btn .btn-content,
+.page-content .enhanced-export-btn .btn-content,
+.header-actions .export-btn .btn-content,
+.header-actions .enhanced-export-btn .btn-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  line-height: 1.2 !important;
+}
+
+.page-content .export-btn .btn-text,
+.page-content .enhanced-export-btn .btn-text,
+.header-actions .export-btn .btn-text,
+.header-actions .enhanced-export-btn .btn-text {
+  font-weight: 600 !important;
+  font-size: 14px !important;
+  display: block !important;
+}
+
+.page-content .export-btn .btn-count,
+.page-content .enhanced-export-btn .btn-count,
+.header-actions .export-btn .btn-count,
+.header-actions .enhanced-export-btn .btn-count {
+  font-weight: 400 !important;
+  font-size: 11px !important;
+  opacity: 0.9 !important;
+  display: block !important;
+  margin-top: 1px !important;
+}
+
+.page-content .export-btn:hover,
+.page-content .enhanced-export-btn:hover,
+.header-actions .export-btn:hover,
+.header-actions .enhanced-export-btn:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%) !important;
+}
+
+.page-content .export-btn:hover::before,
+.page-content .enhanced-export-btn:hover::before,
+.header-actions .export-btn:hover::before,
+.header-actions .enhanced-export-btn:hover::before {
+  left: 100% !important;
+}
+
+.page-content .export-btn:hover .btn-icon,
+.page-content .enhanced-export-btn:hover .btn-icon,
+.header-actions .export-btn:hover .btn-icon,
+.header-actions .enhanced-export-btn:hover .btn-icon {
+  transform: scale(1.1) rotate(5deg) !important;
+}
+
+.page-content .export-btn:hover .btn-text,
+.page-content .enhanced-export-btn:hover .btn-text,
+.header-actions .export-btn:hover .btn-text,
+.header-actions .enhanced-export-btn:hover .btn-text {
+  color: #f0fdf4 !important;
+}
+
+.page-content .export-btn:active,
+.page-content .enhanced-export-btn:active,
+.header-actions .export-btn:active,
+.header-actions .enhanced-export-btn:active {
+  transform: translateY(-1px) scale(1.01) !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35), inset 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.page-content .export-btn:focus,
+.page-content .enhanced-export-btn:focus,
+.header-actions .export-btn:focus,
+.header-actions .enhanced-export-btn:focus {
+  outline: none !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3), 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
 }
 
 /* Date Filter Button */
@@ -1502,7 +1654,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 12px 20px;
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
   border: none;
@@ -1512,6 +1664,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+  min-height: 44px;
 }
 
 .date-filter-btn:hover {
@@ -1643,4 +1796,90 @@
   .date-filter-actions {
     flex-direction: column;
   }
+  
+  /* Client/Inventory page responsive layout */
+  .client-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .search-section {
+    max-width: 100%;
+  }
+  
+  .filter-section {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .filter-section select {
+    min-width: 120px;
+  }
 }
+
+/* Inventory Management Page - Now matches Client page UI exactly */
+
+/* Edit Button Styling */
+.edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  margin-right: 8px;
+}
+
+.edit-btn:hover {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.edit-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Action buttons container */
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Update delete button to match */
+.delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.delete-btn:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+.delete-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+/* Inventory page now matches Client page UI exactly - no overrides needed */

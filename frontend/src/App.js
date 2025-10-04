@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import HomePage from './HomePage';
 import ClientsPage from './ClientsPage';
 import InventoryPage from './InventoryPage';
+import DashboardPage from './DashboardPage';
 import ReportsPage from './ReportsPage';
 import SettingsPage from './SettingsPage';
 
@@ -28,6 +29,8 @@ function App() {
         return <ClientsPage />;
       case 'inventory':
         return <InventoryPage />;
+      case 'dashboard':
+        return <DashboardPage />;
       case 'reports':
         return <ReportsPage />;
       case 'settings':

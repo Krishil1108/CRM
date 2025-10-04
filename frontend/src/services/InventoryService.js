@@ -155,7 +155,8 @@ class InventoryService {
 
   // Utility methods
   static calculateTotalValue(quantity, unitPrice) {
-    return (quantity || 0) * (unitPrice || 0);
+    // Use precise calculation to avoid floating-point precision issues
+    return Math.round(((quantity || 0) * (unitPrice || 0)) * 100) / 100;
   }
 
   static determineStatus(quantity, reorderLevel = 10) {

@@ -29,7 +29,7 @@ const inventorySchema = new mongoose.Schema({
   totalValue: {
     type: Number,
     default: function() {
-      return this.quantity * this.unitPrice;
+      return Math.round((this.quantity * this.unitPrice) * 100) / 100;
     }
   },
   supplier: {
@@ -70,7 +70,8 @@ const inventorySchema = new mongoose.Schema({
 
 // Middleware to update totalValue before saving
 inventorySchema.pre('save', function(next) {
-  this.totalValue = this.quantity * this.unitPrice;
+  // Use precise calculation to avoid floating-point precision issues
+  this.totalValue = Math.round((this.quantity * this.unitPrice) * 100) / 100;
   this.lastUpdated = new Date();
   
   // Auto-update status based on quantity

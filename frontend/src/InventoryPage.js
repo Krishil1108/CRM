@@ -13,6 +13,8 @@ const InventoryPage = () => {
   const [endDate, setEndDate] = useState('');
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [showAddPopup, setShowAddPopup] = useState(false);
+  const [showEditPopup, setShowEditPopup] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -58,6 +60,24 @@ const InventoryPage = () => {
         console.error('Error deleting inventory item:', error);
       }
     }
+  };
+
+  const handleEdit = (item) => {
+    setEditingItem(item);
+    setItemData({
+      name: item.name || '',
+      category: item.category || '',
+      description: item.description || '',
+      quantity: item.quantity || '',
+      unitPrice: item.unitPrice || '',
+      supplier: item.supplier || '',
+      sku: item.sku || '',
+      reorderLevel: item.reorderLevel || '',
+      location: item.location || '',
+      notes: item.notes || ''
+    });
+    setShowEditPopup(true);
+    setError('');
   };
 
   const handleStatusChange = async (itemId, newStatus) => {
@@ -106,7 +126,7 @@ const InventoryPage = () => {
         category: itemData.category,
         description: itemData.description,
         quantity: parseInt(itemData.quantity) || 0,
-        unitPrice: parseFloat(itemData.unitPrice) || 0,
+        unitPrice: Math.round((parseFloat(itemData.unitPrice) || 0) * 100) / 100,
         supplier: itemData.supplier,
         sku: itemData.sku || InventoryService.generateSKU(itemData.name, itemData.category),
         reorderLevel: parseInt(itemData.reorderLevel) || 10,
@@ -142,8 +162,61 @@ const InventoryPage = () => {
     }
   };
 
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+      setLoading(true);
+      setError('');
+      
+      const updatedItemData = {
+        name: itemData.name,
+        category: itemData.category,
+        description: itemData.description,
+        quantity: parseInt(itemData.quantity) || 0,
+        unitPrice: Math.round((parseFloat(itemData.unitPrice) || 0) * 100) / 100,
+        supplier: itemData.supplier,
+        sku: itemData.sku,
+        reorderLevel: parseInt(itemData.reorderLevel) || 10,
+        location: itemData.location,
+        notes: itemData.notes
+      };
+      
+      const updatedItem = await InventoryService.updateInventoryItem(editingItem._id, updatedItemData);
+      setInventory(Array.isArray(inventory) ? inventory.map(item => 
+        item._id === editingItem._id ? updatedItem : item
+      ) : []);
+      
+      // Reset form and close popup
+      setItemData({
+        name: '',
+        category: '',
+        description: '',
+        quantity: '',
+        unitPrice: '',
+        supplier: '',
+        sku: '',
+        reorderLevel: '',
+        location: '',
+        notes: ''
+      });
+      
+      setShowEditPopup(false);
+      setEditingItem(null);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      setError('Failed to update inventory item. Please try again.');
+      console.error('Error updating inventory item:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleClosePopup = () => {
     setShowAddPopup(false);
+    setShowEditPopup(false);
+    setEditingItem(null);
     setItemData({
       name: '',
       category: '',
@@ -208,10 +281,10 @@ const InventoryPage = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR'
-    }).format(amount || 0);
+    const numAmount = parseFloat(amount) || 0;
+    // Use fixed decimal places only if needed, otherwise show exact value
+    const formattedAmount = numAmount % 1 === 0 ? numAmount.toString() : numAmount.toFixed(2);
+    return `₹${formattedAmount}`;
   };
 
   const getStatusColor = (status) => {
@@ -257,7 +330,7 @@ const InventoryPage = () => {
   const categories = [...new Set(Array.isArray(inventory) ? inventory.map(item => item.category) : [])];
 
   return (
-    <div className="page-container">
+    <div className="page-container inventory-page">
       <div className="page-header">
         <div className="header-content">
           <h1>Inventory Management</h1>
@@ -265,14 +338,20 @@ const InventoryPage = () => {
         </div>
         <div className="header-actions">
           <button 
-            className="export-btn"
+            className="export-btn enhanced-export-btn"
             onClick={handleExportToExcel}
-            title="Export to Excel"
+            title="Export inventory data to Excel spreadsheet"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-            </svg>
-            Export to Excel ({filteredInventory.length} items)
+            <div className="btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                <path d="M9,14H7V16H9V14M11,14H13V16H11V14M15,14H17V16H15V14M9,10H7V12H9V10M11,10H13V12H11V10M15,10H17V12H15V10" opacity="0.7"/>
+              </svg>
+            </div>
+            <div className="btn-content">
+              <span className="btn-text">Export to Excel</span>
+              <span className="btn-count">({filteredInventory.length} items)</span>
+            </div>
           </button>
           <button 
             className="date-filter-btn"
@@ -524,6 +603,15 @@ const InventoryPage = () => {
                     <td>
                       <div className="action-buttons">
                         <button
+                          className="edit-btn"
+                          onClick={() => handleEdit(item)}
+                          title="Edit Item"
+                        >
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                          </svg>
+                        </button>
+                        <button
                           className="delete-btn"
                           onClick={() => handleDelete(item._id)}
                           title="Delete Item"
@@ -703,6 +791,160 @@ const InventoryPage = () => {
                 </button>
                 <button type="submit" className="submit-btn" disabled={loading}>
                   {loading ? 'Adding...' : 'Add Inventory Item'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Inventory Item Popup */}
+      {showEditPopup && (
+        <div className="popup-overlay">
+          <div className="popup-container">
+            <div className="popup-header">
+              <h2>Edit Inventory Item</h2>
+              <button className="close-btn" onClick={handleClosePopup}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="popup-form">
+              <div className="form-section">
+                <h3>Basic Information</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="edit-name">Item Name *</label>
+                    <input
+                      type="text"
+                      id="edit-name"
+                      value={itemData.name}
+                      onChange={(e) => setItemData({...itemData, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-category">Category *</label>
+                    <input
+                      type="text"
+                      id="edit-category"
+                      value={itemData.category}
+                      onChange={(e) => setItemData({...itemData, category: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label htmlFor="edit-description">Description</label>
+                    <textarea
+                      id="edit-description"
+                      rows="3"
+                      value={itemData.description}
+                      onChange={(e) => setItemData({...itemData, description: e.target.value})}
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3>Inventory Details</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="edit-quantity">Quantity *</label>
+                    <input
+                      type="number"
+                      id="edit-quantity"
+                      value={itemData.quantity}
+                      onChange={(e) => setItemData({...itemData, quantity: e.target.value})}
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-unitPrice">Unit Price *</label>
+                    <input
+                      type="number"
+                      id="edit-unitPrice"
+                      value={itemData.unitPrice}
+                      onChange={(e) => setItemData({...itemData, unitPrice: e.target.value})}
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="edit-sku">SKU</label>
+                    <input
+                      type="text"
+                      id="edit-sku"
+                      value={itemData.sku}
+                      onChange={(e) => setItemData({...itemData, sku: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-reorderLevel">Reorder Level</label>
+                    <input
+                      type="number"
+                      id="edit-reorderLevel"
+                      value={itemData.reorderLevel}
+                      onChange={(e) => setItemData({...itemData, reorderLevel: e.target.value})}
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section">
+                <h3>Additional Information</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="edit-supplier">Supplier</label>
+                    <input
+                      type="text"
+                      id="edit-supplier"
+                      value={itemData.supplier}
+                      onChange={(e) => setItemData({...itemData, supplier: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit-location">Location</label>
+                    <input
+                      type="text"
+                      id="edit-location"
+                      value={itemData.location}
+                      onChange={(e) => setItemData({...itemData, location: e.target.value})}
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group full-width">
+                    <label htmlFor="edit-notes">Notes</label>
+                    <textarea
+                      id="edit-notes"
+                      rows="3"
+                      value={itemData.notes}
+                      onChange={(e) => setItemData({...itemData, notes: e.target.value})}
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
+              {error && <div className="error-message">{error}</div>}
+
+              <div className="form-actions">
+                <button type="button" className="cancel-btn" onClick={handleClosePopup}>
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn" disabled={loading}>
+                  {loading ? 'Updating...' : 'Update Item'}
                 </button>
               </div>
             </form>
