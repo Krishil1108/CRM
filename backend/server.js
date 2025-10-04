@@ -22,7 +22,10 @@ mongoose.connect(MONGODB_URI, {
 
 // Routes
 const clientRoutes = require('./routes/clients');
+const inventoryRoutes = require('./routes/inventory');
+
 app.use('/api/clients', clientRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // Basic route
 app.get('/api/test', (req, res) => {

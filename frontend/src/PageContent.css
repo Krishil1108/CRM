@@ -680,6 +680,45 @@
   background: white;
 }
 
+/* Search Input Container for Inventory Page */
+.search-input-container {
+  position: relative;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-container svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  z-index: 1;
+}
+
+.search-input-container input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.search-input-container input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.search-input-container input::placeholder {
+  color: #9ca3af;
+  font-size: 0.95rem;
+}
+
 .filter-section {
   display: flex;
   gap: 12px;
@@ -1350,4 +1389,258 @@
   font-size: 14px;
   color: #6b7280;
   margin-top: 4px;
+}
+
+/* Inventory-specific styles */
+.item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.item-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.item-supplier {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.quantity-input {
+  width: 80px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.quantity-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Status-specific colors for inventory */
+.status-in-stock {
+  background-color: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.status-low-stock {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-color: #fde68a;
+}
+
+.status-out-of-stock {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.status-discontinued {
+  background-color: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+/* Stat card icon colors for inventory */
+.stat-icon.in-stock {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.stat-icon.low-stock {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+}
+
+.stat-icon.total-value {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+}
+
+/* Header Actions Layout */
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Export Button Styles */
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.export-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.export-btn:active {
+  transform: translateY(0);
+}
+
+/* Date Filter Button */
+.date-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+.date-filter-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* Date Filter Section */
+.date-filter-section {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.date-filter-container h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.date-inputs {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.date-input-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.date-input-group input[type="date"] {
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  min-width: 150px;
+}
+
+.date-input-group input[type="date"]:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+.date-filter-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.apply-date-btn {
+  padding: 8px 16px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.apply-date-btn:hover {
+  background: #5a67d8;
+}
+
+.clear-date-btn {
+  padding: 8px 16px;
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.clear-date-btn:hover {
+  background: #cbd5e0;
+}
+
+.active-date-filter {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #e6fffa;
+  border: 1px solid #81e6d9;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #234e52;
+}
+
+.active-date-filter span {
+  font-weight: 500;
+}
+
+/* Responsive Design for Header Actions */
+@media (max-width: 768px) {
+  .header-actions {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  
+  .export-btn,
+  .date-filter-btn,
+  .add-client-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .date-inputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .date-filter-actions {
+    flex-direction: column;
+  }
 }

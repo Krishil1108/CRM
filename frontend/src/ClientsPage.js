@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ClientService from './services/ClientService';
+import ExcelExportService from './services/ExcelExportService';
 import './PageContent.css';
 
 const ClientsPage = () => {
@@ -167,6 +168,26 @@ const ClientsPage = () => {
     });
   };
 
+  // Excel export function
+  const handleExportToExcel = () => {
+    const filters = {
+      searchTerm,
+      filterStatus,
+      sortBy
+    };
+
+    const filename = ExcelExportService.generateFilename('clients', filters);
+    const result = ExcelExportService.exportClientsToExcel(filteredClients, filters, filename);
+    
+    if (result.success) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } else {
+      setError(result.message);
+      setTimeout(() => setError(''), 5000);
+    }
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -174,15 +195,27 @@ const ClientsPage = () => {
           <h1>Clients</h1>
           <p>Manage and view all your clients</p>
         </div>
-        <button 
-          className="add-client-btn"
-          onClick={() => setShowAddPopup(true)}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          Add New Client
-        </button>
+        <div className="header-actions">
+          <button 
+            className="export-btn"
+            onClick={handleExportToExcel}
+            title="Export to Excel"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+            </svg>
+            Export to Excel ({filteredClients.length} clients)
+          </button>
+          <button 
+            className="add-client-btn"
+            onClick={() => setShowAddPopup(true)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+            Add New Client
+          </button>
+        </div>
       </div>
       
       <div className="page-content">
