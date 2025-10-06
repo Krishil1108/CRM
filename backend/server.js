@@ -23,14 +23,23 @@ mongoose.connect(MONGODB_URI, {
 // Routes
 const clientRoutes = require('./routes/clients');
 const inventoryRoutes = require('./routes/inventory');
+const meetingRoutes = require('./routes/meetings');
+const noteRoutes = require('./routes/notes');
+
+const activityRoutes = require('./routes/activities');
 
 app.use('/api/clients', clientRoutes);
 app.use('/api/inventory', inventoryRoutes);
+app.use('/api/meetings', meetingRoutes);
+app.use('/api/notes', noteRoutes);
+app.use('/api/activities', activityRoutes);
 
 // Basic route
 app.get('/api/test', (req, res) => {
   res.json({ message: 'Backend server is running!' });
 });
+
+
 
 // Catch all handler
 app.get('*', (req, res) => {

@@ -63,6 +63,10 @@ const inventorySchema = new mongoose.Schema({
   notes: {
     type: String,
     trim: true
+  },
+  dateAdded: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true

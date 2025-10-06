@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Inventory = require('../models/Inventory');
+const Activity = require('../models/Activity');
 
 // Get all inventory items
 router.get('/', async (req, res) => {
@@ -67,6 +68,26 @@ router.post('/', async (req, res) => {
     
     const newItem = new Inventory(inventoryData);
     await newItem.save();
+    
+    // Create activity log
+    try {
+      await Activity.createActivity(
+        'inventory_added',
+        newItem._id,
+        'Inventory',
+        newItem.name,
+        `Added new inventory item: ${newItem.name} (${newItem.quantity} units)`,
+        { 
+          category: newItem.category, 
+          quantity: newItem.quantity, 
+          unitPrice: newItem.unitPrice,
+          supplier: newItem.supplier 
+        }
+      );
+    } catch (activityError) {
+      console.error('Error creating activity log:', activityError);
+      // Don't fail the request if activity logging fails
+    }
     
     res.status(201).json(newItem);
   } catch (error) {
@@ -218,6 +239,136 @@ router.get('/stats/summary', async (req, res) => {
   } catch (error) {
     console.error('Error fetching inventory stats:', error);
     res.status(500).json({ message: 'Error fetching inventory statistics', error: error.message });
+  }
+});
+
+// Bulk import route (exactly like working client implementation)
+router.post('/bulk', async (req, res) => {
+  try {
+    const { inventory } = req.body;
+
+    if (!inventory || !Array.isArray(inventory) || inventory.length === 0) {
+      return res.status(400).json({ 
+        message: 'Invalid data format. Expected an array of inventory items.' 
+      });
+    }
+
+    const results = {
+      successful: [],
+      failed: [],
+      duplicates: []
+    };
+
+    for (let i = 0; i < inventory.length; i++) {
+      const itemData = inventory[i];
+      
+      try {
+        // Validate required fields
+        if (!itemData.name) {
+          results.failed.push({
+            row: i + 1,
+            data: itemData,
+            error: 'Name is required'
+          });
+          continue;
+        }
+
+        // Check for duplicate name (case-insensitive)
+        const existingItem = await Inventory.findOne({ 
+          name: { $regex: new RegExp(`^${itemData.name.trim()}$`, 'i') } 
+        });
+        if (existingItem) {
+          results.duplicates.push({
+            row: i + 1,
+            data: itemData,
+            existing: existingItem
+          });
+          continue;
+        }
+
+        // Create new inventory item
+        const newItem = new Inventory({
+          name: itemData.name.trim(),
+          category: itemData.category && itemData.category.trim() !== '' ? itemData.category.trim() : 'General',
+          description: itemData.description || '',
+          quantity: Number(itemData.quantity) || 0,
+          unitPrice: Number(itemData.unitPrice) || 1,
+          supplier: itemData.supplier || '',
+          sku: itemData.sku || '',
+          status: itemData.status || 'In Stock',
+          reorderLevel: Number(itemData.reorderLevel) || 10,
+          dateAdded: new Date()
+        });
+
+        const savedItem = await newItem.save();
+
+        // Note: Individual activity logging skipped for bulk import to avoid validation issues
+        // Each item is still tracked in the results
+
+        results.successful.push({
+          row: i + 1,
+          data: savedItem
+        });
+
+      } catch (error) {
+        results.failed.push({
+          row: i + 1,
+          data: itemData,
+          error: error.message
+        });
+      }
+    }
+
+    console.log('📊 Import completed, preparing response...');
+    console.log('Results summary:', {
+      successful: results.successful.length,
+      failed: results.failed.length,
+      duplicates: results.duplicates.length
+    });
+
+    // Clean the results data to avoid circular references
+    const cleanResults = {
+      successful: results.successful.map(item => ({
+        row: item.row,
+        data: {
+          _id: item.data._id,
+          name: item.data.name,
+          category: item.data.category,
+          quantity: item.data.quantity,
+          unitPrice: item.data.unitPrice,
+          status: item.data.status
+        }
+      })),
+      failed: results.failed,
+      duplicates: results.duplicates.map(item => ({
+        row: item.row,
+        data: item.data,
+        existing: {
+          _id: item.existing?._id,
+          name: item.existing?.name
+        }
+      }))
+    };
+
+    // Send comprehensive response (exactly like client route)
+    const totalProcessed = results.successful.length + results.failed.length + results.duplicates.length;
+    
+    console.log('✅ Sending response...');
+    res.json({
+      message: `Bulk import completed. ${results.successful.length} inventory items added successfully.`,
+      summary: {
+        total: totalProcessed,
+        successful: results.successful.length,
+        failed: results.failed.length,
+        duplicates: results.duplicates.length
+      },
+      results: cleanResults
+    });
+    console.log('✅ Response sent successfully');
+
+  } catch (error) {
+    console.error('❌ Error in bulk import:', error);
+    res.status(500).json({ message: 'Server error during bulk import' });
   }
 });
 

@@ -1,10 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Calendar from './Calendar';
 import { useCompany } from './CompanyContext';
+import ActionModal from './components/ActionModal';
+import ActivitySection from './components/ActivitySection';
 import './CRMDashboard.css';
 
 const HomePage = () => {
   const { companyInfo } = useCompany();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedDate(null);
+  };
 
   return (
     <div className="page-container">
@@ -40,20 +54,10 @@ const HomePage = () => {
           {/* Left Section - Calendar and Metrics */}
           <div className="dashboard-sidebar">
             <div className="calendar-section">
-              <Calendar />
+              <Calendar onDateSelect={handleDateSelect} />
             </div>
             
-            <div className="activity-section">
-              <h3>Last activity</h3>
-              <div className="activity-entry">
-                <span className="activity-time">10/03/2025 3:15 PM</span>
-                <p>Updated opportunity stage from "Initial contact" to "Proposal sent"</p>
-              </div>
-              <div className="activity-entry">
-                <span className="activity-time">10/02/2025 2:10 PM</span>
-                <p>Added new lead: Sarah Johnson</p>
-              </div>
-            </div>
+            <ActivitySection />
           </div>
 
           {/* Main Content Area */}
@@ -170,6 +174,13 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Action Modal */}
+      <ActionModal 
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        selectedDate={selectedDate}
+      />
     </div>
   );
 };

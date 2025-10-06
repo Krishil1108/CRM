@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ClientService from './services/ClientService';
 import ExcelExportService from './services/ExcelExportService';
+import ExcelImport from './components/ExcelImport';
+import { dataEventManager, DATA_TYPES } from './services/dataEventManager';
 import './PageContent.css';
 
 const ClientsPage = () => {
@@ -10,7 +12,13 @@ const ClientsPage = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddPopup, setShowAddPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(50);
+  
   const [clientData, setClientData] = useState({
     name: '',
     email: '',
@@ -28,6 +36,14 @@ const ClientsPage = () => {
 
   useEffect(() => {
     loadClients();
+
+    // Subscribe to client data updates
+    const unsubscribe = dataEventManager.subscribe(DATA_TYPES.CLIENTS, () => {
+      loadClients(); // Refresh client list when new client is added
+    });
+
+    // Cleanup subscription on unmount
+    return unsubscribe;
   }, []);
 
   const loadClients = async () => {
@@ -230,6 +246,64 @@ const ClientsPage = () => {
       }
     });
 
+  // Pagination calculations
+  const totalItems = filteredClients.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentClients = filteredClients.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, sortBy]);
+
+  // Import handlers
+  const handleImportSuccess = (results) => {
+    setShowImportModal(false);
+    setCurrentPage(1); // Reset to first page to show new data
+    loadClients(); // Refresh the client list
+    
+    // Trigger data event to refresh other components
+    try {
+      if (dataEventManager && typeof dataEventManager.emit === 'function') {
+        dataEventManager.emit(DATA_TYPES.CLIENTS);
+      }
+    } catch (error) {
+      console.warn('Data event manager emit failed, using fallback:', error);
+      // Fallback: manual refresh without event system
+      window.dispatchEvent(new CustomEvent('clientAdded'));
+      window.dispatchEvent(new CustomEvent('activityUpdated'));
+    }
+    
+    if (results.summary) {
+      const { successful, failed, duplicates } = results.summary;
+      let message = `Import completed!\n`;
+      message += `✓ ${successful} clients added successfully\n`;
+      if (duplicates > 0) message += `⚠ ${duplicates} duplicates skipped\n`;
+      if (failed > 0) message += `✗ ${failed} failed to import`;
+      
+      alert(message);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -281,6 +355,19 @@ const ClientsPage = () => {
               <span className="btn-text">Export to Excel</span>
               <span className="btn-count">({filteredClients.length} clients)</span>
             </div>
+          </button>
+          <button 
+            className="import-btn"
+            onClick={() => setShowImportModal(true)}
+            title="Import clients from Excel file"
+          >
+            <div className="btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                <path d="M12,11L8,15H10.5V19H13.5V15H16L12,11Z" opacity="0.7"/>
+              </svg>
+            </div>
+            <span className="btn-text">Import from Excel</span>
           </button>
           <button 
             className="add-client-btn"
@@ -419,7 +506,7 @@ const ClientsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredClients.map(client => (
+                {currentClients.map(client => (
                   <tr key={client._id}>
                     <td>
                       <div className="client-name">
@@ -470,6 +557,58 @@ const ClientsPage = () => {
                 ))}
               </tbody>
             </table>
+          )}
+
+          {/* Pagination Controls */}
+          {filteredClients.length > 0 && totalPages > 1 && (
+            <div className="pagination-container">
+              <div className="pagination-info">
+                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} clients
+              </div>
+              <div className="pagination-controls">
+                <button 
+                  className="pagination-btn"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                
+                <div className="pagination-numbers">
+                  {(() => {
+                    const pages = [];
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                    
+                    if (endPage - startPage < maxVisiblePages - 1) {
+                      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                    }
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          className={`pagination-number ${currentPage === i ? 'active' : ''}`}
+                          onClick={() => handlePageChange(i)}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                    return pages;
+                  })()}
+                </div>
+                
+                <button 
+                  className="pagination-btn"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -757,6 +896,15 @@ const ClientsPage = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Excel Import Modal */}
+      {showImportModal && (
+        <ExcelImport
+          type="clients"
+          onClose={() => setShowImportModal(false)}
+          onSuccess={handleImportSuccess}
+        />
       )}
     </div>
   );

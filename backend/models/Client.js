@@ -44,6 +44,10 @@ const clientSchema = new mongoose.Schema({
     type: String,
     enum: ['Active', 'Inactive', 'Pending'],
     default: 'Active'
+  },
+  dateAdded: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import InventoryService from './services/InventoryService';
 import ExcelExportService from './services/ExcelExportService';
+import ExcelImport from './components/ExcelImport';
+import { dataEventManager, DATA_TYPES } from './services/dataEventManager';
 import './PageContent.css';
 
 const InventoryPage = () => {
@@ -14,7 +16,13 @@ const InventoryPage = () => {
   const [showDateFilter, setShowDateFilter] = useState(false);
   const [showAddPopup, setShowAddPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(50);
+  
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,6 +41,14 @@ const InventoryPage = () => {
 
   useEffect(() => {
     loadInventory();
+
+    // Subscribe to inventory data updates
+    const unsubscribe = dataEventManager.subscribe(DATA_TYPES.INVENTORY, () => {
+      loadInventory(); // Refresh inventory list when new item is added
+    });
+
+    // Cleanup subscription on unmount
+    return unsubscribe;
   }, []);
 
   const loadInventory = async () => {
@@ -272,6 +288,55 @@ const InventoryPage = () => {
       }
     });
 
+  // Pagination calculations
+  const totalItems = filteredInventory.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filteredInventory.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterCategory, filterStatus, startDate, endDate, sortBy]);
+
+  // Import handlers (exactly like ClientsPage)
+  const handleImportSuccess = (results) => {
+    setShowImportModal(false);
+    setCurrentPage(1); // Reset to first page to show new data
+    loadInventory(); // Refresh the inventory list
+    
+    // Trigger data event to refresh other components
+    dataEventManager.emit(DATA_TYPES.INVENTORY);
+    
+    if (results.summary) {
+      const { successful, failed, duplicates } = results.summary;
+      let message = `Import completed!\n`;
+      message += `✓ ${successful} items added successfully\n`;
+      if (duplicates > 0) message += `⚠ ${duplicates} duplicates skipped\n`;
+      if (failed > 0) message += `✗ ${failed} failed to import`;
+      
+      alert(message);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -352,6 +417,19 @@ const InventoryPage = () => {
               <span className="btn-text">Export to Excel</span>
               <span className="btn-count">({filteredInventory.length} items)</span>
             </div>
+          </button>
+          <button 
+            className="import-btn"
+            onClick={() => setShowImportModal(true)}
+            title="Import inventory from Excel file"
+          >
+            <div className="btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                <path d="M12,11L8,15H10.5V19H13.5V15H16L12,11Z" opacity="0.7"/>
+              </svg>
+            </div>
+            <span className="btn-text">Import from Excel</span>
           </button>
           <button 
             className="date-filter-btn"
@@ -565,7 +643,7 @@ const InventoryPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredInventory.map(item => (
+                {currentItems.map(item => (
                   <tr key={item._id}>
                     <td>
                       <div className="item-info">
@@ -626,6 +704,58 @@ const InventoryPage = () => {
                 ))}
               </tbody>
             </table>
+          )}
+
+          {/* Pagination Controls */}
+          {filteredInventory.length > 0 && totalPages > 1 && (
+            <div className="pagination-container">
+              <div className="pagination-info">
+                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} items
+              </div>
+              <div className="pagination-controls">
+                <button 
+                  className="pagination-btn"
+                  onClick={handlePrevPage}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                
+                <div className="pagination-numbers">
+                  {(() => {
+                    const pages = [];
+                    const maxVisiblePages = 5;
+                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                    
+                    if (endPage - startPage < maxVisiblePages - 1) {
+                      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                    }
+                    
+                    for (let i = startPage; i <= endPage; i++) {
+                      pages.push(
+                        <button
+                          key={i}
+                          className={`pagination-number ${currentPage === i ? 'active' : ''}`}
+                          onClick={() => handlePageChange(i)}
+                        >
+                          {i}
+                        </button>
+                      );
+                    }
+                    return pages;
+                  })()}
+                </div>
+                
+                <button 
+                  className="pagination-btn"
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -950,6 +1080,15 @@ const InventoryPage = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Excel Import Modal */}
+      {showImportModal && (
+        <ExcelImport
+          type="inventory"
+          onClose={() => setShowImportModal(false)}
+          onSuccess={handleImportSuccess}
+        />
       )}
     </div>
   );

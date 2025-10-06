@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Calendar.css';
 
-const Calendar = () => {
+const Calendar = ({ onDateSelect }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const today = new Date();
@@ -46,6 +46,13 @@ const Calendar = () => {
     return events[day];
   };
 
+  const handleDateClick = (day) => {
+    const selectedDate = new Date(currentYear, currentMonth, day);
+    if (onDateSelect) {
+      onDateSelect(selectedDate);
+    }
+  };
+
   const renderCalendarDays = () => {
     const days = [];
     
@@ -64,6 +71,8 @@ const Calendar = () => {
           key={day} 
           className={`calendar-day ${isCurrentDay ? 'today' : ''} ${event ? 'has-event' : ''}`}
           title={event || ''}
+          onClick={() => handleDateClick(day)}
+          style={{ cursor: 'pointer' }}
         >
           <span className="day-number">{day}</span>
           {event && <div className="event-indicator"></div>}
