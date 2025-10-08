@@ -632,3 +632,29 @@
     text-align: center;
   }
 }
+
+/* Quotation Settings Specific Styles */
+.settings-page .preview-section {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.settings-page .quotation-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.settings-page .preview-number {
+  background: #003366;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  letter-spacing: 1px;
+}

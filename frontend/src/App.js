@@ -8,6 +8,8 @@ import InventoryPage from './InventoryPage';
 import DashboardPage from './DashboardPage';
 import ReportsPage from './ReportsPage';
 import SettingsPage from './SettingsPage';
+import QuotationPage from './QuotationPageADS';
+import QuoteHistoryPage from './QuoteHistoryPage';
 
 function App() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
@@ -33,6 +35,10 @@ function App() {
         return <DashboardPage />;
       case 'reports':
         return <ReportsPage />;
+      case 'quotation':
+        return <QuotationPage />;
+      case 'quote-history':
+        return <QuoteHistoryPage />;
       case 'settings':
         return <SettingsPage />;
       default:

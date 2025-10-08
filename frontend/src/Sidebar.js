@@ -50,6 +50,24 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
       )
     },
     { 
+      id: 'quotation', 
+      name: 'Quotation', 
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+        </svg>
+      )
+    },
+    { 
+      id: 'quote-history', 
+      name: 'Quote History', 
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M13,3A9,9 0 0,0 4,12H1L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,20 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3M12,8V13L16.28,15.54L17.1,14.2L13.5,12.1V8H12Z"/>
+        </svg>
+      )
+    },
+    { 
       id: 'settings', 
       name: 'Settings', 
       icon: (

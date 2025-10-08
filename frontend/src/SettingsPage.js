@@ -44,6 +44,18 @@ const SettingsPage = () => {
     frequency: 'immediate'
   });
 
+  // Quotation Settings State
+  const [quotationSettings, setQuotationSettings] = useState(
+    (companyInfo && companyInfo.quotationSettings) || {
+      prefix: 'Q',
+      startingNumber: 1001,
+      currentNumber: 1001,
+      separator: '-',
+      suffix: '',
+      resetPeriod: 'never'
+    }
+  );
+
   // Security Settings State
   const [security, setSecurity] = useState({
     twoFactorAuth: false,
@@ -67,6 +79,13 @@ const SettingsPage = () => {
     // Load system statistics
     loadSystemStats();
   }, []);
+
+  // Sync quotationSettings when companyInfo changes
+  useEffect(() => {
+    if (companyInfo && companyInfo.quotationSettings) {
+      setQuotationSettings(companyInfo.quotationSettings);
+    }
+  }, [companyInfo]);
 
   const loadSystemStats = async () => {
     try {
@@ -92,6 +111,10 @@ const SettingsPage = () => {
       case 'company':
         setCompanySettings(data);
         updateCompanyInfo(data);
+        break;
+      case 'quotation':
+        setQuotationSettings(data);
+        updateCompanyInfo({ quotationSettings: data });
         break;
       case 'display':
         setDisplayPrefs(data);
@@ -302,6 +325,16 @@ const SettingsPage = () => {
         </div>
 
         <div className="form-group">
+          <label>Email</label>
+          <input
+            type="email"
+            value={companySettings.email || ''}
+            onChange={(e) => setCompanySettings(prev => ({...prev, email: e.target.value}))}
+            placeholder="info@company.com"
+          />
+        </div>
+
+        <div className="form-group">
           <label>Address</label>
           <textarea
             value={companySettings.address || ''}
@@ -312,6 +345,119 @@ const SettingsPage = () => {
         </div>
 
         <button type="submit" className="save-btn">Save Company Settings</button>
+      </form>
+    </div>
+  );
+
+  const renderQuotationSection = () => (
+    <div className="settings-section">
+      <div className="section-header">
+        <h2>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10,9 9,9 8,9"/>
+          </svg>
+          Quotation Settings
+        </h2>
+        <p>Configure quotation numbering and formatting preferences</p>
+      </div>
+      
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        handleSave('quotation', quotationSettings);
+      }} className="settings-form">
+        <div className="form-row">
+          <div className="form-group">
+            <label>Quotation Prefix</label>
+            <input
+              type="text"
+              value={quotationSettings.prefix}
+              onChange={(e) => setQuotationSettings(prev => ({...prev, prefix: e.target.value}))}
+              placeholder="Q"
+              maxLength="5"
+            />
+            <small>Prefix for quotation numbers (e.g., Q, QUOTE, EST)</small>
+          </div>
+          <div className="form-group">
+            <label>Separator</label>
+            <select
+              value={quotationSettings.separator}
+              onChange={(e) => setQuotationSettings(prev => ({...prev, separator: e.target.value}))}
+            >
+              <option value="-">Dash (-)</option>
+              <option value="">None</option>
+              <option value="/">Slash (/)</option>
+              <option value="_">Underscore (_)</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>Starting Number</label>
+            <input
+              type="number"
+              value={quotationSettings.startingNumber}
+              onChange={(e) => setQuotationSettings(prev => ({...prev, startingNumber: parseInt(e.target.value) || 1001}))}
+              min="1"
+            />
+            <small>The first quotation number to use</small>
+          </div>
+          <div className="form-group">
+            <label>Current Number</label>
+            <input
+              type="number"
+              value={quotationSettings.currentNumber}
+              onChange={(e) => setQuotationSettings(prev => ({...prev, currentNumber: parseInt(e.target.value) || 1001}))}
+              min="1"
+            />
+            <small>Next quotation number to be generated</small>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="form-group">
+            <label>Suffix (Optional)</label>
+            <input
+              type="text"
+              value={quotationSettings.suffix}
+              onChange={(e) => setQuotationSettings(prev => ({...prev, suffix: e.target.value}))}
+              placeholder=""
+              maxLength="10"
+            />
+            <small>Optional suffix for quotation numbers</small>
+          </div>
+          <div className="form-group">
+            <label>Reset Period</label>
+            <select
+              value={quotationSettings.resetPeriod}
+              onChange={(e) => setQuotationSettings(prev => ({...prev, resetPeriod: e.target.value}))}
+            >
+              <option value="never">Never</option>
+              <option value="yearly">Yearly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+            <small>When to reset quotation numbers</small>
+          </div>
+        </div>
+
+        <div className="form-group preview-section">
+          <label>Preview Format</label>
+          <div className="quotation-preview">
+            <strong>Next quotation number: </strong>
+            <span className="preview-number">
+              {quotationSettings.prefix}
+              {quotationSettings.separator && quotationSettings.prefix ? quotationSettings.separator : ''}
+              {quotationSettings.currentNumber.toString().padStart(4, '0')}
+              {quotationSettings.suffix ? quotationSettings.separator + quotationSettings.suffix : ''}
+            </span>
+          </div>
+        </div>
+
+        <button type="submit" className="save-btn">Save Quotation Settings</button>
       </form>
     </div>
   );
@@ -831,6 +977,21 @@ const SettingsPage = () => {
         </span>
       ), 
       component: renderCompanySection 
+    },
+    { 
+      key: 'quotation', 
+      label: (
+        <span className="nav-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          Quotation
+        </span>
+      ), 
+      component: renderQuotationSection 
     },
     { 
       key: 'display', 
