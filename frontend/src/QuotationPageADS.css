@@ -349,6 +349,400 @@
   line-height: 1.4;
 }
 
+/* Sliding Window Configuration */
+.sliding-config-section {
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  border-radius: 8px;
+  border: 1px solid #e0e4ff;
+}
+
+.sliding-input-group {
+  margin-bottom: 12px;
+}
+
+.sliding-input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 13px;
+}
+
+.sliding-dropdown {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d9e6;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #34495e;
+  transition: all 0.3s ease;
+}
+
+.sliding-dropdown:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+}
+
+.pattern-preview {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  border: 1px solid #e8ecf0;
+}
+
+.pattern-label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 12px;
+}
+
+.panel-indicator {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin: 0 2px;
+}
+
+.panel-indicator.fixed {
+  background: #e8f5e8;
+  color: #27ae60;
+}
+
+.panel-indicator.sliding {
+  background: #e3f2fd;
+  color: #2196f3;
+}
+
+/* Bay Window Configuration */
+.bay-config-section {
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+  border-radius: 8px;
+  border: 1px solid #ffc107;
+}
+
+.bay-input-group {
+  margin-bottom: 12px;
+}
+
+.bay-input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #e65100;
+  font-size: 13px;
+}
+
+.bay-dropdown {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ffab00;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #e65100;
+  transition: all 0.3s ease;
+}
+
+.bay-dropdown:focus {
+  outline: none;
+  border-color: #ff8f00;
+  box-shadow: 0 0 0 2px rgba(255, 143, 0, 0.1);
+}
+
+/* Bay Window Visual Diagram */
+.bay-window-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.bay-window-frame {
+  display: flex;
+  align-items: flex-end;
+  perspective: 800px;
+  transform-style: preserve-3d;
+}
+
+.bay-panel {
+  width: 80px;
+  height: 120px;
+  border: 2px solid #2c3e50;
+  background: rgba(173, 216, 230, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 0 2px;
+}
+
+.bay-left {
+  transform: rotateY(30deg);
+  background: linear-gradient(45deg, rgba(173, 216, 230, 0.3), rgba(135, 206, 235, 0.4));
+}
+
+.bay-center {
+  transform: rotateY(0deg);
+  width: 100px;
+  background: rgba(173, 216, 230, 0.4);
+}
+
+.bay-right {
+  transform: rotateY(-30deg);
+  background: linear-gradient(-45deg, rgba(173, 216, 230, 0.3), rgba(135, 206, 235, 0.4));
+}
+
+.bay-panel-content {
+  text-align: center;
+  color: #2c3e50;
+}
+
+.panel-type-label {
+  font-size: 10px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.hinge-indicator, .slide-indicator, .awning-indicator {
+  font-size: 14px;
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.bay-window-label {
+  margin-top: 15px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-align: center;
+}
+
+/* Bay Window Panel Types */
+.bay-panel.fixed {
+  background: rgba(149, 165, 166, 0.3);
+}
+
+.bay-panel.casement {
+  background: rgba(52, 152, 219, 0.3);
+}
+
+.bay-panel.sliding {
+  background: rgba(46, 204, 113, 0.3);
+}
+
+.bay-panel.picture {
+  background: rgba(155, 89, 182, 0.3);
+}
+
+.bay-panel.awning {
+  background: rgba(230, 126, 34, 0.3);
+}
+
+/* Double Hung Window Configuration */
+.double-hung-config-section {
+  margin-top: 15px;
+  padding: 15px;
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-radius: 8px;
+  border: 1px solid #4caf50;
+}
+
+.double-hung-input-group {
+  margin-bottom: 12px;
+}
+
+.double-hung-input-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #2e7d32;
+  font-size: 13px;
+}
+
+.double-hung-dropdown {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #66bb6a;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #2e7d32;
+  transition: all 0.3s ease;
+}
+
+.double-hung-dropdown:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+/* Double Hung Window Visual Diagram */
+.double-hung-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.double-hung-frame {
+  width: 120px;
+  height: 160px;
+  border: 3px solid #2c3e50;
+  background: white;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.dh-sash {
+  flex: 1;
+  border: 1px solid #34495e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: rgba(173, 216, 230, 0.3);
+}
+
+.dh-top {
+  border-bottom: 2px solid #2c3e50;
+}
+
+.dh-bottom {
+  border-top: none;
+}
+
+.window-divider {
+  height: 4px;
+  background: #2c3e50;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.sash-content {
+  text-align: center;
+  color: #2c3e50;
+}
+
+.sash-type-label {
+  font-size: 9px;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+.movement-indicator, .split-indicator {
+  font-size: 12px;
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.double-hung-label {
+  margin-top: 15px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #2c3e50;
+  text-align: center;
+}
+
+/* Double Hung Sash Types */
+.dh-sash.sliding {
+  background: rgba(46, 204, 113, 0.3);
+}
+
+.dh-sash.fixed {
+  background: rgba(149, 165, 166, 0.3);
+}
+
+.dh-sash.tilt_in {
+  background: rgba(52, 152, 219, 0.3);
+}
+
+.dh-sash.split {
+  background: rgba(155, 89, 182, 0.3);
+}
+
+/* Additional Panel Indicators for Bay and Double Hung */
+.panel-indicator.bay-panel {
+  margin: 0 1px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+.panel-indicator.casement {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.panel-indicator.picture {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.panel-indicator.awning {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.panel-indicator.double-hung-sash {
+  margin: 2px 0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  display: block;
+}
+
+.panel-indicator.tilt_in {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.panel-indicator.split {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+/* Window Diagram Enhancements */
+.window-diagram-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+}
+
+.window-diagram {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.diagram-dimensions {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
 .dimension-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;
