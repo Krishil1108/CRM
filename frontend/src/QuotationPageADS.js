@@ -7,6 +7,9 @@ const QuotationPage = () => {
   const { companyInfo, getNextQuotationNumber } = useCompany();
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [modalContent, setModalContent] = useState({ title: '', description: '' });
+  const [activeTab, setActiveTab] = useState('measurements');
   const [quotationData, setQuotationData] = useState({
     quotationNumber: '',
     date: new Date().toISOString().split('T')[0],
@@ -115,6 +118,20 @@ const QuotationPage = () => {
       basePrice: 320
     }
   ];
+
+  // Frame Material Colors
+  const FRAME_MATERIAL_COLORS = {
+    'aluminum': '#C0C0C0',      // Silver-gray for aluminum
+    'upvc': '#FFFFFF',          // White for uPVC
+    'wooden': '#8B4513',        // Saddle brown for wood
+    'steel': '#2F4F4F',         // Dark slate gray for steel
+    'composite': '#696969'       // Dim gray for composite
+  };
+
+  // Function to get frame color based on material
+  const getFrameColor = (material) => {
+    return FRAME_MATERIAL_COLORS[material] || '#003366'; // Default color if material not found
+  };
 
   // Sliding Window Combinations
   const SLIDING_COMBINATIONS = {
@@ -282,6 +299,16 @@ const QuotationPage = () => {
     alert('Quotation saved successfully!');
   };
 
+  const openDescriptionModal = (title, description) => {
+    setModalContent({ title, description });
+    setShowDescriptionModal(true);
+  };
+
+  const closeDescriptionModal = () => {
+    setShowDescriptionModal(false);
+    setModalContent({ title: '', description: '' });
+  };
+
   const handleNewQuotation = () => {
     // Reset all form data and generate new quotation number
     setSelectedClient(null);
@@ -321,8 +348,122 @@ const QuotationPage = () => {
     window.print();
   };
 
+  // Function to generate key-value format descriptions for window configurations
+  const getWindowDescription = (windowType, config, specs) => {
+    const frameMaterialLabels = {
+      'aluminum': 'Aluminum',
+      'upvc': 'uPVC', 
+      'wooden': 'Wooden',
+      'steel': 'Steel',
+      'composite': 'Composite'
+    };
+    
+    const glassTypeLabels = {
+      'single': 'Single Glazed',
+      'double': 'Double Glazed', 
+      'triple': 'Triple Glazed',
+      'laminated': 'Laminated',
+      'tempered': 'Tempered'
+    };
+    
+    const grillLabels = {
+      'none': 'No Grills',
+      'colonial': 'Colonial (Traditional Grid)',
+      'prairie': 'Prairie (4-Pane Style)',
+      'diamond': 'Diamond Pattern',
+      'georgian': 'Georgian Bars',
+      'custom-grid': 'Custom Grid Pattern',
+      'between-glass': 'Between Glass Grills',
+      'snap-in': 'Snap-in Removable'
+    };
+    
+    let configDetails = [];
+    
+    // Only add basic specifications if they have non-default values
+    if (windowType && windowType.name) {
+      configDetails.push(`Window Type: ${windowType.name}`);
+    }
+    
+    if (specs.frame && specs.frame !== 'aluminum') {
+      configDetails.push(`Frame Material: ${frameMaterialLabels[specs.frame]}`);
+    }
+    
+    if (specs.glass && specs.glass !== 'single') {
+      configDetails.push(`Glass Type: ${glassTypeLabels[specs.glass]}`);
+    }
+    
+    if (specs.grilles && specs.grilles !== 'none') {
+      configDetails.push(`Grill Options: ${grillLabels[specs.grilles]}`);
+    }
+    
+    if (specs.width && specs.height && (specs.width !== '1200' || specs.height !== '1500')) {
+      configDetails.push(`Dimensions: ${specs.width}mm × ${specs.height}mm`);
+    }
+    
+    if (specs.quantity && specs.quantity > 1) {
+      configDetails.push(`Quantity: ${specs.quantity}`);
+    }
+    
+    // Window-specific configurations
+    switch (windowType.id) {
+      case 'sliding':
+        const panels = config?.panels || 2;
+        configDetails.push(`Number of Panels: ${panels}`);
+        const combination = config?.combination;
+        if (combination && SLIDING_COMBINATIONS[panels]) {
+          const selectedCombo = SLIDING_COMBINATIONS[panels].find(combo => combo.id === combination);
+          if (selectedCombo) {
+            configDetails.push(`Configuration: ${selectedCombo.name}`);
+            configDetails.push(`Pattern: ${selectedCombo.pattern.join(' - ')}`);
+          }
+        }
+        break;
+        
+      case 'bay':
+        const angle = config?.angle || 30;
+        configDetails.push(`Angle: ${angle}°`);
+        const bayCombo = config?.combination;
+        if (bayCombo) {
+          const bayConfig = BAY_COMBINATIONS.find(c => c.id === bayCombo);
+          if (bayConfig) {
+            configDetails.push(`Configuration: ${bayConfig.name}`);
+            configDetails.push(`Panel Types: ${bayConfig.pattern.join(' - ')}`);
+          }
+        }
+        break;
+        
+      case 'double-hung':
+        const dhCombo = config?.combination;
+        if (dhCombo) {
+          const dhConfig = DOUBLE_HUNG_COMBINATIONS.find(c => c.id === dhCombo);
+          if (dhConfig) {
+            configDetails.push(`Configuration: ${dhConfig.name}`);
+            configDetails.push(`Top Sash: ${dhConfig.pattern[0]}`);
+            configDetails.push(`Bottom Sash: ${dhConfig.pattern[1]}`);
+          }
+        } else {
+          configDetails.push(`Configuration: Standard Double Hung`);
+        }
+        break;
+        
+      case 'casement':
+        configDetails.push(`Operation: Side-hinged, outward opening`);
+        break;
+        
+      case 'awning':
+        configDetails.push(`Operation: Top-hinged, outward opening`);
+        break;
+        
+      case 'picture':
+        configDetails.push(`Operation: Fixed (non-opening)`);
+        break;
+    }
+    
+    return configDetails.join('\n');
+  };
+
   // Dynamic Window Shape Component - Matching Reference Images
-  const WindowDiagram = ({ windowType, specs, slidingConfig, bayConfig, doubleHungConfig }) => {
+  const WindowDiagram = ({ windowType, specs, slidingConfig, bayConfig, doubleHungConfig, onShowDescription }) => {
     if (!windowType) return null;
 
     // Scale dimensions proportionally but keep reasonable preview size
@@ -339,10 +480,113 @@ const QuotationPage = () => {
       width = baseHeight * aspectRatio;
     }
 
+    // Function to render grills/grids on glass panels
+    const renderGrills = (panelX, panelY, panelWidth, panelHeight, grillType) => {
+      if (!grillType || grillType === 'none') return null;
+      
+      const grillColor = "#666";
+      const grillWidth = 1;
+      
+      switch (grillType) {
+        case 'colonial':
+          // Traditional grid pattern (3x2 or 4x3 depending on size)
+          const cols = panelWidth > 80 ? 4 : 3;
+          const rows = panelHeight > 120 ? 3 : 2;
+          const cellWidth = panelWidth / cols;
+          const cellHeight = panelHeight / rows;
+          
+          return (
+            <g>
+              {/* Vertical lines */}
+              {Array.from({length: cols - 1}, (_, i) => (
+                <line 
+                  key={`v${i}`}
+                  x1={panelX + (i + 1) * cellWidth} 
+                  y1={panelY} 
+                  x2={panelX + (i + 1) * cellWidth} 
+                  y2={panelY + panelHeight} 
+                  stroke={grillColor} 
+                  strokeWidth={grillWidth}
+                />
+              ))}
+              {/* Horizontal lines */}
+              {Array.from({length: rows - 1}, (_, i) => (
+                <line 
+                  key={`h${i}`}
+                  x1={panelX} 
+                  y1={panelY + (i + 1) * cellHeight} 
+                  x2={panelX + panelWidth} 
+                  y2={panelY + (i + 1) * cellHeight} 
+                  stroke={grillColor} 
+                  strokeWidth={grillWidth}
+                />
+              ))}
+            </g>
+          );
+          
+        case 'prairie':
+          // 4-pane style (2x2 grid)
+          return (
+            <g>
+              <line x1={panelX + panelWidth/2} y1={panelY} x2={panelX + panelWidth/2} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={grillColor} strokeWidth={grillWidth}/>
+            </g>
+          );
+          
+        case 'diamond':
+          // Diamond pattern
+          const centerX = panelX + panelWidth/2;
+          const centerY = panelY + panelHeight/2;
+          return (
+            <g>
+              <line x1={centerX} y1={panelY} x2={panelX + panelWidth} y2={centerY} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + panelWidth} y1={centerY} x2={centerX} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={centerX} y1={panelY + panelHeight} x2={panelX} y2={centerY} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={centerY} x2={centerX} y2={panelY} stroke={grillColor} strokeWidth={grillWidth}/>
+            </g>
+          );
+          
+        case 'georgian':
+          // Georgian bars (6-pane style)
+          return (
+            <g>
+              <line x1={panelX + panelWidth/3} y1={panelY} x2={panelX + panelWidth/3} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + 2*panelWidth/3} y1={panelY} x2={panelX + 2*panelWidth/3} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={grillColor} strokeWidth={grillWidth}/>
+            </g>
+          );
+          
+        case 'custom-grid':
+          // Simple 3x3 grid
+          return (
+            <g>
+              <line x1={panelX + panelWidth/3} y1={panelY} x2={panelX + panelWidth/3} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + 2*panelWidth/3} y1={panelY} x2={panelX + 2*panelWidth/3} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + panelHeight/3} x2={panelX + panelWidth} y2={panelY + panelHeight/3} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + 2*panelHeight/3} x2={panelX + panelWidth} y2={panelY + 2*panelHeight/3} stroke={grillColor} strokeWidth={grillWidth}/>
+            </g>
+          );
+          
+        case 'between-glass':
+        case 'snap-in':
+          // Same visual as colonial but with lighter color to indicate they're between glass or removable
+          const lightGrillColor = "#999";
+          return (
+            <g>
+              <line x1={panelX + panelWidth/2} y1={panelY} x2={panelX + panelWidth/2} y2={panelY + panelHeight} stroke={lightGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={lightGrillColor} strokeWidth={grillWidth}/>
+            </g>
+          );
+          
+        default:
+          return null;
+      }
+    };
+
     const renderSlidingWindow = (config) => {
       const frameThickness = 8;
       const glassColor = "#E6F3FF";
-      const frameColor = "#003366";
+      const frameColor = getFrameColor(specs.frame);
       const slidingColor = "#CCE7FF"; // Lighter blue for sliding panels
       const fixedColor = "#E6F3FF";   // Regular glass color for fixed panels
       
@@ -395,6 +639,15 @@ const QuotationPage = () => {
                   strokeWidth="1"
                 />
                 
+                {/* Grills on glass panel */}
+                {renderGrills(
+                  panelX + (index > 0 ? 1 : 0) + 2, 
+                  20, 
+                  panelWidth - (index > 0 && index < panels - 1 ? 2 : 1) - 4, 
+                  height-40, 
+                  specs.grilles
+                )}
+                
                 {/* Panel separator (mullion) */}
                 {index < panels - 1 && (
                   <rect 
@@ -438,7 +691,7 @@ const QuotationPage = () => {
 
     const renderBayWindowSVG = (combination, angle = 30) => {
       // Professional color scheme
-      const frameColor = "#2C3E50";
+      const frameColor = getFrameColor(specs.frame);
       const frameHighlight = "#34495E";
       const frameShadow = "#1A252F";
       const glassBase = "#E8F4FD";
@@ -528,7 +781,7 @@ const QuotationPage = () => {
             <text x={centerX} y={15} textAnchor="middle" fontSize="12" fill="#333" fontWeight="bold">1/2</text>
             <text x={centerX + centerWidth/2 + depth/2} y={15} textAnchor="middle" fontSize="12" fill="#333" fontWeight="bold">1/4</text>
             
-            <text x={centerX} y={centerY + panelHeight + 60} textAnchor="middle" fontSize="12" fill="#666">Select Bay Configuration</text>
+
           </g>
         );
       }
@@ -693,15 +946,7 @@ const QuotationPage = () => {
           <text x={centerX} y={20} textAnchor="middle" fontSize="14" fill="#2C3E50" fontWeight="600" filter="url(#labelShadow)">1/2</text>
           <text x={centerX + centerWidth/2 + depth/2} y={20} textAnchor="middle" fontSize="14" fill="#2C3E50" fontWeight="600" filter="url(#labelShadow)">1/4</text>
           
-          {/* Elegant panel type labels - adjusted positioning */}
-          <rect x={centerX - centerWidth/2 - depth/2 - 25} y={centerY + panelHeight + 20} width="50" height="18" rx="9" fill="rgba(44,62,80,0.1)" stroke="rgba(44,62,80,0.3)" strokeWidth="1"/>
-          <text x={centerX - centerWidth/2 - depth/2} y={centerY + panelHeight + 32} textAnchor="middle" fontSize="11" fill="#2C3E50" fontWeight="500">{config.pattern[0]}</text>
-          
-          <rect x={centerX - 25} y={centerY + panelHeight + 25} width="50" height="18" rx="9" fill="rgba(44,62,80,0.1)" stroke="rgba(44,62,80,0.3)" strokeWidth="1"/>
-          <text x={centerX} y={centerY + panelHeight + 37} textAnchor="middle" fontSize="11" fill="#2C3E50" fontWeight="500">{config.pattern[1]}</text>
-          
-          <rect x={centerX + centerWidth/2 + depth/2 - 25} y={centerY + panelHeight + 20} width="50" height="18" rx="9" fill="rgba(44,62,80,0.1)" stroke="rgba(44,62,80,0.3)" strokeWidth="1"/>
-          <text x={centerX + centerWidth/2 + depth/2} y={centerY + panelHeight + 32} textAnchor="middle" fontSize="11" fill="#2C3E50" fontWeight="500">{config.pattern[2]}</text>
+
 
           {/* Premium movement indicators with icons - adjusted positioning */}
           {config.pattern[0] === 'Casement' && (
@@ -780,7 +1025,7 @@ const QuotationPage = () => {
 
 
     const renderDoubleHungWindowSVG = (combination) => {
-      const frameColor = "#003366";
+      const frameColor = getFrameColor(specs.frame);
       const glassColor = "#E6F3FF";
       
       if (!combination) {
@@ -791,7 +1036,11 @@ const QuotationPage = () => {
             <rect x="18" y="18" width={width-36} height={(height-36)/2-4} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
             <rect x="18" y={18+(height-36)/2+4} width={width-36} height={(height-36)/2-4} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
             <rect x="10" y={height/2-2} width={width-20} height="4" fill={frameColor}/>
-            <text x={width/2} y={height-5} textAnchor="middle" fontSize="12" fill="#666">Select Double Hung Configuration</text>
+            {/* Grills on top sash */}
+            {renderGrills(20, 20, width-40, (height-36)/2-8, specs.grilles)}
+            {/* Grills on bottom sash */}
+            {renderGrills(20, 18+(height-36)/2+8, width-40, (height-36)/2-8, specs.grilles)}
+
           </g>
         );
       }
@@ -836,33 +1085,36 @@ const QuotationPage = () => {
           {/* Middle rail/divider */}
           <rect x="10" y={height/2-2} width={width-20} height="4" fill={frameColor}/>
 
+          {/* Grills on top sash */}
+          {renderGrills(20, 20, width-40, (height-36)/2-8, specs.grilles)}
+          
+          {/* Grills on bottom sash */}
+          {renderGrills(20, 18+(height-36)/2+8, width-40, (height-36)/2-8, specs.grilles)}
+
           {/* Sash labels */}
-          <text x={width/2} y={height/4+5} textAnchor="middle" fontSize="10" fill="#fff" fontWeight="bold">
+          <text x={width/2} y={height/4+15} textAnchor="middle" fontSize="10" fill="#fff" fontWeight="bold">
             Top: {config.pattern[0]}
           </text>
-          <text x={width/2} y={height*3/4+5} textAnchor="middle" fontSize="10" fill="#fff" fontWeight="bold">
+          <text x={width/2} y={height*3/4+15} textAnchor="middle" fontSize="10" fill="#fff" fontWeight="bold">
             Bottom: {config.pattern[1]}
           </text>
 
           {/* Movement indicators */}
           {(config.pattern[0] === 'Sliding' || config.pattern[0] === 'Tilt-In') && (
-            <text x={width/2} y={height/4+18} textAnchor="middle" fontSize="12" fill="#e74c3c">↕</text>
+            <text x={width/2} y={height/4+28} textAnchor="middle" fontSize="12" fill="#e74c3c">↕</text>
           )}
           {config.pattern[0] === 'Split' && (
-            <text x={width/2} y={height/4+18} textAnchor="middle" fontSize="12" fill="#e74c3c">⊞</text>
+            <text x={width/2} y={height/4+28} textAnchor="middle" fontSize="12" fill="#e74c3c">⊞</text>
           )}
 
           {(config.pattern[1] === 'Sliding' || config.pattern[1] === 'Tilt-In') && (
-            <text x={width/2} y={height*3/4+18} textAnchor="middle" fontSize="12" fill="#e74c3c">↕</text>
+            <text x={width/2} y={height*3/4+28} textAnchor="middle" fontSize="12" fill="#e74c3c">↕</text>
           )}
           {config.pattern[1] === 'Split' && (
-            <text x={width/2} y={height*3/4+18} textAnchor="middle" fontSize="12" fill="#e74c3c">⊞</text>
+            <text x={width/2} y={height*3/4+28} textAnchor="middle" fontSize="12" fill="#e74c3c">⊞</text>
           )}
 
-          {/* Configuration name at bottom */}
-          <text x={width/2} y={height-5} textAnchor="middle" fontSize="12" fill="#666" fontWeight="bold">
-            {config.name}
-          </text>
+
         </g>
       );
     };
@@ -870,7 +1122,7 @@ const QuotationPage = () => {
     const renderShape = () => {
       const frameThickness = 8;
       const glassColor = "#E6F3FF";
-      const frameColor = "#003366";
+      const frameColor = getFrameColor(specs.frame);
       
       switch (windowType.id) {
         case 'single-hung':
@@ -913,6 +1165,8 @@ const QuotationPage = () => {
               <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="2"/>
               {/* Glass area */}
               <rect x="18" y="18" width={width-36} height={height-36} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
+              {/* Grills on glass */}
+              {renderGrills(20, 20, width-40, height-40, specs.grilles)}
               {/* Hinges on left side */}
               <rect x="12" y="25" width="4" height="8" fill="#666"/>
               <rect x="12" y={height/2-4} width="4" height="8" fill="#666"/>
@@ -930,6 +1184,8 @@ const QuotationPage = () => {
               <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="2"/>
               {/* Glass area */}
               <rect x="18" y="18" width={width-36} height={height-36} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
+              {/* Grills on glass */}
+              {renderGrills(20, 20, width-40, height-40, specs.grilles)}
               {/* Top hinges */}
               <rect x="25" y="12" width="8" height="4" fill="#666"/>
               <rect x={width/2-4} y="12" width="8" height="4" fill="#666"/>
@@ -967,6 +1223,8 @@ const QuotationPage = () => {
               <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="3"/>
               {/* Large glass area */}
               <rect x="20" y="20" width={width-40} height={height-40} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
+              {/* Grills on glass */}
+              {renderGrills(22, 22, width-44, height-44, specs.grilles)}
               {/* No operating hardware - just clean lines */}
             </g>
           );
@@ -1002,6 +1260,18 @@ const QuotationPage = () => {
     const svgWidth = isBayWindow ? width + 120 : width;  // Extra width for angled panels
     const svgHeight = isBayWindow ? height + 100 : height; // Extra height for labels
     
+    const getConfigDescription = () => {
+      if (windowType.id === 'sliding') {
+        return getWindowDescription(windowType, slidingConfig, specs);
+      } else if (windowType.id === 'bay' || windowType.name === 'Bay Windows') {
+        return getWindowDescription(windowType, bayConfig, specs);
+      } else if (windowType.id === 'double-hung' || windowType.name === 'Double Hung Windows') {
+        return getWindowDescription(windowType, doubleHungConfig, specs);
+      } else {
+        return getWindowDescription(windowType, null, specs);
+      }
+    };
+    
     return (
       <div className="window-diagram-container">
         <svg width={svgWidth} height={svgHeight} className="window-diagram" viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
@@ -1010,6 +1280,13 @@ const QuotationPage = () => {
         <div className="diagram-dimensions">
           {specs.width || '1200'}mm × {specs.height || '1500'}mm
         </div>
+        <button 
+          className="info-button" 
+          onClick={() => onShowDescription(windowType.name, getConfigDescription())}
+          title="View detailed window configuration information"
+        >
+          i
+        </button>
       </div>
     );
   };
@@ -1325,68 +1602,208 @@ const QuotationPage = () => {
               )}
             </div>
 
-            <div className="config-section">
-              <h4>Dimensions</h4>
-              <div className="dimension-inputs">
-                <div className="dimension-group">
-                  <label>Width (mm)</label>
-                  <input 
-                    type="number" 
-                    value={quotationData.windowSpecs.width}
-                    onChange={(e) => handleSpecChange('width', e.target.value)}
-                    placeholder="1200"
-                    min="300"
-                    max="3000"
-                  />
-                </div>
-                <div className="dimension-group">
-                  <label>Height (mm)</label>
-                  <input 
-                    type="number" 
-                    value={quotationData.windowSpecs.height}
-                    onChange={(e) => handleSpecChange('height', e.target.value)}
-                    placeholder="1500"
-                    min="300"
-                    max="2500"
-                  />
-                </div>
+            {/* Tabbed Configuration Interface */}
+            <div className="config-tabs-container">
+              <div className="config-tabs">
+                <button 
+                  className={`tab-button ${activeTab === 'measurements' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('measurements')}
+                >
+                  📏 Measurements
+                </button>
+                <button 
+                  className={`tab-button ${activeTab === 'configuration' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('configuration')}
+                >
+                  ⚙️ Configuration
+                </button>
+                <button 
+                  className={`tab-button ${activeTab === 'materials' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('materials')}
+                >
+                  🏗️ Materials
+                </button>
+                <button 
+                  className={`tab-button ${activeTab === 'features' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('features')}
+                >
+                  ✨ Features
+                </button>
               </div>
-            </div>
 
-            <div className="config-section">
-              <h4>Specifications</h4>
-              <div className="spec-inputs">
-                <div className="spec-input-group">
-                  <label>Frame Material</label>
-                  <select value={quotationData.windowSpecs.frame}
-                          onChange={(e) => handleSpecChange('frame', e.target.value)}>
-                    <option value="aluminum">Aluminum</option>
-                    <option value="upvc">uPVC</option>
-                    <option value="wood">Wood</option>
-                    <option value="steel">Steel</option>
-                  </select>
-                </div>
-                <div className="spec-input-group">
-                  <label>Glass Type</label>
-                  <select value={quotationData.windowSpecs.glass}
-                          onChange={(e) => handleSpecChange('glass', e.target.value)}>
-                    <option value="single">Single Glazed</option>
-                    <option value="double">Double Glazed</option>
-                    <option value="triple">Triple Glazed</option>
-                    <option value="laminated">Laminated</option>
-                    <option value="tempered">Tempered</option>
-                  </select>
-                </div>
-                <div className="spec-input-group">
-                  <label>Quantity</label>
-                  <input 
-                    type="number" 
-                    value={quotationData.windowSpecs.quantity}
-                    onChange={(e) => handleSpecChange('quantity', parseInt(e.target.value))}
-                    min="1"
-                    max="50"
-                  />
-                </div>
+              <div className="tab-content">
+                {/* Measurements Tab */}
+                {activeTab === 'measurements' && (
+                  <div className="tab-panel">
+                    <div className="config-section">
+                      <h4>Dimensions</h4>
+                      <div className="dimension-inputs">
+                        <div className="dimension-group">
+                          <label>Width (mm)</label>
+                          <input 
+                            type="number" 
+                            value={quotationData.windowSpecs.width}
+                            onChange={(e) => handleSpecChange('width', e.target.value)}
+                            placeholder="1200"
+                            min="300"
+                            max="3000"
+                          />
+                        </div>
+                        <div className="dimension-group">
+                          <label>Height (mm)</label>
+                          <input 
+                            type="number" 
+                            value={quotationData.windowSpecs.height}
+                            onChange={(e) => handleSpecChange('height', e.target.value)}
+                            placeholder="1500"
+                            min="300"
+                            max="2500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="config-section">
+                      <h4>Quantity</h4>
+                      <div className="spec-input-group">
+                        <label>Number of Units</label>
+                        <input 
+                          type="number" 
+                          value={quotationData.windowSpecs.quantity}
+                          onChange={(e) => handleSpecChange('quantity', parseInt(e.target.value))}
+                          min="1"
+                          max="50"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Configuration Tab */}
+                {activeTab === 'configuration' && (
+                  <div className="tab-panel">
+                    {/* Dynamic configurations based on window type */}
+                    {quotationData.selectedWindowType?.name === 'Sliding Windows' && (
+                      <div className="config-section">
+                        <h4>Panel Configuration</h4>
+                        <div className="sliding-input-group">
+                          <label>Number of Panels:</label>
+                          <select
+                            value={quotationData.slidingConfig.panels}
+                            onChange={(e) => {
+                              const panels = parseInt(e.target.value);
+                              setQuotationData(prev => ({
+                                ...prev,
+                                slidingConfig: {
+                                  ...prev.slidingConfig,
+                                  panels: panels,
+                                  combination: null
+                                }
+                              }));
+                            }}
+                          >
+                            <option value={2}>2 Panels</option>
+                            <option value={3}>3 Panels</option>
+                            <option value={4}>4 Panels</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    {quotationData.selectedWindowType?.name === 'Bay Windows' && (
+                      <div className="config-section">
+                        <h4>Bay Configuration</h4>
+                        <div className="bay-input-group">
+                          <label>Bay Angle:</label>
+                          <select
+                            value={quotationData.bayConfig.angle}
+                            onChange={(e) => {
+                              setQuotationData(prev => ({
+                                ...prev,
+                                bayConfig: {
+                                  ...prev.bayConfig,
+                                  angle: parseInt(e.target.value)
+                                }
+                              }));
+                            }}
+                          >
+                            <option value={30}>30° (Traditional)</option>
+                            <option value={45}>45° (Wide)</option>
+                            <option value={90}>90° (Square Bay)</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Materials Tab */}
+                {activeTab === 'materials' && (
+                  <div className="tab-panel">
+                    <div className="config-section">
+                      <h4>Frame Material</h4>
+                      <div className="spec-input-group">
+                        <label>Material Type</label>
+                        <div className="frame-material-selector">
+                          <select value={quotationData.windowSpecs.frame}
+                                  onChange={(e) => handleSpecChange('frame', e.target.value)}>
+                            <option value="aluminum">Aluminum</option>
+                            <option value="upvc">uPVC</option>
+                            <option value="wooden">Wooden</option>
+                            <option value="steel">Steel</option>
+                            <option value="composite">Composite</option>
+                          </select>
+                          <div 
+                            className="frame-color-indicator" 
+                            style={{ backgroundColor: getFrameColor(quotationData.windowSpecs.frame) }}
+                            title={`Color preview for ${quotationData.windowSpecs.frame}`}
+                          ></div>
+                        </div>
+                        <div className="frame-material-info">
+                          <small>Frame color in diagram reflects selected material</small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="config-section">
+                      <h4>Glass Type</h4>
+                      <div className="spec-input-group">
+                        <label>Glass Specification</label>
+                        <select value={quotationData.windowSpecs.glass}
+                                onChange={(e) => handleSpecChange('glass', e.target.value)}>
+                          <option value="single">Single Glazed</option>
+                          <option value="double">Double Glazed</option>
+                          <option value="triple">Triple Glazed</option>
+                          <option value="laminated">Laminated</option>
+                          <option value="tempered">Tempered</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Features Tab */}
+                {activeTab === 'features' && (
+                  <div className="tab-panel">
+                    <div className="config-section">
+                      <h4>Grill Options</h4>
+                      <div className="spec-input-group">
+                        <label>Grill Pattern</label>
+                        <select value={quotationData.windowSpecs.grilles}
+                                onChange={(e) => handleSpecChange('grilles', e.target.value)}>
+                          <option value="none">No Grills</option>
+                          <option value="colonial">Colonial (Traditional Grid)</option>
+                          <option value="prairie">Prairie (4-Pane Style)</option>
+                          <option value="diamond">Diamond Pattern</option>
+                          <option value="georgian">Georgian Bars</option>
+                          <option value="custom-grid">Custom Grid Pattern</option>
+                          <option value="between-glass">Between Glass Grills</option>
+                          <option value="snap-in">Snap-in Removable</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1403,24 +1820,12 @@ const QuotationPage = () => {
                     slidingConfig={quotationData.slidingConfig}
                     bayConfig={quotationData.bayConfig}
                     doubleHungConfig={quotationData.doubleHungConfig}
+                    onShowDescription={openDescriptionModal}
                   />
                 </div>
                 <div className="preview-info">
                   <div className="preview-details">
                     <h4>{quotationData.selectedWindowType.name}</h4>
-                    <p>Dimensions: {quotationData.windowSpecs.width || '1200'}mm × {quotationData.windowSpecs.height || '1500'}mm</p>
-                    {quotationData.selectedWindowType?.name === 'Bay Windows' && quotationData.bayConfig.combination && (
-                      <>
-                        <p>Configuration: {BAY_COMBINATIONS.find(c => c.id === quotationData.bayConfig.combination)?.name}</p>
-                        <p>Bay Angle: {quotationData.bayConfig.angle}°</p>
-                      </>
-                    )}
-                    {quotationData.selectedWindowType?.name === 'Double Hung Windows' && quotationData.doubleHungConfig.combination && (
-                      <p>Configuration: {DOUBLE_HUNG_COMBINATIONS.find(c => c.id === quotationData.doubleHungConfig.combination)?.name}</p>
-                    )}
-                    <p>Frame: {quotationData.windowSpecs.frame}</p>
-                    <p>Glass: {quotationData.windowSpecs.glass}</p>
-                    <p>Quantity: {quotationData.windowSpecs.quantity}</p>
                   </div>
                   <div className="preview-pricing">
                     <div className="price-display">
@@ -1517,6 +1922,38 @@ const QuotationPage = () => {
           Generate PDF
         </button>
       </div>
+
+      {/* Description Modal */}
+      {showDescriptionModal && (
+        <div className="modal-overlay" onClick={closeDescriptionModal}>
+          <div className="description-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{modalContent.title}</h3>
+              <button className="modal-close" onClick={closeDescriptionModal}>
+                ×
+              </button>
+            </div>
+            <div className="modal-content">
+              <div className="config-details">
+                {modalContent.description.split('\n').map((detail, index) => {
+                  const [key, value] = detail.split(': ');
+                  return (
+                    <div key={index} className="config-item">
+                      <span className="config-key">{key}:</span>
+                      <span className="config-value">{value}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={closeDescriptionModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
