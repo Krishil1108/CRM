@@ -4,20 +4,28 @@ import ExcelExportService from './services/ExcelExportService';
 import ExcelImport from './components/ExcelImport';
 import { dataEventManager, DATA_TYPES } from './services/dataEventManager';
 import './PageContent.css';
+import './InventoryPage.css';
 
 const InventoryPage = () => {
   const [inventory, setInventory] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState({});
+  
+  // Filter and search states
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [filterCategoryType, setFilterCategoryType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [showLowStock, setShowLowStock] = useState(false);
+  
+  // UI states
   const [showAddPopup, setShowAddPopup] = useState(false);
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showStockModal, setShowStockModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [stockOperation, setStockOperation] = useState('add');
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,108 +34,223 @@ const InventoryPage = () => {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // Enhanced item data structure - Complete backend mapping
   const [itemData, setItemData] = useState({
     name: '',
-    category: '',
-    description: '',
-    quantity: '',
-    unitPrice: '',
-    supplier: '',
     sku: '',
-    reorderLevel: '',
-    location: '',
-    notes: ''
+    description: '',
+    categoryType: 'window_type',
+    category: '',
+    
+    // Complete Specifications matching backend model
+    specifications: {
+      windowType: '',
+      glassType: '',
+      thickness: '',
+      frameMaterial: '',
+      finish: '',
+      grillePattern: '',
+      grilleWidth: '',
+      colorCode: '',
+      colorFamily: '',
+      dimensions: {
+        width: { min: '', max: '', standard: '', unit: 'mm' },
+        height: { min: '', max: '', standard: '', unit: 'mm' },
+        depth: { min: '', max: '', standard: '', unit: 'mm' }
+      },
+      performance: {
+        thermalRating: '',
+        soundReduction: '',
+        waterResistance: '',
+        windResistance: '',
+        energyRating: ''
+      }
+    },
+    
+    // Stock information - Enhanced
+    stock: {
+      currentQuantity: 0,
+      reservedQuantity: 0,
+      availableQuantity: 0,
+      reorderLevel: 5,
+      reorderQuantity: 20
+    },
+    
+    // Pricing - Enhanced
+    pricing: {
+      unitPrice: 0,
+      currency: 'INR',
+      costPrice: 0,
+      marginPercentage: 0
+    },
+    
+    // Supply Chain - Enhanced
+    supplier: {
+      name: '',
+      contactPerson: '',
+      phone: '',
+      email: '',
+      leadTime: 7
+    },
+    
+    // Location in warehouse
+    location: {
+      warehouse: '',
+      section: '',
+      row: '',
+      shelf: ''
+    },
+    
+    // Additional metadata
+    status: 'active',
+    notes: '',
+    warranty: {
+      period: '',
+      terms: ''
+    }
   });
 
+  // Stock operation data
+  const [stockData, setStockData] = useState({
+    quantity: 0,
+    reason: '',
+    reference: '',
+    performedBy: 'System'
+  });
+
+  // Load data on component mount
   useEffect(() => {
     loadInventory();
-
-    // Subscribe to inventory data updates
-    const unsubscribe = dataEventManager.subscribe(DATA_TYPES.INVENTORY, () => {
-      loadInventory(); // Refresh inventory list when new item is added
-    });
-
-    // Cleanup subscription on unmount
-    return unsubscribe;
+    loadCategories();
+    loadDashboardStats();
   }, []);
 
   const loadInventory = async () => {
     try {
       setLoading(true);
+      const data = await InventoryService.getAllItems();
+      setInventory(data);
       setError('');
-      const inventoryData = await InventoryService.getAllInventory();
-      setInventory(Array.isArray(inventoryData) ? inventoryData : []);
     } catch (error) {
-      setError('Failed to load inventory items. Please try again.');
+      setError('Failed to load inventory. Please try again.');
       console.error('Error loading inventory:', error);
-      setInventory([]); // Ensure inventory remains an array even on error
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (itemId) => {
-    if (window.confirm('Are you sure you want to delete this inventory item?')) {
-      try {
-        await InventoryService.deleteInventoryItem(itemId);
-        setInventory(Array.isArray(inventory) ? inventory.filter(item => item._id !== itemId) : []);
-      } catch (error) {
-        setError('Failed to delete inventory item. Please try again.');
-        console.error('Error deleting inventory item:', error);
-      }
+  const loadCategories = async () => {
+    try {
+      const data = await InventoryService.getCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error loading categories:', error);
     }
   };
 
-  const handleEdit = (item) => {
-    setEditingItem(item);
+  const loadDashboardStats = async () => {
+    try {
+      const stats = await InventoryService.getDashboardStats();
+      setDashboardStats(stats);
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    }
+  };
+
+  const resetForm = () => {
     setItemData({
-      name: item.name || '',
-      category: item.category || '',
-      description: item.description || '',
-      quantity: item.quantity || '',
-      unitPrice: item.unitPrice || '',
-      supplier: item.supplier || '',
-      sku: item.sku || '',
-      reorderLevel: item.reorderLevel || '',
-      location: item.location || '',
-      notes: item.notes || ''
+      name: '',
+      sku: '',
+      description: '',
+      categoryType: 'window_type',
+      category: '',
+      specifications: {
+        windowType: '',
+        glassType: '',
+        thickness: '',
+        frameMaterial: '',
+        finish: '',
+        grillePattern: '',
+        grilleWidth: '',
+        colorCode: '',
+        colorFamily: '',
+        dimensions: {
+          width: { min: '', max: '', standard: '', unit: 'mm' },
+          height: { min: '', max: '', standard: '', unit: 'mm' },
+          depth: { min: '', max: '', standard: '', unit: 'mm' }
+        },
+        performance: {
+          thermalRating: '',
+          soundReduction: '',
+          waterResistance: '',
+          windResistance: '',
+          energyRating: ''
+        }
+      },
+      stock: {
+        currentQuantity: 0,
+        reservedQuantity: 0,
+        availableQuantity: 0,
+        reorderLevel: 5,
+        reorderQuantity: 20
+      },
+      pricing: {
+        unitPrice: 0,
+        currency: 'INR',
+        costPrice: 0,
+        marginPercentage: 0
+      },
+      supplier: {
+        name: '',
+        contactPerson: '',
+        phone: '',
+        email: '',
+        leadTime: 7
+      },
+      location: {
+        warehouse: '',
+        section: '',
+        row: '',
+        shelf: ''
+      },
+      status: 'active',
+      notes: '',
+      warranty: {
+        period: '',
+        terms: ''
+      }
     });
-    setShowEditPopup(true);
     setError('');
   };
 
-  const handleStatusChange = async (itemId, newStatus) => {
-    try {
-      const updatedItem = await InventoryService.updateInventoryItem(itemId, { status: newStatus });
-      setInventory(Array.isArray(inventory) ? inventory.map(item =>
-        item._id === itemId ? updatedItem : item
-      ) : []);
-    } catch (error) {
-      setError('Failed to update item status. Please try again.');
-      console.error('Error updating item status:', error);
-    }
-  };
-
-  const handleQuantityChange = async (itemId, newQuantity) => {
-    if (newQuantity < 0) return;
-    
-    try {
-      const updatedItem = await InventoryService.updateInventoryItem(itemId, { quantity: parseInt(newQuantity) });
-      setInventory(Array.isArray(inventory) ? inventory.map(item =>
-        item._id === itemId ? updatedItem : item
-      ) : []);
-    } catch (error) {
-      setError('Failed to update quantity. Please try again.');
-      console.error('Error updating quantity:', error);
-    }
-  };
-
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setItemData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const { name, value, type, checked } = e.target;
+    
+    if (name.includes('.')) {
+      const keys = name.split('.');
+      setItemData(prev => {
+        const newData = { ...prev };
+        let current = newData;
+        
+        for (let i = 0; i < keys.length - 1; i++) {
+          if (!current[keys[i]]) {
+            current[keys[i]] = {};
+          }
+          current = current[keys[i]];
+        }
+        
+        const finalKey = keys[keys.length - 1];
+        current[finalKey] = type === 'checkbox' ? checked : (type === 'number' ? Number(value) : value);
+        
+        return newData;
+      });
+    } else {
+      setItemData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : (type === 'number' ? Number(value) : value)
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -137,39 +260,16 @@ const InventoryPage = () => {
       setLoading(true);
       setError('');
       
-      const newItemData = {
-        name: itemData.name,
-        category: itemData.category,
-        description: itemData.description,
-        quantity: parseInt(itemData.quantity) || 0,
-        unitPrice: Math.round((parseFloat(itemData.unitPrice) || 0) * 100) / 100,
-        supplier: itemData.supplier,
-        sku: itemData.sku || InventoryService.generateSKU(itemData.name, itemData.category),
-        reorderLevel: parseInt(itemData.reorderLevel) || 10,
-        location: itemData.location,
-        notes: itemData.notes
-      };
+      const result = await InventoryService.createItem(itemData);
+      setInventory(prev => [...prev, result]);
       
-      const newItem = await InventoryService.createInventoryItem(newItemData);
-      setInventory([...(Array.isArray(inventory) ? inventory : []), newItem]);
-      
-      // Reset form and close popup
-      setItemData({
-        name: '',
-        category: '',
-        description: '',
-        quantity: '',
-        unitPrice: '',
-        supplier: '',
-        sku: '',
-        reorderLevel: '',
-        location: '',
-        notes: ''
-      });
-      
+      resetForm();
       setShowAddPopup(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+      
+      // Refresh dashboard stats
+      loadDashboardStats();
     } catch (error) {
       setError('Failed to add inventory item. Please try again.');
       console.error('Error creating inventory item:', error);
@@ -185,42 +285,19 @@ const InventoryPage = () => {
       setLoading(true);
       setError('');
       
-      const updatedItemData = {
-        name: itemData.name,
-        category: itemData.category,
-        description: itemData.description,
-        quantity: parseInt(itemData.quantity) || 0,
-        unitPrice: Math.round((parseFloat(itemData.unitPrice) || 0) * 100) / 100,
-        supplier: itemData.supplier,
-        sku: itemData.sku,
-        reorderLevel: parseInt(itemData.reorderLevel) || 10,
-        location: itemData.location,
-        notes: itemData.notes
-      };
+      const result = await InventoryService.updateItem(editingItem._id, itemData);
+      setInventory(prev => prev.map(item => 
+        item._id === editingItem._id ? result : item
+      ));
       
-      const updatedItem = await InventoryService.updateInventoryItem(editingItem._id, updatedItemData);
-      setInventory(Array.isArray(inventory) ? inventory.map(item => 
-        item._id === editingItem._id ? updatedItem : item
-      ) : []);
-      
-      // Reset form and close popup
-      setItemData({
-        name: '',
-        category: '',
-        description: '',
-        quantity: '',
-        unitPrice: '',
-        supplier: '',
-        sku: '',
-        reorderLevel: '',
-        location: '',
-        notes: ''
-      });
-      
+      resetForm();
       setShowEditPopup(false);
       setEditingItem(null);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+      
+      // Refresh dashboard stats
+      loadDashboardStats();
     } catch (error) {
       setError('Failed to update inventory item. Please try again.');
       console.error('Error updating inventory item:', error);
@@ -229,221 +306,155 @@ const InventoryPage = () => {
     }
   };
 
-  const handleClosePopup = () => {
-    setShowAddPopup(false);
-    setShowEditPopup(false);
-    setEditingItem(null);
+  const handleEdit = (item) => {
+    setEditingItem(item);
     setItemData({
-      name: '',
-      category: '',
-      description: '',
-      quantity: '',
-      unitPrice: '',
-      supplier: '',
-      sku: '',
-      reorderLevel: '',
-      location: '',
-      notes: ''
+      name: item.name || '',
+      sku: item.sku || '',
+      description: item.description || '',
+      categoryType: item.categoryType || 'window_type',
+      category: item.category || '',
+      
+      specifications: {
+        windowType: item.specifications?.windowType || '',
+        glassType: item.specifications?.glassType || '',
+        thickness: item.specifications?.thickness || '',
+        frameMaterial: item.specifications?.frameMaterial || '',
+        finish: item.specifications?.finish || '',
+        grillePattern: item.specifications?.grillePattern || '',
+        grilleWidth: item.specifications?.grilleWidth || '',
+        colorCode: item.specifications?.colorCode || '',
+        colorFamily: item.specifications?.colorFamily || '',
+        dimensions: {
+          width: item.specifications?.dimensions?.width || { min: '', max: '', standard: '', unit: 'mm' },
+          height: item.specifications?.dimensions?.height || { min: '', max: '', standard: '', unit: 'mm' },
+          depth: item.specifications?.dimensions?.depth || { min: '', max: '', standard: '', unit: 'mm' }
+        },
+        performance: {
+          thermalRating: item.specifications?.performance?.thermalRating || '',
+          soundReduction: item.specifications?.performance?.soundReduction || '',
+          waterResistance: item.specifications?.performance?.waterResistance || '',
+          windResistance: item.specifications?.performance?.windResistance || '',
+          energyRating: item.specifications?.performance?.energyRating || ''
+        }
+      },
+      
+      stock: {
+        currentQuantity: item.stock?.currentQuantity || 0,
+        reservedQuantity: item.stock?.reservedQuantity || 0,
+        availableQuantity: item.stock?.availableQuantity || 0,
+        reorderLevel: item.stock?.reorderLevel || 5,
+        reorderQuantity: item.stock?.reorderQuantity || 20
+      },
+      
+      pricing: {
+        unitPrice: item.pricing?.unitPrice || 0,
+        currency: item.pricing?.currency || 'INR',
+        costPrice: item.pricing?.costPrice || 0,
+        marginPercentage: item.pricing?.marginPercentage || 0
+      },
+      
+      supplier: {
+        name: item.supplier?.name || '',
+        contactPerson: item.supplier?.contactPerson || '',
+        phone: item.supplier?.phone || '',
+        email: item.supplier?.email || '',
+        leadTime: item.supplier?.leadTime || 7
+      },
+      
+      location: {
+        warehouse: item.location?.warehouse || '',
+        section: item.location?.section || '',
+        row: item.location?.row || '',
+        shelf: item.location?.shelf || ''
+      },
+      
+      status: item.status || 'active',
+      notes: item.notes || '',
+      warranty: {
+        period: item.warranty?.period || '',
+        terms: item.warranty?.terms || ''
+      }
+    });
+    setShowEditPopup(true);
+    setError('');
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this inventory item?')) {
+      try {
+        setLoading(true);
+        await InventoryService.deleteItem(id);
+        setInventory(prev => prev.filter(item => item._id !== id));
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+        loadDashboardStats();
+      } catch (error) {
+        setError('Failed to delete inventory item. Please try again.');
+        console.error('Error deleting inventory item:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // Filter and search logic
+  const getFilteredInventory = () => {
+    return inventory.filter(item => {
+      const matchesSearch = !searchTerm || 
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+      const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
+      const matchesCategoryType = filterCategoryType === 'all' || item.categoryType === filterCategoryType;
+      const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
+      const matchesLowStock = !showLowStock || (item.stock?.currentQuantity <= item.stock?.reorderLevel);
+      
+      return matchesSearch && matchesCategory && matchesCategoryType && matchesStatus && matchesLowStock;
     });
   };
 
-  // Filter and sort inventory
-  const filteredInventory = (Array.isArray(inventory) ? inventory : [])
-    .filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (item.supplier && item.supplier.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                           (item.sku && item.sku.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesCategory = filterCategory === 'all' || item.category === filterCategory;
-      const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
-      
-      // Date range filtering
-      let matchesDateRange = true;
-      if (startDate || endDate) {
-        const itemDate = new Date(item.createdAt);
-        const start = startDate ? new Date(startDate) : new Date('1900-01-01');
-        const end = endDate ? new Date(endDate) : new Date('2100-12-31');
-        end.setHours(23, 59, 59, 999); // Set to end of day
-        matchesDateRange = itemDate >= start && itemDate <= end;
-      }
-      
-      return matchesSearch && matchesCategory && matchesStatus && matchesDateRange;
-    })
-    .sort((a, b) => {
+  const getSortedInventory = (filtered) => {
+    return [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'name':
           return a.name.localeCompare(b.name);
-        case 'category':
-          return a.category.localeCompare(b.category);
-        case 'quantity':
-          return b.quantity - a.quantity;
-        case 'price':
-          return b.unitPrice - a.unitPrice;
-        case 'totalValue':
-          return b.totalValue - a.totalValue;
-        case 'date':
+        case 'sku':
+          return (a.sku || '').localeCompare(b.sku || '');
+        case 'stock.currentQuantity':
+          return (b.stock?.currentQuantity || 0) - (a.stock?.currentQuantity || 0);
+        case 'pricing.unitPrice':
+          return (b.pricing?.unitPrice || 0) - (a.pricing?.unitPrice || 0);
+        case 'createdAt':
           return new Date(b.createdAt) - new Date(a.createdAt);
         default:
           return 0;
       }
     });
-
-  // Pagination calculations
-  const totalItems = filteredInventory.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentItems = filteredInventory.slice(startIndex, endIndex);
-
-  // Pagination handlers
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
   };
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, filterCategory, filterStatus, startDate, endDate, sortBy]);
-
-  // Import handlers (exactly like ClientsPage)
-  const handleImportSuccess = (results) => {
-    setShowImportModal(false);
-    setCurrentPage(1); // Reset to first page to show new data
-    loadInventory(); // Refresh the inventory list
-    
-    // Trigger data event to refresh other components
-    dataEventManager.emit(DATA_TYPES.INVENTORY);
-    
-    if (results.summary) {
-      const { successful, failed, duplicates } = results.summary;
-      let message = `Import completed!\n`;
-      message += `✓ ${successful} items added successfully\n`;
-      if (duplicates > 0) message += `⚠ ${duplicates} duplicates skipped\n`;
-      if (failed > 0) message += `✗ ${failed} failed to import`;
-      
-      alert(message);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const formatCurrency = (amount) => {
-    const numAmount = parseFloat(amount) || 0;
-    // Use fixed decimal places only if needed, otherwise show exact value
-    const formattedAmount = numAmount % 1 === 0 ? numAmount.toString() : numAmount.toFixed(2);
-    return `₹${formattedAmount}`;
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'In Stock': return 'status-in-stock';
-      case 'Low Stock': return 'status-low-stock';
-      case 'Out of Stock': return 'status-out-of-stock';
-      case 'Discontinued': return 'status-discontinued';
-      default: return 'status-pending';
-    }
-  };
-
-  // Excel export function
-  const handleExportToExcel = () => {
-    const filters = {
-      searchTerm,
-      filterCategory,
-      filterStatus,
-      sortBy,
-      dateRange: startDate || endDate ? `${startDate || 'beginning'}_to_${endDate || 'present'}` : null
-    };
-
-    const filename = ExcelExportService.generateFilename('inventory', filters);
-    const result = ExcelExportService.exportInventoryToExcel(filteredInventory, filters, filename);
-    
-    if (result.success) {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } else {
-      setError(result.message);
-      setTimeout(() => setError(''), 5000);
-    }
-  };
-
-  // Clear date filters
-  const clearDateFilters = () => {
-    setStartDate('');
-    setEndDate('');
-    setShowDateFilter(false);
-  };
-
-  // Get unique categories for filter
-  const categories = [...new Set(Array.isArray(inventory) ? inventory.map(item => item.category) : [])];
+  const filteredInventory = getFilteredInventory();
+  const sortedInventory = getSortedInventory(filteredInventory);
+  
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = sortedInventory.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(sortedInventory.length / itemsPerPage);
 
   return (
-    <div className="page-container inventory-page">
+    <div className="page-container">
       <div className="page-header">
         <div className="header-content">
           <h1>Inventory Management</h1>
-          <p>Manage your products, stock levels, and inventory operations</p>
+          <p>Manage and view all your inventory items</p>
         </div>
         <div className="header-actions">
           <button 
-            className="export-btn enhanced-export-btn"
-            onClick={handleExportToExcel}
-            title="Export inventory data to Excel spreadsheet"
-          >
-            <div className="btn-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                <path d="M9,14H7V16H9V14M11,14H13V16H11V14M15,14H17V16H15V14M9,10H7V12H9V10M11,10H13V12H11V10M15,10H17V12H15V10" opacity="0.7"/>
-              </svg>
-            </div>
-            <div className="btn-content">
-              <span className="btn-text">Export to Excel</span>
-              <span className="btn-count">({filteredInventory.length} items)</span>
-            </div>
-          </button>
-          <button 
-            className="import-btn"
-            onClick={() => setShowImportModal(true)}
-            title="Import inventory from Excel file"
-          >
-            <div className="btn-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                <path d="M12,11L8,15H10.5V19H13.5V15H16L12,11Z" opacity="0.7"/>
-              </svg>
-            </div>
-            <span className="btn-text">Import from Excel</span>
-          </button>
-          <button 
-            className="date-filter-btn"
-            onClick={() => setShowDateFilter(!showDateFilter)}
-            title="Date Range Filter"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-            </svg>
-            Date Filter
-          </button>
-          <button 
             className="add-client-btn"
             onClick={() => setShowAddPopup(true)}
+            disabled={loading}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
@@ -460,7 +471,7 @@ const InventoryPage = () => {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{marginRight: '8px'}}>
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
             </svg>
-            Inventory item added successfully!
+            Item saved successfully!
           </div>
         )}
 
@@ -482,58 +493,16 @@ const InventoryPage = () => {
           </div>
         )}
 
-        {/* Date Range Filter */}
-        {showDateFilter && (
-          <div className="date-filter-section">
-            <div className="date-filter-container">
-              <h3>Filter by Date Range</h3>
-              <div className="date-inputs">
-                <div className="date-input-group">
-                  <label htmlFor="startDate">From Date:</label>
-                  <input
-                    type="date"
-                    id="startDate"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </div>
-                <div className="date-input-group">
-                  <label htmlFor="endDate">To Date:</label>
-                  <input
-                    type="date"
-                    id="endDate"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </div>
-                <div className="date-filter-actions">
-                  <button className="apply-date-btn" onClick={() => setShowDateFilter(false)}>
-                    Apply Filter
-                  </button>
-                  <button className="clear-date-btn" onClick={clearDateFilters}>
-                    Clear
-                  </button>
-                </div>
-              </div>
-              {(startDate || endDate) && (
-                <div className="active-date-filter">
-                  <span>Active filter: {startDate || 'Beginning'} to {endDate || 'Present'}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* Controls */}
         <div className="client-controls">
           <div className="search-section">
-            <div className="search-input-container">
+            <div className="search-box">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
               </svg>
               <input
                 type="text"
-                placeholder="Search inventory items..."
+                placeholder="Search inventory by name, SKU, or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -543,26 +512,29 @@ const InventoryPage = () => {
           <div className="filter-section">
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
               <option value="name">Sort by Name</option>
-              <option value="category">Sort by Category</option>
-              <option value="quantity">Sort by Quantity</option>
-              <option value="price">Sort by Price</option>
-              <option value="totalValue">Sort by Total Value</option>
-              <option value="date">Sort by Date Added</option>
+              <option value="sku">Sort by SKU</option>
+              <option value="stock.currentQuantity">Sort by Stock</option>
+              <option value="pricing.unitPrice">Sort by Price</option>
+              <option value="createdAt">Sort by Date</option>
             </select>
 
-            <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
-              <option value="all">All Categories</option>
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
+            <select value={filterCategoryType} onChange={(e) => setFilterCategoryType(e.target.value)}>
+              <option value="all">All Types</option>
+              <option value="window_type">Window Types</option>
+              <option value="glass_type">Glass Types</option>
+              <option value="frame_material">Frame Materials</option>
+              <option value="grille_pattern">Grille Patterns</option>
+              <option value="color_option">Color Options</option>
+              <option value="hardware">Hardware</option>
+              <option value="accessory">Accessories</option>
             </select>
 
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
               <option value="all">All Status</option>
-              <option value="In Stock">In Stock</option>
-              <option value="Low Stock">Low Stock</option>
-              <option value="Out of Stock">Out of Stock</option>
-              <option value="Discontinued">Discontinued</option>
+              <option value="active">Active</option>
+              <option value="low_stock">Low Stock</option>
+              <option value="out_of_stock">Out of Stock</option>
+              <option value="discontinued">Discontinued</option>
             </select>
           </div>
         </div>
@@ -572,210 +544,197 @@ const InventoryPage = () => {
           <div className="stat-card">
             <div className="stat-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </svg>
             </div>
-            <div className="stat-info">
-              <div className="stat-number">{Array.isArray(inventory) ? inventory.length : 0}</div>
+            <div className="stat-content">
+              <div className="stat-number">{dashboardStats.totalItems || 0}</div>
               <div className="stat-label">Total Items</div>
             </div>
           </div>
-
+          
           <div className="stat-card">
-            <div className="stat-icon in-stock">
+            <div className="stat-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
               </svg>
             </div>
-            <div className="stat-info">
-              <div className="stat-number">{Array.isArray(inventory) ? inventory.filter(i => i.status === 'In Stock').length : 0}</div>
-              <div className="stat-label">In Stock</div>
+            <div className="stat-content">
+              <div className="stat-number">{dashboardStats.totalStock || 0}</div>
+              <div className="stat-label">Total Stock</div>
             </div>
           </div>
-
-          <div className="stat-card">
-            <div className="stat-icon low-stock">
+          
+          <div className="stat-card low-stock">
+            <div className="stat-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
               </svg>
             </div>
-            <div className="stat-info">
-              <div className="stat-number">{Array.isArray(inventory) ? inventory.filter(i => i.status === 'Low Stock').length : 0}</div>
+            <div className="stat-content">
+              <div className="stat-number">{dashboardStats.lowStockItems || 0}</div>
               <div className="stat-label">Low Stock</div>
             </div>
           </div>
-
+          
           <div className="stat-card">
-            <div className="stat-icon total-value">
+            <div className="stat-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
               </svg>
             </div>
-            <div className="stat-info">
-              <div className="stat-number">{formatCurrency(Array.isArray(inventory) ? inventory.reduce((sum, item) => sum + (item.totalValue || 0), 0) : 0)}</div>
+            <div className="stat-content">
+              <div className="stat-number">₹{(dashboardStats.totalValue || 0).toLocaleString()}</div>
               <div className="stat-label">Total Value</div>
             </div>
           </div>
         </div>
 
-        {/* Inventory Table */}
-        <div className="client-table-container">
-          {filteredInventory.length === 0 ? (
-            <div className="no-clients">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/>
-              </svg>
-              <h3>No inventory items found</h3>
-              <p>Start by adding your first inventory item using the "Add Inventory Item" button.</p>
-            </div>
-          ) : (
-            <table className="client-table">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Category</th>
-                  <th>SKU</th>
-                  <th>Quantity</th>
-                  <th>Unit Price</th>
-                  <th>Total Value</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map(item => (
-                  <tr key={item._id}>
-                    <td>
-                      <div className="item-info">
-                        <div className="item-name">
-                          <strong>{item.name}</strong>
-                          {item.supplier && <div className="item-supplier">Supplier: {item.supplier}</div>}
+      {/* Inventory Table */}
+      <div className="inventory-table-container">
+        {currentItems.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">📦</div>
+            <h3>No inventory items found</h3>
+            {inventory.length === 0 ? (
+              <p>Start by adding your first inventory item or run the seed script to populate with sample data.</p>
+            ) : (
+              <p>Try adjusting your search criteria or filters.</p>
+            )}
+          </div>
+        ) : (
+          <table className="inventory-table">
+            <thead>
+              <tr>
+                <th>Item Details</th>
+                <th>Category</th>
+                <th>Stock</th>
+                <th>Pricing</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.map(item => (
+                <tr key={item._id}>
+                  <td>
+                    <div className="item-details">
+                      <div className="item-name">{item.name}</div>
+                      <div className="item-sku">SKU: {item.sku}</div>
+                      {item.description && (
+                        <div className="item-description">{item.description}</div>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="category-info">
+                      <div className="category-type">{item.categoryType?.replace('_', ' ')}</div>
+                      <div className="category-name">
+                        {Array.isArray(categories) ? categories.find(cat => cat._id === item.category)?.name || 'Uncategorized' : 'Uncategorized'}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="stock-info">
+                      <div className="stock-current">
+                        <strong>{item.stock?.currentQuantity || 0}</strong> units
+                      </div>
+                      {item.stock?.reservedQuantity > 0 && (
+                        <div className="stock-reserved">
+                          Reserved: {item.stock.reservedQuantity}
                         </div>
+                      )}
+                      <div className="stock-value">
+                        Total: ₹{((item.pricing?.unitPrice || 0) * (item.stock?.currentQuantity || 0)).toLocaleString()}
                       </div>
-                    </td>
-                    <td>{item.category}</td>
-                    <td>{item.sku || '-'}</td>
-                    <td>
-                      <input
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => handleQuantityChange(item._id, e.target.value)}
-                        className="quantity-input"
-                        min="0"
-                      />
-                    </td>
-                    <td>{formatCurrency(item.unitPrice)}</td>
-                    <td>{formatCurrency(item.totalValue)}</td>
-                    <td>
-                      <select
-                        value={item.status}
-                        onChange={(e) => handleStatusChange(item._id, e.target.value)}
-                        className={`status-select ${getStatusColor(item.status)}`}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="pricing-info">
+                      <div className="unit-price">₹{(item.pricing?.unitPrice || 0).toLocaleString()}</div>
+                      {item.pricing?.costPrice > 0 && (
+                        <div className="cost-price">Cost: ₹{item.pricing.costPrice.toLocaleString()}</div>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <div className={`status-badge ${item.status}`}>
+                      {item.status?.replace('_', ' ')}
+                    </div>
+                    {item.stock?.currentQuantity <= item.stock?.reorderLevel && (
+                      <div className="reorder-alert">
+                        🔔 Reorder needed
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button 
+                        className="edit-btn"
+                        onClick={() => handleEdit(item)}
+                        title="Edit item"
                       >
-                        <option value="In Stock">In Stock</option>
-                        <option value="Low Stock">Low Stock</option>
-                        <option value="Out of Stock">Out of Stock</option>
-                        <option value="Discontinued">Discontinued</option>
-                      </select>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button
-                          className="edit-btn"
-                          onClick={() => handleEdit(item)}
-                          title="Edit Item"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                          </svg>
-                        </button>
-                        <button
-                          className="delete-btn"
-                          onClick={() => handleDelete(item._id)}
-                          title="Delete Item"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {/* Pagination Controls */}
-          {filteredInventory.length > 0 && totalPages > 1 && (
-            <div className="pagination-container">
-              <div className="pagination-info">
-                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} items
-              </div>
-              <div className="pagination-controls">
-                <button 
-                  className="pagination-btn"
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-                
-                <div className="pagination-numbers">
-                  {(() => {
-                    const pages = [];
-                    const maxVisiblePages = 5;
-                    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-                    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-                    
-                    if (endPage - startPage < maxVisiblePages - 1) {
-                      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                    }
-                    
-                    for (let i = startPage; i <= endPage; i++) {
-                      pages.push(
-                        <button
-                          key={i}
-                          className={`pagination-number ${currentPage === i ? 'active' : ''}`}
-                          onClick={() => handlePageChange(i)}
-                        >
-                          {i}
-                        </button>
-                      );
-                    }
-                    return pages;
-                  })()}
-                </div>
-                
-                <button 
-                  className="pagination-btn"
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+                        ✏️
+                      </button>
+                      <button 
+                        className="delete-btn"
+                        onClick={() => handleDelete(item._id)}
+                        title="Delete item"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {/* Add Inventory Item Popup */}
-      {showAddPopup && (
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button 
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className="pagination-btn"
+          >
+            ← Previous
+          </button>
+          
+          <span className="pagination-info">
+            Page {currentPage} of {totalPages} ({sortedInventory.length} items)
+          </span>
+          
+          <button 
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+            className="pagination-btn"
+          >
+            Next →
+          </button>
+        </div>
+      )}
+
+      {/* Enhanced Add/Edit Inventory Item Modal */}
+      {(showAddPopup || showEditPopup) && (
         <div className="popup-overlay">
-          <div className="popup-container">
+          <div className="popup-container large-popup">
             <div className="popup-header">
-              <h2>Add New Inventory Item</h2>
-              <button className="close-btn" onClick={handleClosePopup}>
+              <h2>{showEditPopup ? 'Edit Inventory Item' : 'Add New Inventory Item'}</h2>
+              <button className="close-btn" onClick={() => { setShowAddPopup(false); setShowEditPopup(false); resetForm(); }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                 </svg>
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="popup-form">
+            <form onSubmit={showEditPopup ? handleEditSubmit : handleSubmit} className="comprehensive-form">
+              
+              {/* Basic Product Information */}
               <div className="form-section">
-                <h3>Product Information</h3>
+                <h3>📦 Product Information</h3>
                 <div className="form-row">
                   <div className="form-group">
                     <label htmlFor="name">Product Name *</label>
@@ -790,16 +749,52 @@ const InventoryPage = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="category">Category *</label>
+                    <label htmlFor="sku">SKU</label>
                     <input
                       type="text"
+                      id="sku"
+                      name="sku"
+                      value={itemData.sku}
+                      onChange={handleInputChange}
+                      placeholder="Auto-generated if empty"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="categoryType">Product Type *</label>
+                    <select
+                      id="categoryType"
+                      name="categoryType"
+                      value={itemData.categoryType}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="window_type">Window Type</option>
+                      <option value="glass_type">Glass Type</option>
+                      <option value="frame_material">Frame Material</option>
+                      <option value="grille_pattern">Grille Pattern</option>
+                      <option value="color_option">Color Option</option>
+                      <option value="hardware">Hardware</option>
+                      <option value="accessory">Accessory</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="category">Category</label>
+                    <select
                       id="category"
                       name="category"
                       value={itemData.category}
                       onChange={handleInputChange}
-                      placeholder="e.g., Electronics, Clothing, etc."
-                      required
-                    />
+                    >
+                      <option value="">Select category</option>
+                      {Array.isArray(categories) && categories.map(category => (
+                        <option key={category._id} value={category._id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -810,22 +805,386 @@ const InventoryPage = () => {
                     name="description"
                     value={itemData.description}
                     onChange={handleInputChange}
-                    placeholder="Product description"
+                    placeholder="Detailed product description"
                     rows="3"
                   />
                 </div>
               </div>
 
+              {/* Specifications Section */}
               <div className="form-section">
-                <h3>Inventory Details</h3>
+                <h3>🔧 Product Specifications</h3>
+                
+                <div className="form-subsection">
+                  <h4>Window & Glass Details</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="specifications.windowType">Window Type</label>
+                      <select
+                        id="specifications.windowType"
+                        name="specifications.windowType"
+                        value={itemData.specifications?.windowType || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select window type</option>
+                        <option value="sliding">Sliding</option>
+                        <option value="casement">Casement</option>
+                        <option value="bay">Bay</option>
+                        <option value="double_hung">Double Hung</option>
+                        <option value="fixed">Fixed</option>
+                        <option value="awning">Awning</option>
+                        <option value="picture">Picture</option>
+                        <option value="single_hung">Single Hung</option>
+                        <option value="pivot">Pivot</option>
+                        <option value="metal">Metal</option>
+                        <option value="louvered">Louvered</option>
+                        <option value="glass_block">Glass Block</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="specifications.glassType">Glass Type</label>
+                      <select
+                        id="specifications.glassType"
+                        name="specifications.glassType"
+                        value={itemData.specifications?.glassType || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select glass type</option>
+                        <option value="single">Single</option>
+                        <option value="double">Double</option>
+                        <option value="triple">Triple</option>
+                        <option value="laminated">Laminated</option>
+                        <option value="tempered">Tempered</option>
+                        <option value="low_e">Low-E</option>
+                        <option value="tinted">Tinted</option>
+                        <option value="reflective">Reflective</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="specifications.thickness">Glass Thickness (mm)</label>
+                      <input
+                        type="number"
+                        id="specifications.thickness"
+                        name="specifications.thickness"
+                        value={itemData.specifications?.thickness || ''}
+                        onChange={handleInputChange}
+                        min="3"
+                        max="50"
+                        placeholder="Enter thickness"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-subsection">
+                  <h4>Frame & Material Details</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="specifications.frameMaterial">Frame Material</label>
+                      <select
+                        id="specifications.frameMaterial"
+                        name="specifications.frameMaterial"
+                        value={itemData.specifications?.frameMaterial || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select frame material</option>
+                        <option value="aluminum">Aluminum</option>
+                        <option value="upvc">uPVC</option>
+                        <option value="wooden">Wooden</option>
+                        <option value="steel">Steel</option>
+                        <option value="composite">Composite</option>
+                        <option value="fiberglass">Fiberglass</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="specifications.finish">Frame Finish</label>
+                      <select
+                        id="specifications.finish"
+                        name="specifications.finish"
+                        value={itemData.specifications?.finish || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select finish</option>
+                        <option value="powder_coated">Powder Coated</option>
+                        <option value="anodized">Anodized</option>
+                        <option value="painted">Painted</option>
+                        <option value="natural">Natural</option>
+                        <option value="laminated">Laminated</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-subsection">
+                  <h4>Color & Pattern Options</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="specifications.colorFamily">Color Family</label>
+                      <select
+                        id="specifications.colorFamily"
+                        name="specifications.colorFamily"
+                        value={itemData.specifications?.colorFamily || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select color family</option>
+                        <option value="white">White</option>
+                        <option value="black">Black</option>
+                        <option value="brown">Brown</option>
+                        <option value="grey">Grey</option>
+                        <option value="bronze">Bronze</option>
+                        <option value="silver">Silver</option>
+                        <option value="custom">Custom</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="specifications.colorCode">Color Code</label>
+                      <input
+                        type="text"
+                        id="specifications.colorCode"
+                        name="specifications.colorCode"
+                        value={itemData.specifications?.colorCode || ''}
+                        onChange={handleInputChange}
+                        placeholder="RAL/HEX code"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="specifications.grillePattern">Grille Pattern</label>
+                      <select
+                        id="specifications.grillePattern"
+                        name="specifications.grillePattern"
+                        value={itemData.specifications?.grillePattern || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select grille pattern</option>
+                        <option value="colonial">Colonial</option>
+                        <option value="prairie">Prairie</option>
+                        <option value="diamond">Diamond</option>
+                        <option value="georgian">Georgian</option>
+                        <option value="custom_grid">Custom Grid</option>
+                        <option value="between_glass">Between Glass</option>
+                        <option value="snap_in">Snap In</option>
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="specifications.grilleWidth">Grille Width (mm)</label>
+                      <input
+                        type="number"
+                        id="specifications.grilleWidth"
+                        name="specifications.grilleWidth"
+                        value={itemData.specifications?.grilleWidth || ''}
+                        onChange={handleInputChange}
+                        placeholder="Enter grille width"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-subsection">
+                  <h4>Dimensions</h4>
+                  <div className="dimension-group">
+                    <h5>Width (mm)</h5>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="specifications.dimensions.width.min">Min</label>
+                        <input
+                          type="number"
+                          id="specifications.dimensions.width.min"
+                          name="specifications.dimensions.width.min"
+                          value={itemData.specifications?.dimensions?.width?.min || ''}
+                          onChange={handleInputChange}
+                          placeholder="Min width"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="specifications.dimensions.width.max">Max</label>
+                        <input
+                          type="number"
+                          id="specifications.dimensions.width.max"
+                          name="specifications.dimensions.width.max"
+                          value={itemData.specifications?.dimensions?.width?.max || ''}
+                          onChange={handleInputChange}
+                          placeholder="Max width"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="specifications.dimensions.width.standard">Standard</label>
+                        <input
+                          type="number"
+                          id="specifications.dimensions.width.standard"
+                          name="specifications.dimensions.width.standard"
+                          value={itemData.specifications?.dimensions?.width?.standard || ''}
+                          onChange={handleInputChange}
+                          placeholder="Standard width"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="dimension-group">
+                    <h5>Height (mm)</h5>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="specifications.dimensions.height.min">Min</label>
+                        <input
+                          type="number"
+                          id="specifications.dimensions.height.min"
+                          name="specifications.dimensions.height.min"
+                          value={itemData.specifications?.dimensions?.height?.min || ''}
+                          onChange={handleInputChange}
+                          placeholder="Min height"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="specifications.dimensions.height.max">Max</label>
+                        <input
+                          type="number"
+                          id="specifications.dimensions.height.max"
+                          name="specifications.dimensions.height.max"
+                          value={itemData.specifications?.dimensions?.height?.max || ''}
+                          onChange={handleInputChange}
+                          placeholder="Max height"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="specifications.dimensions.height.standard">Standard</label>
+                        <input
+                          type="number"
+                          id="specifications.dimensions.height.standard"
+                          name="specifications.dimensions.height.standard"
+                          value={itemData.specifications?.dimensions?.height?.standard || ''}
+                          onChange={handleInputChange}
+                          placeholder="Standard height"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="dimension-group">
+                    <h5>Depth (mm)</h5>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="specifications.dimensions.depth.min">Min</label>
+                        <input
+                          type="number"
+                          id="specifications.dimensions.depth.min"
+                          name="specifications.dimensions.depth.min"
+                          value={itemData.specifications?.dimensions?.depth?.min || ''}
+                          onChange={handleInputChange}
+                          placeholder="Min depth"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="specifications.dimensions.depth.max">Max</label>
+                        <input
+                          type="number"
+                          id="specifications.dimensions.depth.max"
+                          name="specifications.dimensions.depth.max"
+                          value={itemData.specifications?.dimensions?.depth?.max || ''}
+                          onChange={handleInputChange}
+                          placeholder="Max depth"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label htmlFor="specifications.dimensions.depth.standard">Standard</label>
+                        <input
+                          type="number"
+                          id="specifications.dimensions.depth.standard"
+                          name="specifications.dimensions.depth.standard"
+                          value={itemData.specifications?.dimensions?.depth?.standard || ''}
+                          onChange={handleInputChange}
+                          placeholder="Standard depth"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-subsection">
+                  <h4>Performance Characteristics</h4>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="specifications.performance.thermalRating">Thermal Rating (U-Value)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="specifications.performance.thermalRating"
+                        name="specifications.performance.thermalRating"
+                        value={itemData.specifications?.performance?.thermalRating || ''}
+                        onChange={handleInputChange}
+                        placeholder="U-Value"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="specifications.performance.soundReduction">Sound Reduction (dB)</label>
+                      <input
+                        type="number"
+                        id="specifications.performance.soundReduction"
+                        name="specifications.performance.soundReduction"
+                        value={itemData.specifications?.performance?.soundReduction || ''}
+                        onChange={handleInputChange}
+                        placeholder="Sound reduction"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="specifications.performance.energyRating">Energy Rating</label>
+                      <select
+                        id="specifications.performance.energyRating"
+                        name="specifications.performance.energyRating"
+                        value={itemData.specifications?.performance?.energyRating || ''}
+                        onChange={handleInputChange}
+                      >
+                        <option value="">Select energy rating</option>
+                        <option value="A+">A+</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                        <option value="E">E</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="specifications.performance.waterResistance">Water Resistance</label>
+                      <input
+                        type="number"
+                        id="specifications.performance.waterResistance"
+                        name="specifications.performance.waterResistance"
+                        value={itemData.specifications?.performance?.waterResistance || ''}
+                        onChange={handleInputChange}
+                        placeholder="Water resistance rating"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="specifications.performance.windResistance">Wind Resistance</label>
+                      <input
+                        type="number"
+                        id="specifications.performance.windResistance"
+                        name="specifications.performance.windResistance"
+                        value={itemData.specifications?.performance?.windResistance || ''}
+                        onChange={handleInputChange}
+                        placeholder="Wind resistance rating"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Stock Information */}
+              <div className="form-section">
+                <h3>📊 Stock Information</h3>
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="quantity">Quantity *</label>
+                    <label htmlFor="stock.currentQuantity">Current Stock *</label>
                     <input
                       type="number"
-                      id="quantity"
-                      name="quantity"
-                      value={itemData.quantity}
+                      id="stock.currentQuantity"
+                      name="stock.currentQuantity"
+                      value={itemData.stock?.currentQuantity || 0}
                       onChange={handleInputChange}
                       placeholder="0"
                       min="0"
@@ -833,12 +1192,74 @@ const InventoryPage = () => {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="unitPrice">Unit Price *</label>
+                    <label htmlFor="stock.reservedQuantity">Reserved Stock</label>
                     <input
                       type="number"
-                      id="unitPrice"
-                      name="unitPrice"
-                      value={itemData.unitPrice}
+                      id="stock.reservedQuantity"
+                      name="stock.reservedQuantity"
+                      value={itemData.stock?.reservedQuantity || 0}
+                      onChange={handleInputChange}
+                      placeholder="0"
+                      min="0"
+                      readOnly
+                      title="Reserved stock is managed automatically"
+                      style={{backgroundColor: '#f8f9fa'}}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="stock.availableQuantity">Available Stock</label>
+                    <input
+                      type="number"
+                      id="stock.availableQuantity"
+                      name="stock.availableQuantity"
+                      value={(itemData.stock?.currentQuantity || 0) - (itemData.stock?.reservedQuantity || 0)}
+                      readOnly
+                      title="Automatically calculated: Current - Reserved"
+                      style={{backgroundColor: '#f8f9fa'}}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="stock.reorderLevel">Reorder Level *</label>
+                    <input
+                      type="number"
+                      id="stock.reorderLevel"
+                      name="stock.reorderLevel"
+                      value={itemData.stock?.reorderLevel || 5}
+                      onChange={handleInputChange}
+                      placeholder="5"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="stock.reorderQuantity">Reorder Quantity</label>
+                    <input
+                      type="number"
+                      id="stock.reorderQuantity"
+                      name="stock.reorderQuantity"
+                      value={itemData.stock?.reorderQuantity || 20}
+                      onChange={handleInputChange}
+                      placeholder="20"
+                      min="1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pricing Information */}
+              <div className="form-section">
+                <h3>💰 Pricing Information</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="pricing.unitPrice">Unit Price (₹) *</label>
+                    <input
+                      type="number"
+                      id="pricing.unitPrice"
+                      name="pricing.unitPrice"
+                      value={itemData.pricing?.unitPrice || 0}
                       onChange={handleInputChange}
                       placeholder="0.00"
                       min="0"
@@ -846,250 +1267,242 @@ const InventoryPage = () => {
                       required
                     />
                   </div>
+                  <div className="form-group">
+                    <label htmlFor="pricing.costPrice">Cost Price (₹)</label>
+                    <input
+                      type="number"
+                      id="pricing.costPrice"
+                      name="pricing.costPrice"
+                      value={itemData.pricing?.costPrice || 0}
+                      onChange={handleInputChange}
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="pricing.marginPercentage">Margin (%)</label>
+                    <input
+                      type="number"
+                      id="pricing.marginPercentage"
+                      name="pricing.marginPercentage"
+                      value={itemData.pricing?.marginPercentage || 0}
+                      onChange={handleInputChange}
+                      placeholder="Auto-calculated"
+                      min="0"
+                      step="0.01"
+                      readOnly
+                      title="Automatically calculated from unit price and cost price"
+                      style={{backgroundColor: '#f8f9fa'}}
+                    />
+                  </div>
                 </div>
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="reorderLevel">Reorder Level</label>
-                    <input
-                      type="number"
-                      id="reorderLevel"
-                      name="reorderLevel"
-                      value={itemData.reorderLevel}
+                    <label htmlFor="pricing.currency">Currency</label>
+                    <select
+                      id="pricing.currency"
+                      name="pricing.currency"
+                      value={itemData.pricing?.currency || 'INR'}
                       onChange={handleInputChange}
-                      placeholder="10"
-                      min="0"
+                    >
+                      <option value="INR">INR (₹)</option>
+                      <option value="USD">USD ($)</option>
+                      <option value="EUR">EUR (€)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Supplier Information */}
+              <div className="form-section">
+                <h3>🏭 Supplier Information</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="supplier.name">Supplier Name</label>
+                    <input
+                      type="text"
+                      id="supplier.name"
+                      name="supplier.name"
+                      value={itemData.supplier?.name || ''}
+                      onChange={handleInputChange}
+                      placeholder="Supplier company name"
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="sku">SKU</label>
+                    <label htmlFor="supplier.contactPerson">Contact Person</label>
                     <input
                       type="text"
-                      id="sku"
-                      name="sku"
-                      value={itemData.sku}
+                      id="supplier.contactPerson"
+                      name="supplier.contactPerson"
+                      value={itemData.supplier?.contactPerson || ''}
                       onChange={handleInputChange}
-                      placeholder="Leave empty to auto-generate"
+                      placeholder="Contact person name"
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="supplier.phone">Phone Number</label>
+                    <input
+                      type="text"
+                      id="supplier.phone"
+                      name="supplier.phone"
+                      value={itemData.supplier?.phone || ''}
+                      onChange={handleInputChange}
+                      placeholder="+91 XXXXXXXXXX"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="supplier.email">Email</label>
+                    <input
+                      type="email"
+                      id="supplier.email"
+                      name="supplier.email"
+                      value={itemData.supplier?.email || ''}
+                      onChange={handleInputChange}
+                      placeholder="supplier@example.com"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="supplier.leadTime">Lead Time (days)</label>
+                    <input
+                      type="number"
+                      id="supplier.leadTime"
+                      name="supplier.leadTime"
+                      value={itemData.supplier?.leadTime || 7}
+                      onChange={handleInputChange}
+                      placeholder="7"
+                      min="0"
                     />
                   </div>
                 </div>
               </div>
 
+              {/* Warehouse Location */}
               <div className="form-section">
-                <h3>Additional Information</h3>
+                <h3>📍 Warehouse Location</h3>
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="supplier">Supplier</label>
+                    <label htmlFor="location.warehouse">Warehouse</label>
                     <input
                       type="text"
-                      id="supplier"
-                      name="supplier"
-                      value={itemData.supplier}
+                      id="location.warehouse"
+                      name="location.warehouse"
+                      value={itemData.location?.warehouse || ''}
                       onChange={handleInputChange}
-                      placeholder="Supplier name"
+                      placeholder="e.g., Main Warehouse"
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="location">Storage Location</label>
+                    <label htmlFor="location.section">Section</label>
                     <input
                       type="text"
-                      id="location"
-                      name="location"
-                      value={itemData.location}
+                      id="location.section"
+                      name="location.section"
+                      value={itemData.location?.section || ''}
                       onChange={handleInputChange}
-                      placeholder="e.g., Warehouse A, Shelf 3"
+                      placeholder="e.g., Glass Section"
+                    />
+                  </div>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="location.row">Row</label>
+                    <input
+                      type="text"
+                      id="location.row"
+                      name="location.row"
+                      value={itemData.location?.row || ''}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Row A"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="location.shelf">Shelf</label>
+                    <input
+                      type="text"
+                      id="location.shelf"
+                      name="location.shelf"
+                      value={itemData.location?.shelf || ''}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Shelf 1"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              <div className="form-section">
+                <h3>📋 Additional Information</h3>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="status">Status</label>
+                    <select
+                      id="status"
+                      name="status"
+                      value={itemData.status}
+                      onChange={handleInputChange}
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                      <option value="discontinued">Discontinued</option>
+                      <option value="out_of_stock">Out of Stock</option>
+                      <option value="low_stock">Low Stock</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="warranty.period">Warranty Period (months)</label>
+                    <input
+                      type="number"
+                      id="warranty.period"
+                      name="warranty.period"
+                      value={itemData.warranty?.period || ''}
+                      onChange={handleInputChange}
+                      placeholder="12"
+                      min="0"
                     />
                   </div>
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="notes">Notes</label>
+                  <label htmlFor="notes">Notes & Comments</label>
                   <textarea
                     id="notes"
                     name="notes"
                     value={itemData.notes}
                     onChange={handleInputChange}
-                    placeholder="Additional notes"
-                    rows="3"
+                    placeholder="Any additional notes, installation instructions, or special considerations..."
+                    rows="4"
                   />
                 </div>
               </div>
 
+              {/* Form Actions */}
               <div className="popup-footer">
-                <button type="button" onClick={handleClosePopup} className="cancel-btn">
+                <button 
+                  type="button" 
+                  onClick={() => { 
+                    setShowAddPopup(false); 
+                    setShowEditPopup(false); 
+                    resetForm(); 
+                  }} 
+                  className="cancel-btn"
+                >
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? 'Adding...' : 'Add Inventory Item'}
+                  {loading ? (showEditPopup ? 'Updating...' : 'Adding...') : (showEditPopup ? 'Update Item' : 'Add Inventory Item')}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Edit Inventory Item Popup */}
-      {showEditPopup && (
-        <div className="popup-overlay">
-          <div className="popup-container">
-            <div className="popup-header">
-              <h2>Edit Inventory Item</h2>
-              <button className="close-btn" onClick={handleClosePopup}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                </svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleEditSubmit} className="popup-form">
-              <div className="form-section">
-                <h3>Basic Information</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="edit-name">Item Name *</label>
-                    <input
-                      type="text"
-                      id="edit-name"
-                      value={itemData.name}
-                      onChange={(e) => setItemData({...itemData, name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="edit-category">Category *</label>
-                    <input
-                      type="text"
-                      id="edit-category"
-                      value={itemData.category}
-                      onChange={(e) => setItemData({...itemData, category: e.target.value})}
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group full-width">
-                    <label htmlFor="edit-description">Description</label>
-                    <textarea
-                      id="edit-description"
-                      rows="3"
-                      value={itemData.description}
-                      onChange={(e) => setItemData({...itemData, description: e.target.value})}
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-section">
-                <h3>Inventory Details</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="edit-quantity">Quantity *</label>
-                    <input
-                      type="number"
-                      id="edit-quantity"
-                      value={itemData.quantity}
-                      onChange={(e) => setItemData({...itemData, quantity: e.target.value})}
-                      min="0"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="edit-unitPrice">Unit Price *</label>
-                    <input
-                      type="number"
-                      id="edit-unitPrice"
-                      value={itemData.unitPrice}
-                      onChange={(e) => setItemData({...itemData, unitPrice: e.target.value})}
-                      min="0"
-                      step="0.01"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="edit-sku">SKU</label>
-                    <input
-                      type="text"
-                      id="edit-sku"
-                      value={itemData.sku}
-                      onChange={(e) => setItemData({...itemData, sku: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="edit-reorderLevel">Reorder Level</label>
-                    <input
-                      type="number"
-                      id="edit-reorderLevel"
-                      value={itemData.reorderLevel}
-                      onChange={(e) => setItemData({...itemData, reorderLevel: e.target.value})}
-                      min="0"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="form-section">
-                <h3>Additional Information</h3>
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="edit-supplier">Supplier</label>
-                    <input
-                      type="text"
-                      id="edit-supplier"
-                      value={itemData.supplier}
-                      onChange={(e) => setItemData({...itemData, supplier: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="edit-location">Location</label>
-                    <input
-                      type="text"
-                      id="edit-location"
-                      value={itemData.location}
-                      onChange={(e) => setItemData({...itemData, location: e.target.value})}
-                    />
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group full-width">
-                    <label htmlFor="edit-notes">Notes</label>
-                    <textarea
-                      id="edit-notes"
-                      rows="3"
-                      value={itemData.notes}
-                      onChange={(e) => setItemData({...itemData, notes: e.target.value})}
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-
-              {error && <div className="error-message">{error}</div>}
-
-              <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={handleClosePopup}>
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? 'Updating...' : 'Update Item'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Excel Import Modal */}
-      {showImportModal && (
-        <ExcelImport
-          type="inventory"
-          onClose={() => setShowImportModal(false)}
-          onSuccess={handleImportSuccess}
-        />
-      )}
+      </div>
     </div>
   );
 };

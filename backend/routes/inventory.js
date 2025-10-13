@@ -1,9 +1,496 @@
 const express = require('express');
 const router = express.Router();
 const Inventory = require('../models/Inventory');
+const InventoryItem = require('../models/InventoryItem');
+const InventoryCategory = require('../models/InventoryCategory');
+const StockTransaction = require('../models/StockTransaction');
 const Activity = require('../models/Activity');
 
-// Get all inventory items
+// ===========================================
+// NEW ENHANCED INVENTORY SYSTEM ROUTES (SPECIFIC ROUTES FIRST)
+// ===========================================
+
+// INVENTORY CATEGORIES ROUTES
+// ===========================================
+
+// Get all inventory categories
+router.get('/categories/list', async (req, res) => {
+  try {
+    const { type, active } = req.query;
+    let query = {};
+    
+    if (type) query.type = type;
+    if (active !== undefined) query.isActive = active === 'true';
+    
+    const categories = await InventoryCategory.find(query).sort({ sortOrder: 1, name: 1 });
+    res.json(categories);
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ message: 'Error fetching categories', error: error.message });
+  }
+});
+
+// Get all inventory categories (simple endpoint for frontend)
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await InventoryCategory.find({ isActive: true }).sort({ sortOrder: 1, name: 1 });
+    res.json(categories);
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    res.status(500).json({ message: 'Error fetching categories', error: error.message });
+  }
+});
+
+// Create new inventory category
+router.post('/categories', async (req, res) => {
+  try {
+    const category = new InventoryCategory(req.body);
+    await category.save();
+    
+    // Log activity
+    await Activity.create({
+      type: 'inventory',
+      description: `Created new inventory category: ${category.name}`,
+      user: req.body.createdBy || 'System',
+      metadata: { categoryId: category._id, categoryType: category.type }
+    });
+    
+    res.status(201).json(category);
+  } catch (error) {
+    console.error('Error creating category:', error);
+    res.status(500).json({ message: 'Error creating category', error: error.message });
+  }
+});
+
+// INVENTORY ITEMS ROUTES (NEW ENHANCED SYSTEM)
+// ===========================================
+
+// Get all inventory items with advanced filtering
+router.get('/items', async (req, res) => {
+  try {
+    const { 
+      category, 
+      categoryType, 
+      status, 
+      windowType, 
+      glassType, 
+      frameMaterial,
+      lowStock,
+      search, 
+      sortBy = 'name', 
+      sortOrder = 'asc',
+      page = 1,
+      limit = 50
+    } = req.query;
+    
+    let query = {};
+    
+    // Add filters
+    if (category) query.category = category;
+    if (categoryType) query.categoryType = categoryType;
+    if (status) query.status = status;
+    if (windowType) query['specifications.windowType'] = windowType;
+    if (glassType) query['specifications.glassType'] = glassType;
+    if (frameMaterial) query['specifications.frameMaterial'] = frameMaterial;
+    if (lowStock === 'true') {
+      query.$expr = { $lte: ['$stock.currentQuantity', '$stock.reorderLevel'] };
+    }
+    
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { sku: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { 'supplier.name': { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    // Sort options
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    
+    // Pagination
+    const skip = (page - 1) * limit;
+    
+    const [items, total] = await Promise.all([
+      InventoryItem.find(query)
+        .populate('category', 'name code type')
+        .sort(sortOptions)
+        .skip(skip)
+        .limit(parseInt(limit)),
+      InventoryItem.countDocuments(query)
+    ]);
+    
+    res.json({
+      items,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching inventory items:', error);
+    res.status(500).json({ message: 'Error fetching inventory items', error: error.message });
+  }
+});
+
+// Create new inventory item
+router.post('/items', async (req, res) => {
+  try {
+    const item = new InventoryItem(req.body);
+    await item.save();
+    
+    // Create initial stock transaction
+    if (item.stock.currentQuantity > 0) {
+      await StockTransaction.create({
+        inventoryItem: item._id,
+        transactionType: 'stock_in',
+        quantity: item.stock.currentQuantity,
+        stockBefore: 0,
+        stockAfter: item.stock.currentQuantity,
+        referenceType: 'manual',
+        performedBy: req.body.createdBy || 'System',
+        reason: 'Initial stock entry'
+      });
+    }
+    
+    // Log activity
+    await Activity.create({
+      type: 'inventory',
+      description: `Created new inventory item: ${item.name} (SKU: ${item.sku})`,
+      user: req.body.createdBy || 'System',
+      metadata: { itemId: item._id, sku: item.sku, quantity: item.stock.currentQuantity }
+    });
+    
+    await item.populate('category');
+    res.status(201).json(item);
+  } catch (error) {
+    console.error('Error creating inventory item:', error);
+    res.status(500).json({ message: 'Error creating inventory item', error: error.message });
+  }
+});
+
+// Get inventory dashboard stats
+router.get('/dashboard/stats', async (req, res) => {
+  try {
+    const [
+      totalItems,
+      lowStockItems,
+      outOfStockItems,
+      totalValue,
+      categoryStats
+    ] = await Promise.all([
+      InventoryItem.countDocuments({ status: 'active' }),
+      InventoryItem.countDocuments({ status: 'low_stock' }),
+      InventoryItem.countDocuments({ status: 'out_of_stock' }),
+      InventoryItem.aggregate([
+        { $match: { status: 'active' } },
+        { $group: { 
+          _id: null, 
+          totalValue: { $sum: { $multiply: ['$stock.currentQuantity', '$pricing.unitPrice'] } }
+        }}
+      ]),
+      InventoryItem.aggregate([
+        { $group: { 
+          _id: '$categoryType', 
+          count: { $sum: 1 },
+          totalStock: { $sum: '$stock.currentQuantity' },
+          totalValue: { $sum: { $multiply: ['$stock.currentQuantity', '$pricing.unitPrice'] } }
+        }}
+      ])
+    ]);
+    
+    res.json({
+      totalItems,
+      lowStockItems,
+      outOfStockItems,
+      totalValue: totalValue[0]?.totalValue || 0,
+      categoryStats
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard stats:', error);
+    res.status(500).json({ message: 'Error fetching dashboard stats', error: error.message });
+  }
+});
+
+// Get low stock items
+router.get('/reports/low-stock', async (req, res) => {
+  try {
+    const lowStockItems = await InventoryItem.find({
+      $expr: { $lte: ['$stock.currentQuantity', '$stock.reorderLevel'] }
+    }).populate('category').sort({ 'stock.currentQuantity': 1 });
+    
+    res.json(lowStockItems);
+  } catch (error) {
+    console.error('Error fetching low stock report:', error);
+    res.status(500).json({ message: 'Error fetching low stock report', error: error.message });
+  }
+});
+
+// Get stats summary
+router.get('/stats/summary', async (req, res) => {
+  try {
+    const totalItems = await InventoryItem.countDocuments();
+    const totalValue = await InventoryItem.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalValue: { $sum: { $multiply: ['$stock.currentQuantity', '$pricing.unitPrice'] } }
+        }
+      }
+    ]);
+
+    const lowStockCount = await InventoryItem.countDocuments({
+      $expr: { $lte: ['$stock.currentQuantity', '$stock.reorderLevel'] }
+    });
+
+    res.json({
+      totalItems,
+      totalValue: totalValue[0]?.totalValue || 0,
+      lowStockCount,
+      categories: await InventoryCategory.countDocuments()
+    });
+  } catch (error) {
+    console.error('Error fetching stats:', error);
+    res.status(500).json({ message: 'Error fetching stats', error: error.message });
+  }
+});
+
+// PARAMETERIZED ROUTES (MUST COME AFTER SPECIFIC ROUTES)
+// ===========================================
+
+// Get single inventory item by ID
+router.get('/items/:id', async (req, res) => {
+  try {
+    const item = await InventoryItem.findById(req.params.id).populate('category');
+    if (!item) {
+      return res.status(404).json({ message: 'Inventory item not found' });
+    }
+    res.json(item);
+  } catch (error) {
+    console.error('Error fetching inventory item:', error);
+    res.status(500).json({ message: 'Error fetching inventory item', error: error.message });
+  }
+});
+
+// Update inventory item
+router.put('/items/:id', async (req, res) => {
+  try {
+    const item = await InventoryItem.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    ).populate('category');
+    
+    if (!item) {
+      return res.status(404).json({ message: 'Inventory item not found' });
+    }
+    
+    // Log activity
+    await Activity.create({
+      type: 'inventory',
+      description: `Updated inventory item: ${item.name}`,
+      user: req.body.updatedBy || 'System',
+      metadata: { itemId: item._id, sku: item.sku }
+    });
+    
+    res.json(item);
+  } catch (error) {
+    console.error('Error updating inventory item:', error);
+    res.status(500).json({ message: 'Error updating inventory item', error: error.message });
+  }
+});
+
+// Add stock to an item
+router.post('/items/:id/stock/add', async (req, res) => {
+  try {
+    const { quantity, reason, reference, referenceType = 'manual', performedBy = 'System' } = req.body;
+    
+    const item = await InventoryItem.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: 'Inventory item not found' });
+    }
+    
+    const stockBefore = item.stock.currentQuantity;
+    const addedQuantity = item.addStock(quantity, reason);
+    await item.save();
+    
+    // Create stock transaction record
+    await StockTransaction.create({
+      inventoryItem: item._id,
+      transactionType: 'stock_in',
+      quantity: quantity,
+      stockBefore,
+      stockAfter: item.stock.currentQuantity,
+      reference,
+      referenceType,
+      performedBy,
+      reason
+    });
+    
+    // Log activity
+    await Activity.create({
+      type: 'inventory',
+      description: `Added ${quantity} units to ${item.name} (SKU: ${item.sku})`,
+      user: performedBy,
+      metadata: { 
+        itemId: item._id, 
+        sku: item.sku, 
+        quantity, 
+        stockBefore, 
+        stockAfter: item.stock.currentQuantity 
+      }
+    });
+    
+    res.json({ 
+      message: `Successfully added ${quantity} units`, 
+      item: await item.populate('category')
+    });
+  } catch (error) {
+    console.error('Error adding stock:', error);
+    res.status(500).json({ message: 'Error adding stock', error: error.message });
+  }
+});
+
+// Consume stock from an item
+router.post('/items/:id/stock/consume', async (req, res) => {
+  try {
+    const { quantity, reason, reference, referenceType = 'manual', performedBy = 'System' } = req.body;
+    
+    const item = await InventoryItem.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: 'Inventory item not found' });
+    }
+    
+    if (item.stock.availableQuantity < quantity) {
+      return res.status(400).json({ 
+        message: 'Insufficient stock available',
+        available: item.stock.availableQuantity,
+        requested: quantity
+      });
+    }
+    
+    const stockBefore = item.stock.currentQuantity;
+    const consumedQuantity = item.consumeStock(quantity);
+    await item.save();
+    
+    // Create stock transaction record
+    await StockTransaction.create({
+      inventoryItem: item._id,
+      transactionType: 'stock_out',
+      quantity: consumedQuantity,
+      stockBefore,
+      stockAfter: item.stock.currentQuantity,
+      reference,
+      referenceType,
+      performedBy,
+      reason
+    });
+    
+    // Log activity
+    await Activity.create({
+      type: 'inventory',
+      description: `Consumed ${consumedQuantity} units from ${item.name} (SKU: ${item.sku})`,
+      user: performedBy,
+      metadata: { 
+        itemId: item._id, 
+        sku: item.sku, 
+        quantity: consumedQuantity, 
+        stockBefore, 
+        stockAfter: item.stock.currentQuantity 
+      }
+    });
+    
+    res.json({ 
+      message: `Successfully consumed ${consumedQuantity} units`, 
+      item: await item.populate('category')
+    });
+  } catch (error) {
+    console.error('Error consuming stock:', error);
+    res.status(500).json({ message: 'Error consuming stock', error: error.message });
+  }
+});
+
+// Reserve stock for quotations
+router.post('/items/:id/stock/reserve', async (req, res) => {
+  try {
+    const { quantity, reason, reference, performedBy = 'System' } = req.body;
+    
+    const item = await InventoryItem.findById(req.params.id);
+    if (!item) {
+      return res.status(404).json({ message: 'Inventory item not found' });
+    }
+    
+    const success = item.reserveStock(quantity);
+    if (!success) {
+      return res.status(400).json({ 
+        message: 'Insufficient stock available for reservation',
+        available: item.stock.availableQuantity,
+        requested: quantity
+      });
+    }
+    
+    await item.save();
+    
+    // Create stock transaction record
+    await StockTransaction.create({
+      inventoryItem: item._id,
+      transactionType: 'reservation',
+      quantity,
+      stockBefore: item.stock.currentQuantity,
+      stockAfter: item.stock.currentQuantity, // Same as current quantity doesn't change
+      reference,
+      referenceType: 'quotation',
+      performedBy,
+      reason
+    });
+    
+    res.json({ 
+      message: `Successfully reserved ${quantity} units`, 
+      item: await item.populate('category')
+    });
+  } catch (error) {
+    console.error('Error reserving stock:', error);
+    res.status(500).json({ message: 'Error reserving stock', error: error.message });
+  }
+});
+
+// Get stock transactions for an item
+router.get('/items/:id/transactions', async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (page - 1) * limit;
+    
+    const [transactions, total] = await Promise.all([
+      StockTransaction.find({ inventoryItem: req.params.id })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      StockTransaction.countDocuments({ inventoryItem: req.params.id })
+    ]);
+    
+    res.json({
+      transactions,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    res.status(500).json({ message: 'Error fetching transactions', error: error.message });
+  }
+});
+
+// ===========================================
+// LEGACY ROUTES FOR BACKWARDS COMPATIBILITY
+// ===========================================
+
+// Get all inventory items (legacy route)
 router.get('/', async (req, res) => {
   try {
     const { category, status, search, sortBy = 'name', sortOrder = 'asc' } = req.query;
@@ -22,8 +509,7 @@ router.get('/', async (req, res) => {
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
-        { category: { $regex: search, $options: 'i' } },
-        { supplier: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
         { sku: { $regex: search, $options: 'i' } }
       ];
     }
@@ -40,21 +526,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single inventory item by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const item = await Inventory.findById(req.params.id);
-    if (!item) {
-      return res.status(404).json({ message: 'Inventory item not found' });
-    }
-    res.json(item);
-  } catch (error) {
-    console.error('Error fetching inventory item:', error);
-    res.status(500).json({ message: 'Error fetching inventory item', error: error.message });
-  }
-});
-
-// Create new inventory item
+// Create new inventory item (legacy)
 router.post('/', async (req, res) => {
   try {
     const inventoryData = req.body;
@@ -71,22 +543,20 @@ router.post('/', async (req, res) => {
     
     // Create activity log
     try {
-      await Activity.createActivity(
-        'inventory_added',
-        newItem._id,
-        'Inventory',
-        newItem.name,
-        `Added new inventory item: ${newItem.name} (${newItem.quantity} units)`,
-        { 
-          category: newItem.category, 
-          quantity: newItem.quantity, 
-          unitPrice: newItem.unitPrice,
-          supplier: newItem.supplier 
+      await Activity.create({
+        type: 'inventory_added',
+        inventoryId: newItem._id,
+        description: `Added inventory item: ${newItem.name}`,
+        user: 'System',
+        metadata: {
+          name: newItem.name,
+          category: newItem.category,
+          quantity: newItem.quantity,
+          unitPrice: newItem.unitPrice
         }
-      );
+      });
     } catch (activityError) {
-      console.error('Error creating activity log:', activityError);
-      // Don't fail the request if activity logging fails
+      console.warn('Failed to create activity log:', activityError);
     }
     
     res.status(201).json(newItem);
@@ -108,7 +578,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Update inventory item
+// Update inventory item (legacy)
 router.put('/:id', async (req, res) => {
   try {
     const updatedItem = await Inventory.findByIdAndUpdate(
@@ -140,7 +610,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Delete inventory item
+// Delete inventory item (legacy)
 router.delete('/:id', async (req, res) => {
   try {
     const deletedItem = await Inventory.findByIdAndDelete(req.params.id);
@@ -149,223 +619,90 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Inventory item not found' });
     }
     
-    res.json({ message: 'Inventory item deleted successfully', item: deletedItem });
+    // Create activity log
+    try {
+      await Activity.create({
+        type: 'inventory_deleted',
+        inventoryId: deletedItem._id,
+        description: `Deleted inventory item: ${deletedItem.name}`,
+        user: 'System',
+        metadata: {
+          name: deletedItem.name,
+          category: deletedItem.category
+        }
+      });
+    } catch (activityError) {
+      console.warn('Failed to create activity log:', activityError);
+    }
+    
+    res.json({ message: 'Inventory item deleted successfully' });
   } catch (error) {
     console.error('Error deleting inventory item:', error);
     res.status(500).json({ message: 'Error deleting inventory item', error: error.message });
   }
 });
 
-// Bulk update quantities (useful for inventory adjustments)
-router.patch('/bulk-update', async (req, res) => {
-  try {
-    const { updates } = req.body; // Array of { id, quantity }
-    
-    if (!Array.isArray(updates)) {
-      return res.status(400).json({ message: 'Updates must be an array' });
-    }
-    
-    const results = [];
-    
-    for (const update of updates) {
-      try {
-        const item = await Inventory.findByIdAndUpdate(
-          update.id,
-          { quantity: update.quantity },
-          { new: true, runValidators: true }
-        );
-        if (item) {
-          results.push(item);
-        }
-      } catch (error) {
-        console.error(`Error updating item ${update.id}:`, error);
-      }
-    }
-    
-    res.json({ message: 'Bulk update completed', updatedItems: results });
-  } catch (error) {
-    console.error('Error in bulk update:', error);
-    res.status(500).json({ message: 'Error in bulk update', error: error.message });
-  }
-});
-
-// Get inventory statistics
-router.get('/stats/summary', async (req, res) => {
-  try {
-    const stats = await Inventory.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalItems: { $sum: 1 },
-          totalQuantity: { $sum: '$quantity' },
-          totalValue: { $sum: '$totalValue' },
-          averagePrice: { $avg: '$unitPrice' },
-          inStock: {
-            $sum: { $cond: [{ $eq: ['$status', 'In Stock'] }, 1, 0] }
-          },
-          lowStock: {
-            $sum: { $cond: [{ $eq: ['$status', 'Low Stock'] }, 1, 0] }
-          },
-          outOfStock: {
-            $sum: { $cond: [{ $eq: ['$status', 'Out of Stock'] }, 1, 0] }
-          }
-        }
-      }
-    ]);
-    
-    const categoryStats = await Inventory.aggregate([
-      {
-        $group: {
-          _id: '$category',
-          count: { $sum: 1 },
-          totalValue: { $sum: '$totalValue' }
-        }
-      },
-      { $sort: { count: -1 } }
-    ]);
-    
-    res.json({
-      summary: stats[0] || {
-        totalItems: 0,
-        totalQuantity: 0,
-        totalValue: 0,
-        averagePrice: 0,
-        inStock: 0,
-        lowStock: 0,
-        outOfStock: 0
-      },
-      categories: categoryStats
-    });
-  } catch (error) {
-    console.error('Error fetching inventory stats:', error);
-    res.status(500).json({ message: 'Error fetching inventory statistics', error: error.message });
-  }
-});
-
-// Bulk import route (exactly like working client implementation)
+// Bulk import
 router.post('/bulk', async (req, res) => {
   try {
-    const { inventory } = req.body;
-
-    if (!inventory || !Array.isArray(inventory) || inventory.length === 0) {
-      return res.status(400).json({ 
-        message: 'Invalid data format. Expected an array of inventory items.' 
-      });
+    const { items, replaceExisting = false } = req.body;
+    
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'No items provided for import' });
     }
-
+    
     const results = {
-      successful: [],
-      failed: [],
-      duplicates: []
+      imported: 0,
+      updated: 0,
+      errors: []
     };
-
-    for (let i = 0; i < inventory.length; i++) {
-      const itemData = inventory[i];
-      
+    
+    for (let i = 0; i < items.length; i++) {
       try {
+        const itemData = items[i];
+        
         // Validate required fields
-        if (!itemData.name) {
-          results.failed.push({
+        if (!itemData.name || !itemData.category) {
+          results.errors.push({
             row: i + 1,
-            data: itemData,
-            error: 'Name is required'
+            error: 'Missing required fields: name and category'
           });
           continue;
         }
-
-        // Check for duplicate name (case-insensitive)
-        const existingItem = await Inventory.findOne({ 
-          name: { $regex: new RegExp(`^${itemData.name.trim()}$`, 'i') } 
-        });
-        if (existingItem) {
-          results.duplicates.push({
-            row: i + 1,
-            data: itemData,
-            existing: existingItem
-          });
-          continue;
+        
+        // Check if item exists
+        let existingItem = null;
+        if (itemData.sku) {
+          existingItem = await Inventory.findOne({ sku: itemData.sku });
         }
-
-        // Create new inventory item
-        const newItem = new Inventory({
-          name: itemData.name.trim(),
-          category: itemData.category && itemData.category.trim() !== '' ? itemData.category.trim() : 'General',
-          description: itemData.description || '',
-          quantity: Number(itemData.quantity) || 0,
-          unitPrice: Number(itemData.unitPrice) || 1,
-          supplier: itemData.supplier || '',
-          sku: itemData.sku || '',
-          status: itemData.status || 'In Stock',
-          reorderLevel: Number(itemData.reorderLevel) || 10,
-          dateAdded: new Date()
-        });
-
-        const savedItem = await newItem.save();
-
-        // Note: Individual activity logging skipped for bulk import to avoid validation issues
-        // Each item is still tracked in the results
-
-        results.successful.push({
-          row: i + 1,
-          data: savedItem
-        });
-
+        
+        if (existingItem && replaceExisting) {
+          // Update existing item
+          await Inventory.findByIdAndUpdate(existingItem._id, itemData);
+          results.updated++;
+        } else if (!existingItem) {
+          // Create new item
+          const newItem = new Inventory(itemData);
+          await newItem.save();
+          results.imported++;
+        } else {
+          results.errors.push({
+            row: i + 1,
+            error: 'Item with this SKU already exists'
+          });
+        }
       } catch (error) {
-        results.failed.push({
+        results.errors.push({
           row: i + 1,
-          data: itemData,
           error: error.message
         });
       }
     }
-
-    console.log('📊 Import completed, preparing response...');
-    console.log('Results summary:', {
-      successful: results.successful.length,
-      failed: results.failed.length,
-      duplicates: results.duplicates.length
-    });
-
-    // Clean the results data to avoid circular references
-    const cleanResults = {
-      successful: results.successful.map(item => ({
-        row: item.row,
-        data: {
-          _id: item.data._id,
-          name: item.data.name,
-          category: item.data.category,
-          quantity: item.data.quantity,
-          unitPrice: item.data.unitPrice,
-          status: item.data.status
-        }
-      })),
-      failed: results.failed,
-      duplicates: results.duplicates.map(item => ({
-        row: item.row,
-        data: item.data,
-        existing: {
-          _id: item.existing?._id,
-          name: item.existing?.name
-        }
-      }))
-    };
-
-    // Send comprehensive response (exactly like client route)
-    const totalProcessed = results.successful.length + results.failed.length + results.duplicates.length;
     
-    console.log('✅ Sending response...');
     res.json({
-      message: `Bulk import completed. ${results.successful.length} inventory items added successfully.`,
-      summary: {
-        total: totalProcessed,
-        successful: results.successful.length,
-        failed: results.failed.length,
-        duplicates: results.duplicates.length
-      },
-      results: cleanResults
+      message: `Import completed. ${results.imported} items imported, ${results.updated} items updated`,
+      results
     });
-    console.log('✅ Response sent successfully');
-
   } catch (error) {
     console.error('❌ Error in bulk import:', error);
     res.status(500).json({ message: 'Server error during bulk import' });
