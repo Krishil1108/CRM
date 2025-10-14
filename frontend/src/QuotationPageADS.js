@@ -2,14 +2,24 @@ import React, { useState, useEffect } from 'react';
 import './QuotationPageADS.css';
 import ClientService from './services/ClientService';
 import { useCompany } from './CompanyContext';
+import { useAppMode } from './contexts/AppModeContext';
 
 const QuotationPage = () => {
   const { companyInfo, getNextQuotationNumber } = useCompany();
+  const {
+    currentMode,
+    getCurrentModeConfig,
+    canIgnoreInventory,
+    shouldShowInventoryWarnings,
+    requiresInventoryValidation,
+    allowsUnlimitedConfigurations
+  } = useAppMode();
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [showConfigInfoModal, setShowConfigInfoModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', description: '' });
-  const [activeTab, setActiveTab] = useState('measurements');
+  const [activeTab, setActiveTab] = useState('configuration');
   const [quotationData, setQuotationData] = useState({
     quotationNumber: '',
     date: new Date().toISOString().split('T')[0],
@@ -32,6 +42,10 @@ const QuotationPage = () => {
     },
     doubleHungConfig: {
       combination: null
+    },
+    casementConfig: {
+      direction: 'outward',
+      hinge: 'left'
     },
     windowSpecs: {
       width: '',
@@ -462,9 +476,157 @@ const QuotationPage = () => {
     return configDetails.join('\n');
   };
 
-  // Dynamic Window Shape Component - Matching Reference Images
-  const WindowDiagram = ({ windowType, specs, slidingConfig, bayConfig, doubleHungConfig, onShowDescription }) => {
+  // Dynamic Window Shape Component - Enhanced with All Configuration Options
+  const WindowDiagram = ({ 
+    windowType, 
+    specs, 
+    slidingConfig, 
+    bayConfig, 
+    doubleHungConfig, 
+    casementConfig,
+    onShowDescription 
+  }) => {
     if (!windowType) return null;
+
+    // Enhanced frame color mapping with new materials
+    const getEnhancedFrameColor = (material, color = 'white') => {
+      const materialColors = {
+        aluminum: {
+          white: '#F5F5F5',
+          black: '#2C2C2C',
+          brown: '#8B4513',
+          grey: '#808080',
+          bronze: '#CD7F32',
+          'wood-grain': '#D2B48C',
+          custom: '#E6E6FA'
+        },
+        upvc: {
+          white: '#FFFFFF',
+          black: '#1C1C1C',
+          brown: '#8B4513',
+          grey: '#A9A9A9',
+          bronze: '#CD7F32',
+          'wood-grain': '#DEB887',
+          custom: '#F0F8FF'
+        },
+        wooden: {
+          white: '#FFF8DC',
+          black: '#3C3C3C',
+          brown: '#8B4513',
+          grey: '#DCDCDC',
+          bronze: '#B87333',
+          'wood-grain': '#D2B48C',
+          custom: '#F5DEB3'
+        },
+        steel: {
+          white: '#F8F8FF',
+          black: '#2F2F2F',
+          brown: '#A0522D',
+          grey: '#708090',
+          bronze: '#B87333',
+          'wood-grain': '#DDD',
+          custom: '#E0E0E0'
+        },
+        composite: {
+          white: '#FFFAF0',
+          black: '#2E2E2E',
+          brown: '#A0522D',
+          grey: '#B0B0B0',
+          bronze: '#B87333',
+          'wood-grain': '#D2B48C',
+          custom: '#F0F0F0'
+        },
+        fiberglass: {
+          white: '#FFFFF0',
+          black: '#2B2B2B',
+          brown: '#8B4513',
+          grey: '#A0A0A0',
+          bronze: '#B87333',
+          'wood-grain': '#DEB887',
+          custom: '#F5F5DC'
+        }
+      };
+      
+      return materialColors[material]?.[color] || materialColors[material]?.white || '#F5F5F5';
+    };
+
+    // Enhanced glass color mapping with types and tints
+    const getGlassColor = (glassType, tint = 'clear') => {
+      const glassColors = {
+        single: {
+          clear: '#E6F3FF',
+          bronze: '#F4E4BC',
+          grey: '#E6E6E6',
+          blue: '#E0F0FF',
+          green: '#E6F7E6',
+          reflective: '#C0C0C0'
+        },
+        double: {
+          clear: '#E8F4FD',
+          bronze: '#F6E6BE',
+          grey: '#E8E8E8',
+          blue: '#E2F2FF',
+          green: '#E8F9E8',
+          reflective: '#C2C2C2'
+        },
+        triple: {
+          clear: '#EAF5FE',
+          bronze: '#F8E8C0',
+          grey: '#EAEAEA',
+          blue: '#E4F4FF',
+          green: '#EAFBEA',
+          reflective: '#C4C4C4'
+        },
+        'low-e': {
+          clear: '#E6F9FF',
+          bronze: '#F4EAC2',
+          grey: '#E6EAE6',
+          blue: '#E0F6FF',
+          green: '#E6FDE6',
+          reflective: '#C0C6C0'
+        },
+        laminated: {
+          clear: '#E4F1FE',
+          bronze: '#F2E2BA',
+          grey: '#E4E4E4',
+          blue: '#DEF0FE',
+          green: '#E4F5E4',
+          reflective: '#BEBEBE'
+        },
+        tempered: {
+          clear: '#E2EFFD',
+          bronze: '#F0E0B8',
+          grey: '#E2E2E2',
+          blue: '#DCEEFE',
+          green: '#E2F3E2',
+          reflective: '#BCBCBC'
+        },
+        acoustic: {
+          clear: '#E0EDFC',
+          bronze: '#EEDEB6',
+          grey: '#E0E0E0',
+          blue: '#DAECFD',
+          green: '#E0F1E0',
+          reflective: '#BABABA'
+        }
+      };
+      
+      return glassColors[glassType]?.[tint] || glassColors[glassType]?.clear || '#E6F3FF';
+    };
+
+    // Get hardware color mapping
+    const getHardwareColor = (hardware = 'standard') => {
+      const hardwareColors = {
+        standard: '#FFFFFF',
+        'brushed-chrome': '#C0C0C0',
+        'polished-chrome': '#E5E5E5',
+        'brushed-nickel': '#C4B59A',
+        'oil-rubbed-bronze': '#654321',
+        black: '#2C2C2C'
+      };
+      
+      return hardwareColors[hardware] || '#FFFFFF';
+    };
 
     // Scale dimensions proportionally but keep reasonable preview size
     const baseWidth = 300;
@@ -480,12 +642,24 @@ const QuotationPage = () => {
       width = baseHeight * aspectRatio;
     }
 
-    // Function to render grills/grids on glass panels
-    const renderGrills = (panelX, panelY, panelWidth, panelHeight, grillType) => {
+    // Function to render grills/grids on glass panels with enhanced styling
+    const renderGrills = (panelX, panelY, panelWidth, panelHeight, grillType, grillColor = 'white') => {
       if (!grillType || grillType === 'none') return null;
       
-      const grillColor = "#666";
-      const grillWidth = 1;
+      // Get grill color based on selection or default
+      const getGrillDisplayColor = (color) => {
+        const grillColors = {
+          white: "#FFFFFF",
+          black: "#2C2C2C",
+          bronze: "#CD7F32",
+          'match-frame': getEnhancedFrameColor(specs.frame, specs.frameColor),
+          custom: "#999999"
+        };
+        return grillColors[color] || "#666666";
+      };
+      
+      const actualGrillColor = getGrillDisplayColor(grillColor);
+      const grillWidth = 1.5;
       
       switch (grillType) {
         case 'colonial':
@@ -505,7 +679,7 @@ const QuotationPage = () => {
                   y1={panelY} 
                   x2={panelX + (i + 1) * cellWidth} 
                   y2={panelY + panelHeight} 
-                  stroke={grillColor} 
+                  stroke={actualGrillColor} 
                   strokeWidth={grillWidth}
                 />
               ))}
@@ -517,7 +691,7 @@ const QuotationPage = () => {
                   y1={panelY + (i + 1) * cellHeight} 
                   x2={panelX + panelWidth} 
                   y2={panelY + (i + 1) * cellHeight} 
-                  stroke={grillColor} 
+                  stroke={actualGrillColor} 
                   strokeWidth={grillWidth}
                 />
               ))}
@@ -528,8 +702,8 @@ const QuotationPage = () => {
           // 4-pane style (2x2 grid)
           return (
             <g>
-              <line x1={panelX + panelWidth/2} y1={panelY} x2={panelX + panelWidth/2} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
-              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + panelWidth/2} y1={panelY} x2={panelX + panelWidth/2} y2={panelY + panelHeight} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={actualGrillColor} strokeWidth={grillWidth}/>
             </g>
           );
           
@@ -539,10 +713,10 @@ const QuotationPage = () => {
           const centerY = panelY + panelHeight/2;
           return (
             <g>
-              <line x1={centerX} y1={panelY} x2={panelX + panelWidth} y2={centerY} stroke={grillColor} strokeWidth={grillWidth}/>
-              <line x1={panelX + panelWidth} y1={centerY} x2={centerX} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
-              <line x1={centerX} y1={panelY + panelHeight} x2={panelX} y2={centerY} stroke={grillColor} strokeWidth={grillWidth}/>
-              <line x1={panelX} y1={centerY} x2={centerX} y2={panelY} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={centerX} y1={panelY} x2={panelX + panelWidth} y2={centerY} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + panelWidth} y1={centerY} x2={centerX} y2={panelY + panelHeight} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={centerX} y1={panelY + panelHeight} x2={panelX} y2={centerY} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={centerY} x2={centerX} y2={panelY} stroke={actualGrillColor} strokeWidth={grillWidth}/>
             </g>
           );
           
@@ -550,9 +724,9 @@ const QuotationPage = () => {
           // Georgian bars (6-pane style)
           return (
             <g>
-              <line x1={panelX + panelWidth/3} y1={panelY} x2={panelX + panelWidth/3} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
-              <line x1={panelX + 2*panelWidth/3} y1={panelY} x2={panelX + 2*panelWidth/3} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
-              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + panelWidth/3} y1={panelY} x2={panelX + panelWidth/3} y2={panelY + panelHeight} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + 2*panelWidth/3} y1={panelY} x2={panelX + 2*panelWidth/3} y2={panelY + panelHeight} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={actualGrillColor} strokeWidth={grillWidth}/>
             </g>
           );
           
@@ -560,21 +734,31 @@ const QuotationPage = () => {
           // Simple 3x3 grid
           return (
             <g>
-              <line x1={panelX + panelWidth/3} y1={panelY} x2={panelX + panelWidth/3} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
-              <line x1={panelX + 2*panelWidth/3} y1={panelY} x2={panelX + 2*panelWidth/3} y2={panelY + panelHeight} stroke={grillColor} strokeWidth={grillWidth}/>
-              <line x1={panelX} y1={panelY + panelHeight/3} x2={panelX + panelWidth} y2={panelY + panelHeight/3} stroke={grillColor} strokeWidth={grillWidth}/>
-              <line x1={panelX} y1={panelY + 2*panelHeight/3} x2={panelX + panelWidth} y2={panelY + 2*panelHeight/3} stroke={grillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + panelWidth/3} y1={panelY} x2={panelX + panelWidth/3} y2={panelY + panelHeight} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + 2*panelWidth/3} y1={panelY} x2={panelX + 2*panelWidth/3} y2={panelY + panelHeight} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + panelHeight/3} x2={panelX + panelWidth} y2={panelY + panelHeight/3} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + 2*panelHeight/3} x2={panelX + panelWidth} y2={panelY + 2*panelHeight/3} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+            </g>
+          );
+          
+        case 'decorative':
+          // Decorative muntins pattern
+          return (
+            <g>
+              <ellipse cx={panelX + panelWidth/2} cy={panelY + panelHeight/2} rx={panelWidth/4} ry={panelHeight/4} fill="none" stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + panelWidth/2} y1={panelY} x2={panelX + panelWidth/2} y2={panelY + panelHeight} stroke={actualGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={actualGrillColor} strokeWidth={grillWidth}/>
             </g>
           );
           
         case 'between-glass':
         case 'snap-in':
-          // Same visual as colonial but with lighter color to indicate they're between glass or removable
-          const lightGrillColor = "#999";
+          // Same visual as colonial but with lighter appearance to indicate they're between glass or removable
+          const lightGrillColor = actualGrillColor + "80"; // Add transparency
           return (
             <g>
-              <line x1={panelX + panelWidth/2} y1={panelY} x2={panelX + panelWidth/2} y2={panelY + panelHeight} stroke={lightGrillColor} strokeWidth={grillWidth}/>
-              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={lightGrillColor} strokeWidth={grillWidth}/>
+              <line x1={panelX + panelWidth/2} y1={panelY} x2={panelX + panelWidth/2} y2={panelY + panelHeight} stroke={lightGrillColor} strokeWidth={grillWidth} strokeDasharray="3,2"/>
+              <line x1={panelX} y1={panelY + panelHeight/2} x2={panelX + panelWidth} y2={panelY + panelHeight/2} stroke={lightGrillColor} strokeWidth={grillWidth} strokeDasharray="3,2"/>
             </g>
           );
           
@@ -585,10 +769,11 @@ const QuotationPage = () => {
 
     const renderSlidingWindow = (config) => {
       const frameThickness = 8;
-      const glassColor = "#E6F3FF";
-      const frameColor = getFrameColor(specs.frame);
-      const slidingColor = "#CCE7FF"; // Lighter blue for sliding panels
-      const fixedColor = "#E6F3FF";   // Regular glass color for fixed panels
+      const frameColor = getEnhancedFrameColor(specs.frame, specs.frameColor);
+      const glassColor = getGlassColor(specs.glass, specs.glassTint);
+      const hardwareColor = getHardwareColor(specs.hardware);
+      const slidingColor = glassColor; // Use same glass color but with different opacity
+      const fixedColor = glassColor;
       
       const panels = config?.panels || 2;
       const combination = config?.combination;
@@ -617,10 +802,40 @@ const QuotationPage = () => {
       
       return (
         <g>
-          {/* Outer frame */}
-          <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="2"/>
+          {/* Enhanced outer frame with material texture */}
+          <defs>
+            <linearGradient id="frameGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={frameColor} stopOpacity="1.2"/>
+              <stop offset="50%" stopColor={frameColor} stopOpacity="1"/>
+              <stop offset="100%" stopColor={frameColor} stopOpacity="0.8"/>
+            </linearGradient>
+            
+            {/* Glass pattern for different types */}
+            <pattern id="glassPattern" patternUnits="userSpaceOnUse" width="20" height="20">
+              {specs.glassPattern === 'frosted' && (
+                <rect width="20" height="20" fill={glassColor} opacity="0.8"/>
+              )}
+              {specs.glassPattern === 'etched' && (
+                <>
+                  <rect width="20" height="20" fill={glassColor}/>
+                  <circle cx="10" cy="10" r="3" fill="white" opacity="0.3"/>
+                </>
+              )}
+              {specs.glassPattern === 'textured' && (
+                <>
+                  <rect width="20" height="20" fill={glassColor}/>
+                  <path d="M0,10 Q10,5 20,10 Q10,15 0,10" fill="white" opacity="0.2"/>
+                </>
+              )}
+              {(!specs.glassPattern || specs.glassPattern === 'clear') && (
+                <rect width="20" height="20" fill={glassColor}/>
+              )}
+            </pattern>
+          </defs>
           
-          {/* Render each panel */}
+          <rect x="10" y="10" width={width-20} height={height-20} fill="url(#frameGradient)" stroke={frameColor} strokeWidth="2"/>
+          
+          {/* Render each panel with enhanced features */}
           {pattern.map((panelType, index) => {
             const panelX = 18 + (index * panelWidth);
             const isSliding = panelType === 'S';
@@ -628,24 +843,42 @@ const QuotationPage = () => {
             
             return (
               <g key={index}>
-                {/* Glass panel */}
+                {/* Enhanced glass panel with pattern */}
                 <rect 
                   x={panelX + (index > 0 ? 1 : 0)} 
                   y="18" 
                   width={panelWidth - (index > 0 && index < panels - 1 ? 2 : 1)} 
                   height={height-36} 
-                  fill={panelColor} 
+                  fill="url(#glassPattern)"
                   stroke="#ccc" 
                   strokeWidth="1"
                 />
                 
-                {/* Grills on glass panel */}
+                {/* Glass performance indicator */}
+                {specs.glass === 'double' && (
+                  <rect 
+                    x={panelX + (index > 0 ? 1 : 0) + 2} 
+                    y="20" 
+                    width={panelWidth - (index > 0 && index < panels - 1 ? 2 : 1) - 4} 
+                    height={2} 
+                    fill="rgba(0,100,255,0.3)"
+                  />
+                )}
+                {specs.glass === 'triple' && (
+                  <>
+                    <rect x={panelX + (index > 0 ? 1 : 0) + 2} y="20" width={panelWidth - (index > 0 && index < panels - 1 ? 2 : 1) - 4} height={1} fill="rgba(0,100,255,0.3)"/>
+                    <rect x={panelX + (index > 0 ? 1 : 0) + 2} y="22" width={panelWidth - (index > 0 && index < panels - 1 ? 2 : 1) - 4} height={1} fill="rgba(0,100,255,0.3)"/>
+                  </>
+                )}
+                
+                {/* Enhanced grills with grill color */}
                 {renderGrills(
                   panelX + (index > 0 ? 1 : 0) + 2, 
                   20, 
                   panelWidth - (index > 0 && index < panels - 1 ? 2 : 1) - 4, 
                   height-40, 
-                  specs.grilles
+                  specs.grilles,
+                  specs.grillColor
                 )}
                 
                 {/* Panel separator (mullion) */}
@@ -659,14 +892,24 @@ const QuotationPage = () => {
                   />
                 )}
                 
-                {/* Handle for sliding panels */}
+                {/* Enhanced handle for sliding panels with hardware color */}
                 {isSliding && (
-                  <circle 
-                    cx={panelX + panelWidth - 15} 
-                    cy={height/2} 
-                    r="3" 
-                    fill="#666"
-                  />
+                  <>
+                    <circle 
+                      cx={panelX + panelWidth - 15} 
+                      cy={height/2} 
+                      r="4" 
+                      fill={hardwareColor}
+                      stroke="#666"
+                      strokeWidth="1"
+                    />
+                    <circle 
+                      cx={panelX + panelWidth - 15} 
+                      cy={height/2} 
+                      r="2" 
+                      fill="#666"
+                    />
+                  </>
                 )}
                 
                 {/* Track indicator for sliding panels */}
@@ -679,12 +922,68 @@ const QuotationPage = () => {
                     fill="#999"
                   />
                 )}
+                
+                {/* Feature indicators */}
+                {specs.screenIncluded && (
+                  <rect 
+                    x={panelX + (index > 0 ? 1 : 0) + 1} 
+                    y="17" 
+                    width={panelWidth - (index > 0 && index < panels - 1 ? 2 : 1) - 2} 
+                    height={height-34} 
+                    fill="none"
+                    stroke="#666"
+                    strokeWidth="0.5"
+                    strokeDasharray="2,2"
+                  />
+                )}
+                
+                {specs.blindsIntegrated && (
+                  <g>
+                    {Array.from({length: 5}, (_, i) => (
+                      <rect 
+                        key={i}
+                        x={panelX + (index > 0 ? 1 : 0) + 4} 
+                        y={25 + i * (height-50)/5} 
+                        width={panelWidth - (index > 0 && index < panels - 1 ? 2 : 1) - 8} 
+                        height="2" 
+                        fill="rgba(150,150,150,0.6)"
+                      />
+                    ))}
+                  </g>
+                )}
+                
+                {specs.motorized && isSliding && (
+                  <rect 
+                    x={panelX + panelWidth - 20} 
+                    y={height-25} 
+                    width="8" 
+                    height="4" 
+                    fill="#FF6B6B"
+                    rx="1"
+                  />
+                )}
               </g>
             );
           })}
           
-          {/* Bottom track for all sliding windows */}
+          {/* Enhanced bottom track for all sliding windows */}
           <rect x="14" y={height-16} width={width-28} height="2" fill="#999"/>
+          
+          {/* Security indicator */}
+          {specs.security && specs.security !== 'standard' && (
+            <g>
+              <circle cx={width-30} cy="25" r="6" fill="#FFD700" stroke="#FFA500" strokeWidth="1"/>
+              <text x={width-30} y="28" textAnchor="middle" fontSize="8" fill="#B8860B" fontWeight="bold">🔒</text>
+            </g>
+          )}
+          
+          {/* Smart home indicator */}
+          {specs.smartHome && (
+            <g>
+              <circle cx={width-50} cy="25" r="6" fill="#4CAF50" stroke="#2E7D32" strokeWidth="1"/>
+              <text x={width-50} y="28" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">📱</text>
+            </g>
+          )}
         </g>
       );
     };
@@ -1119,32 +1418,185 @@ const QuotationPage = () => {
       );
     };
 
+    // Enhanced Casement Window Renderer
+    const renderCasementWindow = (config) => {
+      const frameColor = getEnhancedFrameColor(specs.frame, specs.frameColor);
+      const glassColor = getGlassColor(specs.glass, specs.glassTint);
+      const hardwareColor = getHardwareColor(specs.hardware);
+      const direction = config?.direction || 'outward';
+      const hinge = config?.hinge || 'left';
+      
+      return (
+        <g>
+          {/* Enhanced outer frame with material gradient */}
+          <defs>
+            <linearGradient id="casementFrameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={frameColor} stopOpacity="1.2"/>
+              <stop offset="50%" stopColor={frameColor} stopOpacity="1"/>
+              <stop offset="100%" stopColor={frameColor} stopOpacity="0.8"/>
+            </linearGradient>
+            
+            {/* Glass pattern for different types */}
+            <pattern id="casementGlassPattern" patternUnits="userSpaceOnUse" width="20" height="20">
+              {specs.glassPattern === 'frosted' && (
+                <rect width="20" height="20" fill={glassColor} opacity="0.8"/>
+              )}
+              {specs.glassPattern === 'etched' && (
+                <>
+                  <rect width="20" height="20" fill={glassColor}/>
+                  <circle cx="10" cy="10" r="3" fill="white" opacity="0.3"/>
+                </>
+              )}
+              {(!specs.glassPattern || specs.glassPattern === 'clear') && (
+                <rect width="20" height="20" fill={glassColor}/>
+              )}
+            </pattern>
+          </defs>
+          
+          <rect x="10" y="10" width={width-20} height={height-20} fill="url(#casementFrameGrad)" stroke={frameColor} strokeWidth="2"/>
+          
+          {/* Enhanced glass area */}
+          <rect x="18" y="18" width={width-36} height={height-36} fill="url(#casementGlassPattern)" stroke="#ccc" strokeWidth="1"/>
+          
+          {/* Glass performance indicator */}
+          {specs.glass === 'double' && (
+            <rect x="20" y="20" width={width-40} height="2" fill="rgba(0,100,255,0.3)"/>
+          )}
+          {specs.glass === 'triple' && (
+            <>
+              <rect x="20" y="20" width={width-40} height="1" fill="rgba(0,100,255,0.3)"/>
+              <rect x="20" y="22" width={width-40} height="1" fill="rgba(0,100,255,0.3)"/>
+            </>
+          )}
+          
+          {/* Enhanced grills with proper color */}
+          {renderGrills(20, 20, width-40, height-40, specs.grilles, specs.grillColor)}
+          
+          {/* Enhanced hinges based on position */}
+          {hinge === 'left' && (
+            <>
+              <rect x="12" y="25" width="4" height="10" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x="12" y={height/2-5} width="4" height="10" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x="12" y={height-35} width="4" height="10" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+            </>
+          )}
+          {hinge === 'right' && (
+            <>
+              <rect x={width-16} y="25" width="4" height="10" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x={width-16} y={height/2-5} width="4" height="10" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x={width-16} y={height-35} width="4" height="10" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+            </>
+          )}
+          {hinge === 'top' && (
+            <>
+              <rect x="25" y="12" width="10" height="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x={width/2-5} y="12" width="10" height="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x={width-35} y="12" width="10" height="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+            </>
+          )}
+          {hinge === 'bottom' && (
+            <>
+              <rect x="25" y={height-16} width="10" height="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x={width/2-5} y={height-16} width="10" height="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x={width-35} y={height-16} width="10" height="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+            </>
+          )}
+          
+          {/* Enhanced handle/crank based on hinge position */}
+          {(hinge === 'left' || hinge === 'right') && (
+            <>
+              <circle 
+                cx={hinge === 'left' ? width-25 : 25} 
+                cy={height/2} 
+                r="5" 
+                fill={hardwareColor} 
+                stroke="#666" 
+                strokeWidth="1"
+              />
+              <circle 
+                cx={hinge === 'left' ? width-25 : 25} 
+                cy={height/2} 
+                r="3" 
+                fill="#666"
+              />
+              <line 
+                x1={hinge === 'left' ? width-25 : 25} 
+                y1={height/2} 
+                x2={hinge === 'left' ? width-20 : 30} 
+                y2={height/2-5} 
+                stroke="#666" 
+                strokeWidth="2"
+              />
+            </>
+          )}
+          
+          {/* Direction indicator */}
+          <g>
+            <circle cx={width-35} cy="35" r="8" fill="rgba(52, 152, 219, 0.8)" stroke="#2980b9" strokeWidth="1"/>
+            <text x={width-35} y="38" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">
+              {direction === 'outward' ? '→' : '←'}
+            </text>
+          </g>
+          
+          {/* Feature indicators */}
+          {specs.screenIncluded && (
+            <rect 
+              x="17" 
+              y="17" 
+              width={width-34} 
+              height={height-34} 
+              fill="none"
+              stroke="#666"
+              strokeWidth="0.5"
+              strokeDasharray="2,2"
+            />
+          )}
+          
+          {specs.tiltAndTurn && (
+            <g>
+              <circle cx="35" cy="35" r="6" fill="#9b59b6" stroke="#8e44ad" strokeWidth="1"/>
+              <text x="35" y="38" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">T&T</text>
+            </g>
+          )}
+          
+          {specs.motorized && (
+            <rect x={width-30} y={height-25} width="15" height="6" fill="#e74c3c" rx="2"/>
+          )}
+          
+          {/* Security indicator */}
+          {specs.security && specs.security !== 'standard' && (
+            <g>
+              <circle cx={width-30} cy="55" r="6" fill="#f39c12" stroke="#e67e22" strokeWidth="1"/>
+              <text x={width-30} y="58" textAnchor="middle" fontSize="8" fill="white" fontWeight="bold">🔒</text>
+            </g>
+          )}
+        </g>
+      );
+    };
+
     const renderShape = () => {
       const frameThickness = 8;
-      const glassColor = "#E6F3FF";
-      const frameColor = getFrameColor(specs.frame);
+      const frameColor = getEnhancedFrameColor(specs.frame, specs.frameColor);
+      const glassColor = getGlassColor(specs.glass, specs.glassTint);
+      const hardwareColor = getHardwareColor(specs.hardware);
       
       switch (windowType.id) {
         case 'single-hung':
           return (
             <g>
-              {/* Outer frame */}
+              {/* Enhanced outer frame */}
               <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="2"/>
-              {/* Glass areas */}
+              {/* Glass areas with enhanced colors */}
               <rect x="18" y="18" width={width-36} height={(height-36)/2-4} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
               <rect x="18" y={18+(height-36)/2+4} width={width-36} height={(height-36)/2-4} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
-              {/* Middle rail */}
+              {/* Enhanced middle rail */}
               <rect x="14" y={14+(height-28)/2-2} width={width-28} height="4" fill={frameColor}/>
-              {/* Grid pattern on glass */}
-              <line x1="26" y1="18" x2="26" y2={18+(height-36)/2-4} stroke="#ddd" strokeWidth="1"/>
-              <line x1={width-26} y1="18" x2={width-26} y2={18+(height-36)/2-4} stroke="#ddd" strokeWidth="1"/>
-              <line x1="18" y1={18+(height-36)/4-2} x2={width-18} y2={18+(height-36)/4-2} stroke="#ddd" strokeWidth="1"/>
-              {/* Bottom sash grid */}
-              <line x1="26" y1={18+(height-36)/2+4} x2="26" y2={height-18} stroke="#ddd" strokeWidth="1"/>
-              <line x1={width-26} y1={18+(height-36)/2+4} x2={width-26} y2={height-18} stroke="#ddd" strokeWidth="1"/>
-              <line x1="18" y1={18+(height-36)*3/4+2} x2={width-18} y2={18+(height-36)*3/4+2} stroke="#ddd" strokeWidth="1"/>
-              {/* Sash locks */}
-              <circle cx={width-25} cy={14+(height-28)/2} r="3" fill="#666"/>
+              {/* Enhanced grills */}
+              {renderGrills(20, 20, width-40, (height-36)/2-8, specs.grilles, specs.grillColor)}
+              {renderGrills(20, 20+(height-36)/2+8, width-40, (height-36)/2-8, specs.grilles, specs.grillColor)}
+              {/* Enhanced sash locks with hardware color */}
+              <circle cx={width-25} cy={14+(height-28)/2} r="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <circle cx={width-25} cy={14+(height-28)/2} r="2" fill="#666"/>
             </g>
           );
           
@@ -1153,46 +1605,35 @@ const QuotationPage = () => {
           return renderDoubleHungWindowSVG(doubleHungConfig?.combination);
           
         case 'sliding':
-          return renderSlidingWindow(slidingConfig);
-        
         case 'Sliding Windows':
           return renderSlidingWindow(slidingConfig);
           
         case 'casement':
-          return (
-            <g>
-              {/* Outer frame */}
-              <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="2"/>
-              {/* Glass area */}
-              <rect x="18" y="18" width={width-36} height={height-36} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
-              {/* Grills on glass */}
-              {renderGrills(20, 20, width-40, height-40, specs.grilles)}
-              {/* Hinges on left side */}
-              <rect x="12" y="25" width="4" height="8" fill="#666"/>
-              <rect x="12" y={height/2-4} width="4" height="8" fill="#666"/>
-              <rect x="12" y={height-33} width="4" height="8" fill="#666"/>
-              {/* Handle/crank on right side */}
-              <circle cx={width-25} cy={height/2} r="4" fill="#666"/>
-              <line x1={width-25} y1={height/2} x2={width-20} y2={height/2-5} stroke="#666" strokeWidth="2"/>
-            </g>
-          );
+        case 'Casement Windows':
+          return renderCasementWindow(casementConfig);
           
         case 'awning':
           return (
             <g>
-              {/* Outer frame */}
+              {/* Enhanced outer frame */}
               <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="2"/>
-              {/* Glass area */}
+              {/* Enhanced glass area */}
               <rect x="18" y="18" width={width-36} height={height-36} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
-              {/* Grills on glass */}
-              {renderGrills(20, 20, width-40, height-40, specs.grilles)}
-              {/* Top hinges */}
-              <rect x="25" y="12" width="8" height="4" fill="#666"/>
-              <rect x={width/2-4} y="12" width="8" height="4" fill="#666"/>
-              <rect x={width-33} y="12" width="8" height="4" fill="#666"/>
-              {/* Bottom handle/operator */}
-              <circle cx={width/2} cy={height-25} r="4" fill="#666"/>
+              {/* Enhanced grills */}
+              {renderGrills(20, 20, width-40, height-40, specs.grilles, specs.grillColor)}
+              {/* Enhanced top hinges with hardware color */}
+              <rect x="25" y="12" width="10" height="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x={width/2-5} y="12" width="10" height="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x={width-35} y="12" width="10" height="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              {/* Enhanced bottom handle/operator */}
+              <circle cx={width/2} cy={height-25} r="5" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <circle cx={width/2} cy={height-25} r="3" fill="#666"/>
               <line x1={width/2} y1={height-25} x2={width/2} y2={height-15} stroke="#666" strokeWidth="2"/>
+              
+              {/* Feature indicators */}
+              {specs.screenIncluded && (
+                <rect x="17" y="17" width={width-34} height={height-34} fill="none" stroke="#666" strokeWidth="0.5" strokeDasharray="2,2"/>
+              )}
             </g>
           );
           
@@ -1203,7 +1644,7 @@ const QuotationPage = () => {
         case 'bow':
           return (
             <g>
-              {/* Create curved bow window effect with multiple angled sections */}
+              {/* Enhanced curved bow window effect with multiple angled sections */}
               <polygon points={`10,${height-10} 30,10 50,15 ${width-50},15 ${width-30},10 ${width-10},${height-10}`} 
                        fill={frameColor} stroke={frameColor} strokeWidth="2"/>
               {/* Glass sections */}
@@ -1280,13 +1721,6 @@ const QuotationPage = () => {
         <div className="diagram-dimensions">
           {specs.width || '1200'}mm × {specs.height || '1500'}mm
         </div>
-        <button 
-          className="info-button" 
-          onClick={() => onShowDescription(windowType.name, getConfigDescription())}
-          title="View detailed window configuration information"
-        >
-          i
-        </button>
       </div>
     );
   };
@@ -1333,6 +1767,28 @@ const QuotationPage = () => {
       {/* Title Section */}
       <div className="quotation-title-section">
         <h1 className="quotation-main-title">WINDOW QUOTATION</h1>
+      </div>
+
+      {/* Mode Indicator */}
+      <div className={`mode-indicator mode-${currentMode}`}>
+        <div className="mode-info">
+          <span className="mode-icon">{getCurrentModeConfig().icon}</span>
+          <div className="mode-details">
+            <strong>{getCurrentModeConfig().name}</strong>
+            <span className="mode-description">{getCurrentModeConfig().description}</span>
+          </div>
+        </div>
+        <div className="mode-features">
+          {canIgnoreInventory() && (
+            <span className="feature-badge unlimited">Unlimited Stock</span>
+          )}
+          {requiresInventoryValidation() && (
+            <span className="feature-badge validation">Real-time Validation</span>
+          )}
+          {shouldShowInventoryWarnings() && (
+            <span className="feature-badge warnings">Inventory Warnings</span>
+          )}
+        </div>
       </div>
 
       {/* Client Information Section */}
@@ -1409,213 +1865,20 @@ const QuotationPage = () => {
         <div className="builder-layout">
           {/* Left Panel - Window Selection */}
           <div className="builder-left-panel">
-            <div className="section-title">Window Configuration</div>
-            
-            <div className="config-section">
-              <h4>Window Type</h4>
-              <select 
-                value={quotationData.selectedWindowType?.id || ''} 
-                onChange={(e) => {
-                  const windowType = WINDOW_TYPES.find(type => type.id === e.target.value);
-                  if (windowType) handleWindowTypeSelect(windowType);
-                }}
-                className="window-type-dropdown"
-              >
-                <option value="">Select Window Type...</option>
-                {WINDOW_TYPES.map(windowType => (
-                  <option key={windowType.id} value={windowType.id}>
-                    {windowType.name}
-                  </option>
-                ))}
-              </select>
-              {quotationData.selectedWindowType && (
-                <p className="window-description">{quotationData.selectedWindowType.description}</p>
-              )}
-
-              {/* Dynamic Sliding Window Configuration */}
-              {quotationData.selectedWindowType?.name === 'Sliding Windows' && (
-                <div className="sliding-config-section">
-                  <div className="sliding-input-group">
-                    <label>Number of Panels:</label>
-                    <select
-                      value={quotationData.slidingConfig.panels}
-                      onChange={(e) => {
-                        const panels = parseInt(e.target.value);
-                        setQuotationData(prev => ({
-                          ...prev,
-                          slidingConfig: {
-                            ...prev.slidingConfig,
-                            panels: panels,
-                            combination: null // Reset combination when panels change
-                          }
-                        }));
-                      }}
-                      className="sliding-dropdown"
-                    >
-                      <option value={1}>1 Panel</option>
-                      <option value={2}>2 Panels</option>
-                      <option value={3}>3 Panels</option>
-                      <option value={4}>4 Panels</option>
-                      <option value={5}>5 Panels</option>
-                      <option value={6}>6 Panels</option>
-                    </select>
-                  </div>
-
-                  <div className="sliding-input-group">
-                    <label>Panel Configuration:</label>
-                    <select
-                      value={quotationData.slidingConfig.combination || ''}
-                      onChange={(e) => {
-                        setQuotationData(prev => ({
-                          ...prev,
-                          slidingConfig: {
-                            ...prev.slidingConfig,
-                            combination: e.target.value
-                          }
-                        }));
-                      }}
-                      className="sliding-dropdown"
-                    >
-                      <option value="">Select Configuration</option>
-                      {SLIDING_COMBINATIONS[quotationData.slidingConfig.panels]?.map(combo => (
-                        <option key={combo.id} value={combo.id}>
-                          {combo.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {quotationData.slidingConfig.combination && (
-                    <div className="pattern-preview">
-                      <span className="pattern-label">Pattern: </span>
-                      {SLIDING_COMBINATIONS[quotationData.slidingConfig.panels]
-                        ?.find(combo => combo.id === quotationData.slidingConfig.combination)
-                        ?.pattern.map((panel, index) => (
-                          <span key={index} className={`panel-indicator ${panel === 'F' ? 'fixed' : 'sliding'}`}>
-                            {panel === 'F' ? 'Fixed' : 'Sliding'}
-                            {index < SLIDING_COMBINATIONS[quotationData.slidingConfig.panels]
-                              .find(combo => combo.id === quotationData.slidingConfig.combination)
-                              .pattern.length - 1 && ' – '}
-                          </span>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Dynamic Bay Window Configuration */}
-              {quotationData.selectedWindowType?.name === 'Bay Windows' && (
-                <div className="bay-config-section">
-                  <div className="bay-input-group">
-                    <label>Bay Window Configuration:</label>
-                    <select
-                      value={quotationData.bayConfig.combination || ''}
-                      onChange={(e) => {
-                        setQuotationData(prev => ({
-                          ...prev,
-                          bayConfig: {
-                            ...prev.bayConfig,
-                            combination: e.target.value
-                          }
-                        }));
-                      }}
-                      className="bay-dropdown"
-                    >
-                      <option value="">Select Configuration</option>
-                      {BAY_COMBINATIONS.map(combo => (
-                        <option key={combo.id} value={combo.id}>
-                          {combo.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="bay-input-group">
-                    <label>Bay Window Angle:</label>
-                    <select
-                      value={quotationData.bayConfig.angle}
-                      onChange={(e) => {
-                        setQuotationData(prev => ({
-                          ...prev,
-                          bayConfig: {
-                            ...prev.bayConfig,
-                            angle: parseInt(e.target.value)
-                          }
-                        }));
-                      }}
-                      className="bay-dropdown"
-                    >
-                      <option value={15}>15° (Shallow Bay)</option>
-                      <option value={22.5}>22.5° (Standard Bay)</option>
-                      <option value={25}>25° (Three-Lite Bay)</option>
-                      <option value={30}>30° (Standard Bay)</option>
-                      <option value={45}>45° (Corner Bay)</option>
-                      <option value={60}>60° (Wide Bay)</option>
-                      <option value={90}>90° (Right Angle Bay)</option>
-                    </select>
-                  </div>
-
-
-                </div>
-              )}
-
-              {/* Dynamic Double Hung Window Configuration */}
-              {quotationData.selectedWindowType?.name === 'Double Hung Windows' && (
-                <div className="double-hung-config-section">
-                  <div className="double-hung-input-group">
-                    <label>Double Hung Configuration:</label>
-                    <select
-                      value={quotationData.doubleHungConfig.combination || ''}
-                      onChange={(e) => {
-                        setQuotationData(prev => ({
-                          ...prev,
-                          doubleHungConfig: {
-                            ...prev.doubleHungConfig,
-                            combination: e.target.value
-                          }
-                        }));
-                      }}
-                      className="double-hung-dropdown"
-                    >
-                      <option value="">Select Configuration</option>
-                      {DOUBLE_HUNG_COMBINATIONS.map(combo => (
-                        <option key={combo.id} value={combo.id}>
-                          {combo.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {quotationData.doubleHungConfig.combination && (
-                    <div className="pattern-preview">
-                      <span className="pattern-label">Sash Configuration: </span>
-                      {DOUBLE_HUNG_COMBINATIONS
-                        .find(combo => combo.id === quotationData.doubleHungConfig.combination)
-                        ?.pattern.map((sash, index) => (
-                          <span key={index} className={`panel-indicator double-hung-sash ${sash.toLowerCase().replace('-', '_')}`}>
-                            {index === 0 ? 'Top: ' : 'Bottom: '}{sash}
-                          </span>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
             {/* Tabbed Configuration Interface */}
             <div className="config-tabs-container">
               <div className="config-tabs">
-                <button 
-                  className={`tab-button ${activeTab === 'measurements' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('measurements')}
-                >
-                  📏 Measurements
-                </button>
                 <button 
                   className={`tab-button ${activeTab === 'configuration' ? 'active' : ''}`}
                   onClick={() => setActiveTab('configuration')}
                 >
                   ⚙️ Configuration
+                </button>
+                <button 
+                  className={`tab-button ${activeTab === 'measurements' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('measurements')}
+                >
+                  📏 Measurements
                 </button>
                 <button 
                   className={`tab-button ${activeTab === 'materials' ? 'active' : ''}`}
@@ -1632,151 +1895,516 @@ const QuotationPage = () => {
               </div>
 
               <div className="tab-content">
-                {/* Measurements Tab */}
-                {activeTab === 'measurements' && (
-                  <div className="tab-panel">
-                    <div className="config-section">
-                      <h4>Dimensions</h4>
-                      <div className="dimension-inputs">
-                        <div className="dimension-group">
-                          <label>Width (mm)</label>
-                          <input 
-                            type="number" 
-                            value={quotationData.windowSpecs.width}
-                            onChange={(e) => handleSpecChange('width', e.target.value)}
-                            placeholder="1200"
-                            min="300"
-                            max="3000"
-                          />
-                        </div>
-                        <div className="dimension-group">
-                          <label>Height (mm)</label>
-                          <input 
-                            type="number" 
-                            value={quotationData.windowSpecs.height}
-                            onChange={(e) => handleSpecChange('height', e.target.value)}
-                            placeholder="1500"
-                            min="300"
-                            max="2500"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="config-section">
-                      <h4>Quantity</h4>
-                      <div className="spec-input-group">
-                        <label>Number of Units</label>
-                        <input 
-                          type="number" 
-                          value={quotationData.windowSpecs.quantity}
-                          onChange={(e) => handleSpecChange('quantity', parseInt(e.target.value))}
-                          min="1"
-                          max="50"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
                 {/* Configuration Tab */}
                 {activeTab === 'configuration' && (
                   <div className="tab-panel">
-                    {/* Dynamic configurations based on window type */}
+                    {/* Window Type Selection */}
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">🪟</span>
+                        Window Type Selection
+                      </h4>
+                      <div className="form-field">
+                        <label className="field-label">Select Window Type</label>
+                        <select 
+                          value={quotationData.selectedWindowType?.id || ''} 
+                          onChange={(e) => {
+                            const windowType = WINDOW_TYPES.find(type => type.id === e.target.value);
+                            if (windowType) handleWindowTypeSelect(windowType);
+                          }}
+                          className="field-select"
+                        >
+                          <option value="">Choose a window type...</option>
+                          {WINDOW_TYPES.map(windowType => (
+                            <option key={windowType.id} value={windowType.id}>
+                              {windowType.name}
+                            </option>
+                          ))}
+                        </select>
+                        {quotationData.selectedWindowType && (
+                          <div className="field-description">
+                            {quotationData.selectedWindowType.description}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dynamic Window Configurations */}
                     {quotationData.selectedWindowType?.name === 'Sliding Windows' && (
-                      <div className="config-section">
-                        <h4>Panel Configuration</h4>
-                        <div className="sliding-input-group">
-                          <label>Number of Panels:</label>
-                          <select
-                            value={quotationData.slidingConfig.panels}
-                            onChange={(e) => {
-                              const panels = parseInt(e.target.value);
-                              setQuotationData(prev => ({
-                                ...prev,
-                                slidingConfig: {
-                                  ...prev.slidingConfig,
-                                  panels: panels,
-                                  combination: null
-                                }
-                              }));
-                            }}
-                          >
-                            <option value={2}>2 Panels</option>
-                            <option value={3}>3 Panels</option>
-                            <option value={4}>4 Panels</option>
-                          </select>
+                      <div className="form-section">
+                        <h4 className="section-heading">
+                          <span className="section-icon">⬌</span>
+                          Sliding Configuration
+                        </h4>
+                        <div className="form-grid">
+                          <div className="form-field">
+                            <label className="field-label">Number of Panels</label>
+                            <select
+                              value={quotationData.slidingConfig.panels}
+                              onChange={(e) => {
+                                const panels = parseInt(e.target.value);
+                                setQuotationData(prev => ({
+                                  ...prev,
+                                  slidingConfig: {
+                                    ...prev.slidingConfig,
+                                    panels: panels,
+                                    combination: null
+                                  }
+                                }));
+                              }}
+                              className="field-select"
+                            >
+                              <option value={2}>2 Panels</option>
+                              <option value={3}>3 Panels</option>
+                              <option value={4}>4 Panels</option>
+                              <option value={5}>5 Panels</option>
+                              <option value={6}>6 Panels</option>
+                            </select>
+                            <small className="field-hint">Select the number of sliding panels</small>
+                          </div>
+                          
+                          <div className="form-field">
+                            <label className="field-label">Panel Operation</label>
+                            <select
+                              value={quotationData.slidingConfig.combination || ''}
+                              onChange={(e) => {
+                                setQuotationData(prev => ({
+                                  ...prev,
+                                  slidingConfig: {
+                                    ...prev.slidingConfig,
+                                    combination: e.target.value
+                                  }
+                                }));
+                              }}
+                              className="field-select"
+                            >
+                              <option value="">Select configuration...</option>
+                              <option value="all-sliding">All Panels Sliding</option>
+                              <option value="fixed-center">Fixed Center Panel</option>
+                              <option value="fixed-ends">Fixed End Panels</option>
+                              <option value="custom">Custom Configuration</option>
+                            </select>
+                            <small className="field-hint">Choose how panels operate</small>
+                          </div>
                         </div>
                       </div>
                     )}
 
                     {quotationData.selectedWindowType?.name === 'Bay Windows' && (
-                      <div className="config-section">
-                        <h4>Bay Configuration</h4>
-                        <div className="bay-input-group">
-                          <label>Bay Angle:</label>
-                          <select
-                            value={quotationData.bayConfig.angle}
-                            onChange={(e) => {
-                              setQuotationData(prev => ({
-                                ...prev,
-                                bayConfig: {
-                                  ...prev.bayConfig,
-                                  angle: parseInt(e.target.value)
-                                }
-                              }));
-                            }}
-                          >
-                            <option value={30}>30° (Traditional)</option>
-                            <option value={45}>45° (Wide)</option>
-                            <option value={90}>90° (Square Bay)</option>
-                          </select>
+                      <div className="form-section">
+                        <h4 className="section-heading">
+                          <span className="section-icon">🏠</span>
+                          Bay Window Configuration
+                        </h4>
+                        <div className="form-grid">
+                          <div className="form-field">
+                            <label className="field-label">Bay Angle</label>
+                            <select
+                              value={quotationData.bayConfig.angle}
+                              onChange={(e) => {
+                                setQuotationData(prev => ({
+                                  ...prev,
+                                  bayConfig: {
+                                    ...prev.bayConfig,
+                                    angle: parseInt(e.target.value)
+                                  }
+                                }));
+                              }}
+                              className="field-select"
+                            >
+                              <option value={30}>30° - Traditional Bay</option>
+                              <option value={45}>45° - Wide Opening</option>
+                              <option value={60}>60° - Maximum View</option>
+                              <option value={90}>90° - Square Bay</option>
+                            </select>
+                            <small className="field-hint">Angle determines the bay window projection</small>
+                          </div>
+                          
+                          <div className="form-field">
+                            <label className="field-label">Bay Style</label>
+                            <select
+                              value={quotationData.bayConfig.style || 'traditional'}
+                              onChange={(e) => {
+                                setQuotationData(prev => ({
+                                  ...prev,
+                                  bayConfig: {
+                                    ...prev.bayConfig,
+                                    style: e.target.value
+                                  }
+                                }));
+                              }}
+                              className="field-select"
+                            >
+                              <option value="traditional">Traditional 3-Panel</option>
+                              <option value="five-panel">5-Panel Bay</option>
+                              <option value="curved">Curved Bay</option>
+                              <option value="box">Box Bay</option>
+                            </select>
+                            <small className="field-hint">Select bay window architectural style</small>
+                          </div>
                         </div>
                       </div>
                     )}
+
+                    {quotationData.selectedWindowType?.name === 'Casement Windows' && (
+                      <div className="form-section">
+                        <h4 className="section-heading">
+                          <span className="section-icon">🔄</span>
+                          Casement Configuration
+                        </h4>
+                        <div className="form-grid">
+                          <div className="form-field">
+                            <label className="field-label">Opening Direction</label>
+                            <select
+                              value={quotationData.casementConfig?.direction || 'outward'}
+                              onChange={(e) => {
+                                setQuotationData(prev => ({
+                                  ...prev,
+                                  casementConfig: {
+                                    ...prev.casementConfig,
+                                    direction: e.target.value
+                                  }
+                                }));
+                              }}
+                              className="field-select"
+                            >
+                              <option value="outward">Outward Opening</option>
+                              <option value="inward">Inward Opening</option>
+                            </select>
+                            <small className="field-hint">Direction window opens</small>
+                          </div>
+                          
+                          <div className="form-field">
+                            <label className="field-label">Hinge Position</label>
+                            <select
+                              value={quotationData.casementConfig?.hinge || 'left'}
+                              onChange={(e) => {
+                                setQuotationData(prev => ({
+                                  ...prev,
+                                  casementConfig: {
+                                    ...prev.casementConfig,
+                                    hinge: e.target.value
+                                  }
+                                }));
+                              }}
+                              className="field-select"
+                            >
+                              <option value="left">Left Hinged</option>
+                              <option value="right">Right Hinged</option>
+                              <option value="top">Top Hinged (Awning)</option>
+                              <option value="bottom">Bottom Hinged (Hopper)</option>
+                            </select>
+                            <small className="field-hint">Position of window hinges</small>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Measurements Tab */}
+                {activeTab === 'measurements' && (
+                  <div className="tab-panel">
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">📏</span>
+                        Window Dimensions
+                      </h4>
+                      <div className="form-grid">
+                        <div className="form-field">
+                          <label className="field-label">Width (mm)</label>
+                          <div className="input-with-unit">
+                            <input 
+                              type="number" 
+                              value={quotationData.windowSpecs.width}
+                              onChange={(e) => handleSpecChange('width', e.target.value)}
+                              placeholder="1200"
+                              min="300"
+                              max="3000"
+                              className="field-input"
+                            />
+                            <span className="input-unit">mm</span>
+                          </div>
+                          <small className="field-hint">Range: 300mm - 3000mm</small>
+                        </div>
+                        
+                        <div className="form-field">
+                          <label className="field-label">Height (mm)</label>
+                          <div className="input-with-unit">
+                            <input 
+                              type="number" 
+                              value={quotationData.windowSpecs.height}
+                              onChange={(e) => handleSpecChange('height', e.target.value)}
+                              placeholder="1500"
+                              min="300"
+                              max="2500"
+                              className="field-input"
+                            />
+                            <span className="input-unit">mm</span>
+                          </div>
+                          <small className="field-hint">Range: 300mm - 2500mm</small>
+                        </div>
+                      </div>
+                      
+                      {quotationData.windowSpecs.width && quotationData.windowSpecs.height && (
+                        <div className="dimension-preview">
+                          <div className="preview-label">Window Area:</div>
+                          <div className="preview-value">
+                            {((quotationData.windowSpecs.width * quotationData.windowSpecs.height) / 1000000).toFixed(2)} m²
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">🔢</span>
+                        Quantity & Installation
+                      </h4>
+                      <div className="form-grid">
+                        <div className="form-field">
+                          <label className="field-label">Number of Units</label>
+                          <input 
+                            type="number" 
+                            value={quotationData.windowSpecs.quantity}
+                            onChange={(e) => handleSpecChange('quantity', parseInt(e.target.value))}
+                            min="1"
+                            max="50"
+                            className="field-input"
+                          />
+                          <small className="field-hint">Maximum 50 units per quote</small>
+                        </div>
+                        
+                        <div className="form-field">
+                          <label className="field-label">Installation Location</label>
+                          <select
+                            value={quotationData.windowSpecs.location || 'ground-floor'}
+                            onChange={(e) => handleSpecChange('location', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="ground-floor">Ground Floor</option>
+                            <option value="first-floor">First Floor</option>
+                            <option value="second-floor">Second Floor</option>
+                            <option value="high-rise">High Rise (3+ floors)</option>
+                          </select>
+                          <small className="field-hint">Affects installation pricing</small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">🏗️</span>
+                        Installation Details
+                      </h4>
+                      <div className="form-grid">
+                        <div className="form-field">
+                          <label className="field-label">Wall Type</label>
+                          <select
+                            value={quotationData.windowSpecs.wallType || 'brick'}
+                            onChange={(e) => handleSpecChange('wallType', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="brick">Brick Wall</option>
+                            <option value="concrete">Concrete Wall</option>
+                            <option value="wood-frame">Wood Frame</option>
+                            <option value="steel-frame">Steel Frame</option>
+                            <option value="cavity">Cavity Wall</option>
+                          </select>
+                          <small className="field-hint">Type of wall for installation</small>
+                        </div>
+                        
+                        <div className="form-field">
+                          <label className="field-label">Existing Window</label>
+                          <select
+                            value={quotationData.windowSpecs.replacement || 'new-opening'}
+                            onChange={(e) => handleSpecChange('replacement', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="new-opening">New Opening</option>
+                            <option value="replace-existing">Replace Existing</option>
+                            <option value="retrofit">Retrofit Installation</option>
+                          </select>
+                          <small className="field-hint">Installation type affects labor cost</small>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {/* Materials Tab */}
                 {activeTab === 'materials' && (
                   <div className="tab-panel">
-                    <div className="config-section">
-                      <h4>Frame Material</h4>
-                      <div className="spec-input-group">
-                        <label>Material Type</label>
-                        <div className="frame-material-selector">
-                          <select value={quotationData.windowSpecs.frame}
-                                  onChange={(e) => handleSpecChange('frame', e.target.value)}>
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">🏗️</span>
+                        Frame Material
+                      </h4>
+                      <div className="form-field">
+                        <label className="field-label">Material Type</label>
+                        <div className="material-selector">
+                          <select 
+                            value={quotationData.windowSpecs.frame}
+                            onChange={(e) => handleSpecChange('frame', e.target.value)}
+                            className="field-select"
+                          >
                             <option value="aluminum">Aluminum</option>
-                            <option value="upvc">uPVC</option>
+                            <option value="upvc">uPVC (Vinyl)</option>
                             <option value="wooden">Wooden</option>
                             <option value="steel">Steel</option>
                             <option value="composite">Composite</option>
+                            <option value="fiberglass">Fiberglass</option>
                           </select>
                           <div 
-                            className="frame-color-indicator" 
+                            className="material-color-preview" 
                             style={{ backgroundColor: getFrameColor(quotationData.windowSpecs.frame) }}
-                            title={`Color preview for ${quotationData.windowSpecs.frame}`}
+                            title={`Preview color for ${quotationData.windowSpecs.frame}`}
                           ></div>
                         </div>
-                        <div className="frame-material-info">
-                          <small>Frame color in diagram reflects selected material</small>
+                        <div className="material-info">
+                          {quotationData.windowSpecs.frame === 'aluminum' && (
+                            <small>Durable, lightweight, low maintenance. Good for modern designs.</small>
+                          )}
+                          {quotationData.windowSpecs.frame === 'upvc' && (
+                            <small>Energy efficient, weather resistant, excellent insulation properties.</small>
+                          )}
+                          {quotationData.windowSpecs.frame === 'wooden' && (
+                            <small>Natural beauty, excellent insulation, requires regular maintenance.</small>
+                          )}
+                          {quotationData.windowSpecs.frame === 'steel' && (
+                            <small>Very strong, slim profiles, suitable for large openings.</small>
+                          )}
+                          {quotationData.windowSpecs.frame === 'composite' && (
+                            <small>Combines benefits of wood and PVC, low maintenance.</small>
+                          )}
+                          {quotationData.windowSpecs.frame === 'fiberglass' && (
+                            <small>Extremely durable, energy efficient, minimal expansion/contraction.</small>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="form-field">
+                        <label className="field-label">Frame Color/Finish</label>
+                        <select
+                          value={quotationData.windowSpecs.frameColor || 'white'}
+                          onChange={(e) => handleSpecChange('frameColor', e.target.value)}
+                          className="field-select"
+                        >
+                          <option value="white">White</option>
+                          <option value="black">Black</option>
+                          <option value="brown">Brown</option>
+                          <option value="grey">Grey</option>
+                          <option value="bronze">Bronze</option>
+                          <option value="wood-grain">Wood Grain</option>
+                          <option value="custom">Custom Color</option>
+                        </select>
+                        <small className="field-hint">Frame finish affects appearance and cost</small>
+                      </div>
+                    </div>
+
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">🔬</span>
+                        Glass Specification
+                      </h4>
+                      <div className="form-grid">
+                        <div className="form-field">
+                          <label className="field-label">Glass Type</label>
+                          <select 
+                            value={quotationData.windowSpecs.glass}
+                            onChange={(e) => handleSpecChange('glass', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="single">Single Glazed (4mm)</option>
+                            <option value="double">Double Glazed (4-12-4mm)</option>
+                            <option value="triple">Triple Glazed (4-12-4-12-4mm)</option>
+                            <option value="laminated">Laminated Safety Glass</option>
+                            <option value="tempered">Tempered Safety Glass</option>
+                            <option value="low-e">Low-E Energy Efficient</option>
+                            <option value="acoustic">Acoustic Insulation</option>
+                          </select>
+                          <small className="field-hint">Glass type affects energy efficiency and sound insulation</small>
+                        </div>
+
+                        <div className="form-field">
+                          <label className="field-label">Glass Tint</label>
+                          <select
+                            value={quotationData.windowSpecs.glassTint || 'clear'}
+                            onChange={(e) => handleSpecChange('glassTint', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="clear">Clear</option>
+                            <option value="bronze">Bronze Tint</option>
+                            <option value="grey">Grey Tint</option>
+                            <option value="blue">Blue Tint</option>
+                            <option value="green">Green Tint</option>
+                            <option value="reflective">Reflective</option>
+                          </select>
+                          <small className="field-hint">Tinted glass reduces glare and heat</small>
+                        </div>
+                      </div>
+
+                      <div className="glass-performance">
+                        <h5>Glass Performance Ratings</h5>
+                        <div className="performance-grid">
+                          <div className="performance-item">
+                            <span className="performance-label">U-Value:</span>
+                            <span className="performance-value">
+                              {quotationData.windowSpecs.glass === 'single' ? '5.7' : 
+                               quotationData.windowSpecs.glass === 'double' ? '2.8' :
+                               quotationData.windowSpecs.glass === 'triple' ? '1.6' : '2.5'} W/m²K
+                            </span>
+                          </div>
+                          <div className="performance-item">
+                            <span className="performance-label">Sound Reduction:</span>
+                            <span className="performance-value">
+                              {quotationData.windowSpecs.glass === 'single' ? '25' : 
+                               quotationData.windowSpecs.glass === 'double' ? '35' :
+                               quotationData.windowSpecs.glass === 'acoustic' ? '45' : '40'} dB
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="config-section">
-                      <h4>Glass Type</h4>
-                      <div className="spec-input-group">
-                        <label>Glass Specification</label>
-                        <select value={quotationData.windowSpecs.glass}
-                                onChange={(e) => handleSpecChange('glass', e.target.value)}>
-                          <option value="single">Single Glazed</option>
-                          <option value="double">Double Glazed</option>
-                          <option value="triple">Triple Glazed</option>
-                          <option value="laminated">Laminated</option>
-                          <option value="tempered">Tempered</option>
-                        </select>
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">🔧</span>
+                        Hardware & Accessories
+                      </h4>
+                      <div className="form-grid">
+                        <div className="form-field">
+                          <label className="field-label">Hardware Finish</label>
+                          <select
+                            value={quotationData.windowSpecs.hardware || 'standard'}
+                            onChange={(e) => handleSpecChange('hardware', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="standard">Standard White</option>
+                            <option value="brushed-chrome">Brushed Chrome</option>
+                            <option value="polished-chrome">Polished Chrome</option>
+                            <option value="brushed-nickel">Brushed Nickel</option>
+                            <option value="oil-rubbed-bronze">Oil Rubbed Bronze</option>
+                            <option value="black">Matte Black</option>
+                          </select>
+                          <small className="field-hint">Hardware includes handles, locks, and hinges</small>
+                        </div>
+
+                        <div className="form-field">
+                          <label className="field-label">Security Features</label>
+                          <select
+                            value={quotationData.windowSpecs.security || 'standard'}
+                            onChange={(e) => handleSpecChange('security', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="standard">Standard Locks</option>
+                            <option value="multi-point">Multi-Point Locking</option>
+                            <option value="security-glass">Security Glass</option>
+                            <option value="reinforced">Reinforced Frame</option>
+                            <option value="smart-locks">Smart Lock System</option>
+                          </select>
+                          <small className="field-hint">Enhanced security options available</small>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1785,21 +2413,213 @@ const QuotationPage = () => {
                 {/* Features Tab */}
                 {activeTab === 'features' && (
                   <div className="tab-panel">
-                    <div className="config-section">
-                      <h4>Grill Options</h4>
-                      <div className="spec-input-group">
-                        <label>Grill Pattern</label>
-                        <select value={quotationData.windowSpecs.grilles}
-                                onChange={(e) => handleSpecChange('grilles', e.target.value)}>
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">📐</span>
+                        Grill & Decorative Options
+                      </h4>
+                      <div className="form-field">
+                        <label className="field-label">Grill Pattern</label>
+                        <select 
+                          value={quotationData.windowSpecs.grilles}
+                          onChange={(e) => handleSpecChange('grilles', e.target.value)}
+                          className="field-select"
+                        >
                           <option value="none">No Grills</option>
-                          <option value="colonial">Colonial (Traditional Grid)</option>
-                          <option value="prairie">Prairie (4-Pane Style)</option>
+                          <option value="colonial">Colonial Grid (Traditional)</option>
+                          <option value="prairie">Prairie Style (4-Pane)</option>
                           <option value="diamond">Diamond Pattern</option>
                           <option value="georgian">Georgian Bars</option>
                           <option value="custom-grid">Custom Grid Pattern</option>
                           <option value="between-glass">Between Glass Grills</option>
                           <option value="snap-in">Snap-in Removable</option>
+                          <option value="decorative">Decorative Muntins</option>
                         </select>
+                        <small className="field-hint">Grills add architectural character to windows</small>
+                      </div>
+
+                      {quotationData.windowSpecs.grilles !== 'none' && (
+                        <div className="form-field">
+                          <label className="field-label">Grill Color</label>
+                          <select
+                            value={quotationData.windowSpecs.grillColor || 'white'}
+                            onChange={(e) => handleSpecChange('grillColor', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="white">White</option>
+                            <option value="black">Black</option>
+                            <option value="bronze">Bronze</option>
+                            <option value="match-frame">Match Frame Color</option>
+                            <option value="custom">Custom Color</option>
+                          </select>
+                          <small className="field-hint">Grill color can match or contrast frame</small>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">🌤️</span>
+                        Weather & Energy Features
+                      </h4>
+                      <div className="form-grid">
+                        <div className="form-field">
+                          <label className="field-label">Weather Stripping</label>
+                          <select
+                            value={quotationData.windowSpecs.weatherStripping || 'standard'}
+                            onChange={(e) => handleSpecChange('weatherStripping', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="standard">Standard Seal</option>
+                            <option value="premium">Premium Seal</option>
+                            <option value="triple-seal">Triple Seal System</option>
+                            <option value="compression">Compression Seal</option>
+                          </select>
+                          <small className="field-hint">Better sealing improves energy efficiency</small>
+                        </div>
+
+                        <div className="form-field">
+                          <label className="field-label">Drainage System</label>
+                          <select
+                            value={quotationData.windowSpecs.drainage || 'standard'}
+                            onChange={(e) => handleSpecChange('drainage', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="standard">Standard Weep Holes</option>
+                            <option value="sloped-sill">Sloped Sill Design</option>
+                            <option value="internal-drain">Internal Drainage</option>
+                            <option value="pressure-equalized">Pressure Equalized</option>
+                          </select>
+                          <small className="field-hint">Prevents water infiltration and damage</small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">🏠</span>
+                        Comfort & Convenience Features
+                      </h4>
+                      <div className="checkbox-grid">
+                        <div className="checkbox-field">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={quotationData.windowSpecs.screenIncluded || false}
+                              onChange={(e) => handleSpecChange('screenIncluded', e.target.checked)}
+                            />
+                            <span className="checkmark"></span>
+                            Include Screen Mesh
+                          </label>
+                          <small>Insect protection screen</small>
+                        </div>
+
+                        <div className="checkbox-field">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={quotationData.windowSpecs.blindsIntegrated || false}
+                              onChange={(e) => handleSpecChange('blindsIntegrated', e.target.checked)}
+                            />
+                            <span className="checkmark"></span>
+                            Integrated Blinds
+                          </label>
+                          <small>Built-in between glass blinds</small>
+                        </div>
+
+                        <div className="checkbox-field">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={quotationData.windowSpecs.tiltAndTurn || false}
+                              onChange={(e) => handleSpecChange('tiltAndTurn', e.target.checked)}
+                            />
+                            <span className="checkmark"></span>
+                            Tilt & Turn Function
+                          </label>
+                          <small>Easy cleaning and ventilation</small>
+                        </div>
+
+                        <div className="checkbox-field">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={quotationData.windowSpecs.childSafety || false}
+                              onChange={(e) => handleSpecChange('childSafety', e.target.checked)}
+                            />
+                            <span className="checkmark"></span>
+                            Child Safety Locks
+                          </label>
+                          <small>Restricts window opening</small>
+                        </div>
+
+                        <div className="checkbox-field">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={quotationData.windowSpecs.motorized || false}
+                              onChange={(e) => handleSpecChange('motorized', e.target.checked)}
+                            />
+                            <span className="checkmark"></span>
+                            Motorized Operation
+                          </label>
+                          <small>Electric window operation</small>
+                        </div>
+
+                        <div className="checkbox-field">
+                          <label className="checkbox-label">
+                            <input
+                              type="checkbox"
+                              checked={quotationData.windowSpecs.smartHome || false}
+                              onChange={(e) => handleSpecChange('smartHome', e.target.checked)}
+                            />
+                            <span className="checkmark"></span>
+                            Smart Home Integration
+                          </label>
+                          <small>IoT connectivity and automation</small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-section">
+                      <h4 className="section-heading">
+                        <span className="section-icon">🎨</span>
+                        Aesthetic Enhancements
+                      </h4>
+                      <div className="form-grid">
+                        <div className="form-field">
+                          <label className="field-label">Window Trim Style</label>
+                          <select
+                            value={quotationData.windowSpecs.trimStyle || 'standard'}
+                            onChange={(e) => handleSpecChange('trimStyle', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="standard">Standard Trim</option>
+                            <option value="colonial">Colonial Style</option>
+                            <option value="craftsman">Craftsman Style</option>
+                            <option value="modern">Modern Minimal</option>
+                            <option value="decorative">Decorative Molding</option>
+                            <option value="custom">Custom Design</option>
+                          </select>
+                          <small className="field-hint">Interior and exterior trim appearance</small>
+                        </div>
+
+                        <div className="form-field">
+                          <label className="field-label">Glass Pattern</label>
+                          <select
+                            value={quotationData.windowSpecs.glassPattern || 'clear'}
+                            onChange={(e) => handleSpecChange('glassPattern', e.target.value)}
+                            className="field-select"
+                          >
+                            <option value="clear">Clear Glass</option>
+                            <option value="frosted">Frosted Glass</option>
+                            <option value="etched">Etched Pattern</option>
+                            <option value="stained">Stained Glass</option>
+                            <option value="textured">Textured Glass</option>
+                            <option value="privacy">Privacy Pattern</option>
+                          </select>
+                          <small className="field-hint">Decorative glass options for privacy and style</small>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1820,6 +2640,7 @@ const QuotationPage = () => {
                     slidingConfig={quotationData.slidingConfig}
                     bayConfig={quotationData.bayConfig}
                     doubleHungConfig={quotationData.doubleHungConfig}
+                    casementConfig={quotationData.casementConfig}
                     onShowDescription={openDescriptionModal}
                   />
                 </div>
@@ -1837,6 +2658,18 @@ const QuotationPage = () => {
                       <span className="price-value">${quotationData.pricing.finalTotal.toFixed(2)}</span>
                     </div>
                   </div>
+                </div>
+                
+                {/* Info Button to Show Configuration Details */}
+                <div className="diagram-info-section">
+                  <button 
+                    className="config-info-button"
+                    onClick={() => setShowConfigInfoModal(true)}
+                    title="View Current Configuration Details"
+                  >
+                    <span className="info-icon">ℹ️</span>
+                    <span>Configuration Details</span>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -1950,6 +2783,158 @@ const QuotationPage = () => {
               <button className="btn-secondary" onClick={closeDescriptionModal}>
                 Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Configuration Info Modal */}
+      {showConfigInfoModal && (
+        <div className="modal-overlay" onClick={() => setShowConfigInfoModal(false)}>
+          <div className="config-info-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Current Configuration Details</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowConfigInfoModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-content">
+              <div className="config-summary-panel">
+                <div className="summary-grid">
+                  {/* Material & Finish Summary */}
+                  <div className="summary-card">
+                    <div className="summary-title">
+                      <span className="summary-icon">🏗️</span>
+                      Materials & Finish
+                    </div>
+                    <div className="summary-details">
+                      <div className="detail-item">
+                        <span>Frame:</span>
+                        <span>{quotationData.windowSpecs.frame?.charAt(0).toUpperCase() + quotationData.windowSpecs.frame?.slice(1)} {quotationData.windowSpecs.frameColor && `(${quotationData.windowSpecs.frameColor})`}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span>Glass:</span>
+                        <span>{quotationData.windowSpecs.glass?.charAt(0).toUpperCase() + quotationData.windowSpecs.glass?.slice(1)} {quotationData.windowSpecs.glassTint && quotationData.windowSpecs.glassTint !== 'clear' && `(${quotationData.windowSpecs.glassTint})`}</span>
+                      </div>
+                      {quotationData.windowSpecs.hardware && quotationData.windowSpecs.hardware !== 'standard' && (
+                        <div className="detail-item">
+                          <span>Hardware:</span>
+                          <span>{quotationData.windowSpecs.hardware.replace('-', ' ')}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Installation Summary */}
+                  <div className="summary-card">
+                    <div className="summary-title">
+                      <span className="summary-icon">🔧</span>
+                      Installation
+                    </div>
+                    <div className="summary-details">
+                      {quotationData.windowSpecs.location && (
+                        <div className="detail-item">
+                          <span>Location:</span>
+                          <span>{quotationData.windowSpecs.location.replace('-', ' ')}</span>
+                        </div>
+                      )}
+                      {quotationData.windowSpecs.wallType && (
+                        <div className="detail-item">
+                          <span>Wall Type:</span>
+                          <span>{quotationData.windowSpecs.wallType.replace('-', ' ')}</span>
+                        </div>
+                      )}
+                      {quotationData.windowSpecs.replacement && (
+                        <div className="detail-item">
+                          <span>Installation:</span>
+                          <span>{quotationData.windowSpecs.replacement.replace('-', ' ')}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Features Summary */}
+                  <div className="summary-card">
+                    <div className="summary-title">
+                      <span className="summary-icon">✨</span>
+                      Features
+                    </div>
+                    <div className="summary-details">
+                      {quotationData.windowSpecs.grilles && quotationData.windowSpecs.grilles !== 'none' && (
+                        <div className="detail-item">
+                          <span>Grills:</span>
+                          <span>{quotationData.windowSpecs.grilles.replace('-', ' ')} {quotationData.windowSpecs.grillColor && `(${quotationData.windowSpecs.grillColor})`}</span>
+                        </div>
+                      )}
+                      {quotationData.windowSpecs.security && quotationData.windowSpecs.security !== 'standard' && (
+                        <div className="detail-item">
+                          <span>Security:</span>
+                          <span>{quotationData.windowSpecs.security.replace('-', ' ')}</span>
+                        </div>
+                      )}
+                      
+                      {/* Feature badges */}
+                      <div className="feature-badges">
+                        {quotationData.windowSpecs.screenIncluded && (
+                          <span className="feature-badge">Screen</span>
+                        )}
+                        {quotationData.windowSpecs.blindsIntegrated && (
+                          <span className="feature-badge">Blinds</span>
+                        )}
+                        {quotationData.windowSpecs.tiltAndTurn && (
+                          <span className="feature-badge">Tilt & Turn</span>
+                        )}
+                        {quotationData.windowSpecs.childSafety && (
+                          <span className="feature-badge">Child Safety</span>
+                        )}
+                        {quotationData.windowSpecs.motorized && (
+                          <span className="feature-badge">Motorized</span>
+                        )}
+                        {quotationData.windowSpecs.smartHome && (
+                          <span className="feature-badge">Smart</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Performance Summary */}
+                  <div className="summary-card">
+                    <div className="summary-title">
+                      <span className="summary-icon">📊</span>
+                      Performance
+                    </div>
+                    <div className="summary-details">
+                      <div className="detail-item">
+                        <span>U-Value:</span>
+                        <span>
+                          {quotationData.windowSpecs.glass === 'single' ? '5.7' : 
+                           quotationData.windowSpecs.glass === 'double' ? '2.8' :
+                           quotationData.windowSpecs.glass === 'triple' ? '1.6' :
+                           quotationData.windowSpecs.glass === 'low-e' ? '1.8' : '2.5'} W/m²K
+                        </span>
+                      </div>
+                      <div className="detail-item">
+                        <span>Sound Reduction:</span>
+                        <span>
+                          {quotationData.windowSpecs.glass === 'single' ? '25' : 
+                           quotationData.windowSpecs.glass === 'double' ? '35' :
+                           quotationData.windowSpecs.glass === 'acoustic' ? '45' : '40'} dB
+                        </span>
+                      </div>
+                      {quotationData.windowSpecs.width && quotationData.windowSpecs.height && (
+                        <div className="detail-item">
+                          <span>Area:</span>
+                          <span>{((quotationData.windowSpecs.width * quotationData.windowSpecs.height) / 1000000).toFixed(2)} m²</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -3,13 +3,24 @@ import InventoryService from './services/InventoryService';
 import ExcelExportService from './services/ExcelExportService';
 import ExcelImport from './components/ExcelImport';
 import { dataEventManager, DATA_TYPES } from './services/dataEventManager';
+import { useAppMode } from './contexts/AppModeContext';
+import ModeInventoryService from './services/ModeInventoryService';
 import './PageContent.css';
 import './InventoryPage.css';
 
 const InventoryPage = () => {
+  const {
+    currentMode,
+    getCurrentModeConfig,
+    canIgnoreInventory,
+    shouldShowInventoryWarnings,
+    requiresInventoryValidation,
+    allowsUnlimitedConfigurations
+  } = useAppMode();
   const [inventory, setInventory] = useState([]);
   const [categories, setCategories] = useState([]);
   const [dashboardStats, setDashboardStats] = useState({});
+  const [inventoryWarnings, setInventoryWarnings] = useState([]);
   
   // Filter and search states
   const [searchTerm, setSearchTerm] = useState('');
@@ -126,6 +137,13 @@ const InventoryPage = () => {
     loadDashboardStats();
   }, []);
 
+  // Reload stats when mode changes
+  useEffect(() => {
+    if (inventory.length > 0) {
+      loadDashboardStats();
+    }
+  }, [currentMode, inventory]);
+
   const loadInventory = async () => {
     try {
       setLoading(true);
@@ -152,7 +170,19 @@ const InventoryPage = () => {
   const loadDashboardStats = async () => {
     try {
       const stats = await InventoryService.getDashboardStats();
-      setDashboardStats(stats);
+      
+      // Enhance stats with mode-specific data
+      const modeSpecificStats = ModeInventoryService.getModeSpecificStats(inventory, currentMode);
+      const combinedStats = { ...stats, ...modeSpecificStats };
+      setDashboardStats(combinedStats);
+      
+      // Load mode-based warnings
+      if (shouldShowInventoryWarnings()) {
+        const warnings = ModeInventoryService.getInventoryWarnings(inventory, currentMode);
+        setInventoryWarnings(warnings);
+      } else {
+        setInventoryWarnings([]);
+      }
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
     }
@@ -260,7 +290,65 @@ const InventoryPage = () => {
       setLoading(true);
       setError('');
       
-      const result = await InventoryService.createItem(itemData);
+      // Basic validation
+      if (!itemData.name.trim()) {
+        setError('Product name is required.');
+        return;
+      }
+      
+      // Clean and prepare data for submission
+      const cleanedData = {
+        ...itemData,
+        // Generate SKU if empty
+        sku: itemData.sku?.trim() || `SKU-${Date.now()}`,
+        // Use default category if not provided (required field)
+        category: itemData.category?.trim() || '68ede250298996a8e3b081a4', // Default category ID
+        // Set default categoryType (required field)
+        categoryType: itemData.categoryType?.trim() || 'window_type',
+        // Clean specifications to remove empty enum values
+        specifications: {
+          ...itemData.specifications,
+          // Clean nested objects - remove empty strings for enums
+          windowType: itemData.specifications.windowType?.trim() || undefined,
+          glassType: itemData.specifications.glassType?.trim() || undefined,
+          frameMaterial: itemData.specifications.frameMaterial?.trim() || undefined,
+          finish: itemData.specifications.finish?.trim() || undefined,
+          colorFamily: itemData.specifications.colorFamily?.trim() || undefined,
+          grillePattern: itemData.specifications.grillePattern?.trim() || undefined,
+          performance: {
+            ...itemData.specifications.performance,
+            // Remove empty energy rating to avoid enum validation error
+            energyRating: itemData.specifications.performance?.energyRating?.trim() || undefined
+          }
+        }
+      };
+
+      // Remove undefined values from specifications to avoid enum validation errors
+      if (!cleanedData.specifications.windowType) {
+        delete cleanedData.specifications.windowType;
+      }
+      if (!cleanedData.specifications.glassType) {
+        delete cleanedData.specifications.glassType;
+      }
+      if (!cleanedData.specifications.frameMaterial) {
+        delete cleanedData.specifications.frameMaterial;
+      }
+      if (!cleanedData.specifications.finish) {
+        delete cleanedData.specifications.finish;
+      }
+      if (!cleanedData.specifications.colorFamily) {
+        delete cleanedData.specifications.colorFamily;
+      }
+      if (!cleanedData.specifications.grillePattern) {
+        delete cleanedData.specifications.grillePattern;
+      }
+      if (!cleanedData.specifications.performance.energyRating) {
+        delete cleanedData.specifications.performance.energyRating;
+      }
+      
+      console.log('Submitting cleaned data:', cleanedData);
+      
+      const result = await InventoryService.createInventoryItem(cleanedData);
       setInventory(prev => [...prev, result]);
       
       resetForm();
@@ -285,10 +373,76 @@ const InventoryPage = () => {
       setLoading(true);
       setError('');
       
-      const result = await InventoryService.updateItem(editingItem._id, itemData);
-      setInventory(prev => prev.map(item => 
-        item._id === editingItem._id ? result : item
-      ));
+      // Clean and prepare data for submission (same as create)
+      const cleanedData = {
+        ...itemData,
+        // Use existing SKU or generate new one if empty
+        sku: itemData.sku?.trim() || `SKU-${Date.now()}`,
+        // Handle category - it might be an object or string
+        category: typeof itemData.category === 'string' 
+          ? (itemData.category?.trim() || '68ede250298996a8e3b081a4')
+          : (itemData.category?._id || '68ede250298996a8e3b081a4'),
+        // Set default categoryType (required field)
+        categoryType: itemData.categoryType?.trim() || 'window_type',
+        // Clean specifications to remove empty enum values
+        specifications: {
+          ...itemData.specifications,
+          // Clean nested objects - remove empty strings for enums
+          windowType: itemData.specifications.windowType?.trim() || undefined,
+          glassType: itemData.specifications.glassType?.trim() || undefined,
+          frameMaterial: itemData.specifications.frameMaterial?.trim() || undefined,
+          finish: itemData.specifications.finish?.trim() || undefined,
+          colorFamily: itemData.specifications.colorFamily?.trim() || undefined,
+          grillePattern: itemData.specifications.grillePattern?.trim() || undefined,
+          performance: {
+            ...itemData.specifications.performance,
+            // Remove empty energy rating to avoid enum validation error
+            energyRating: itemData.specifications.performance?.energyRating?.trim() || undefined
+          }
+        }
+      };
+
+      // Remove undefined values from specifications to avoid enum validation errors
+      if (!cleanedData.specifications.windowType) {
+        delete cleanedData.specifications.windowType;
+      }
+      if (!cleanedData.specifications.glassType) {
+        delete cleanedData.specifications.glassType;
+      }
+      if (!cleanedData.specifications.frameMaterial) {
+        delete cleanedData.specifications.frameMaterial;
+      }
+      if (!cleanedData.specifications.finish) {
+        delete cleanedData.specifications.finish;
+      }
+      if (!cleanedData.specifications.colorFamily) {
+        delete cleanedData.specifications.colorFamily;
+      }
+      if (!cleanedData.specifications.grillePattern) {
+        delete cleanedData.specifications.grillePattern;
+      }
+      if (!cleanedData.specifications.performance.energyRating) {
+        delete cleanedData.specifications.performance.energyRating;
+      }
+      
+      console.log('Updating with cleaned data:', cleanedData);
+      console.log('Editing item ID:', editingItem._id);
+      
+      const result = await InventoryService.updateItem(editingItem._id, cleanedData);
+      console.log('Update result:', result);
+      
+      // Update the specific item in the state
+      setInventory(prev => {
+        const updatedInventory = prev.map(item => {
+          if (item._id === editingItem._id) {
+            console.log('Found matching item to update:', item._id);
+            return result;
+          }
+          return item;
+        });
+        console.log('Updated inventory state:', updatedInventory);
+        return updatedInventory;
+      });
       
       resetForm();
       setShowEditPopup(false);
@@ -443,6 +597,52 @@ const InventoryPage = () => {
   const currentItems = sortedInventory.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(sortedInventory.length / itemsPerPage);
 
+  // Manufacturing export function
+  const handleManufacturingExport = async () => {
+    try {
+      setLoading(true);
+      
+      // Generate export data with mode-specific formatting
+      const exportData = ModeInventoryService.generateConfigurationExport(
+        inventory.map(item => ({
+          id: item._id,
+          name: item.name,
+          sku: item.sku,
+          category: item.category,
+          stock: item.stock,
+          pricing: item.pricing,
+          specifications: item.specifications,
+          items: [{ id: item._id, quantity: item.stock?.currentQuantity || 0 }]
+        })),
+        currentMode
+      );
+      
+      // Create downloadable file
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json'
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `manufacturing-inventory-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      // Show success message
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+      
+    } catch (error) {
+      console.error('Error exporting manufacturing data:', error);
+      setError('Failed to export manufacturing data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
@@ -461,8 +661,60 @@ const InventoryPage = () => {
             </svg>
             Add Inventory Item
           </button>
+          
+          {/* Manufacturing Export Button - Only visible in Manufacturer mode */}
+          {currentMode === 'manufacturer' && (
+            <button 
+              className="export-btn manufacturer-export"
+              onClick={handleManufacturingExport}
+              disabled={loading || inventory.length === 0}
+              title="Export inventory data for manufacturing"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+              </svg>
+              Export for Manufacturing
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Mode Indicator */}
+      <div className={`mode-indicator mode-${currentMode}`}>
+        <div className="mode-info">
+          <span className="mode-icon">{getCurrentModeConfig().icon}</span>
+          <div className="mode-details">
+            <strong>{getCurrentModeConfig().name}</strong>
+            <span className="mode-description">{getCurrentModeConfig().description}</span>
+          </div>
+        </div>
+        <div className="mode-features">
+          {canIgnoreInventory() && (
+            <span className="feature-badge unlimited">Unlimited Stock</span>
+          )}
+          {requiresInventoryValidation() && (
+            <span className="feature-badge validation">Real-time Validation</span>
+          )}
+          {shouldShowInventoryWarnings() && (
+            <span className="feature-badge warnings">Inventory Warnings</span>
+          )}
+        </div>
+      </div>
+
+      {/* Inventory Warnings */}
+      {shouldShowInventoryWarnings() && inventoryWarnings.length > 0 && (
+        <div className="inventory-warnings">
+          <h3>⚠️ Inventory Alerts</h3>
+          <div className="warnings-list">
+            {inventoryWarnings.map((warning, index) => (
+              <div key={index} className={`warning-item ${warning.severity}`}>
+                <span className="warning-message">{warning.message}</span>
+                <span className="warning-type">{warning.type.replace('-', ' ').toUpperCase()}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       
       <div className="page-content">
         {/* Success Message */}
@@ -730,7 +982,7 @@ const InventoryPage = () => {
               </button>
             </div>
 
-            <form onSubmit={showEditPopup ? handleEditSubmit : handleSubmit} className="comprehensive-form">
+            <form id="inventory-form" onSubmit={showEditPopup ? handleEditSubmit : handleSubmit} className="comprehensive-form">
               
               {/* Basic Product Information */}
               <div className="form-section">
@@ -1480,25 +1732,50 @@ const InventoryPage = () => {
                   />
                 </div>
               </div>
-
-              {/* Form Actions */}
-              <div className="popup-footer">
-                <button 
-                  type="button" 
-                  onClick={() => { 
-                    setShowAddPopup(false); 
-                    setShowEditPopup(false); 
-                    resetForm(); 
-                  }} 
-                  className="cancel-btn"
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? (showEditPopup ? 'Updating...' : 'Adding...') : (showEditPopup ? 'Update Item' : 'Add Inventory Item')}
-                </button>
-              </div>
             </form>
+
+            {/* Error Message Display */}
+            {error && (
+              <div className="form-error-message" style={{
+                background: '#fee2e2',
+                color: '#dc2626',
+                padding: '12px 20px',
+                margin: '0 20px',
+                borderRadius: '8px',
+                border: '1px solid #fecaca',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM13 17h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                {error}
+              </div>
+            )}
+
+            {/* Form Actions - Outside form for proper sticky positioning */}
+            <div className="popup-footer">
+              <button 
+                type="button" 
+                onClick={() => { 
+                  setShowAddPopup(false); 
+                  setShowEditPopup(false); 
+                  resetForm(); 
+                }} 
+                className="cancel-btn"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                form="inventory-form"
+                className="submit-btn" 
+                disabled={loading}
+              >
+                {loading ? (showEditPopup ? 'Updating...' : 'Adding...') : (showEditPopup ? 'Update Item' : 'Add Inventory Item')}
+              </button>
+            </div>
           </div>
         </div>
       )}

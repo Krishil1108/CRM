@@ -312,7 +312,7 @@ class InventoryService {
 
   static async deleteInventoryItem(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/inventory/items/${id}`, {
         method: 'DELETE',
       });
       

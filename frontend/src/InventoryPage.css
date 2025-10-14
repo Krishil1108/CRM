@@ -1,5 +1,204 @@
 /* Enhanced Inventory Page Styles */
 
+/* Mode Indicator Styles */
+.mode-indicator {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  border-left: 4px solid var(--theme-primary);
+  background: linear-gradient(135deg, var(--theme-light) 0%, #ffffff 100%);
+}
+
+.mode-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mode-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.mode-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mode-details strong {
+  color: var(--theme-dark);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.mode-description {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.mode-features {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feature-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--theme-light);
+  color: var(--theme-dark);
+  border: 1px solid var(--theme-primary);
+}
+
+.feature-badge.unlimited {
+  background: var(--theme-light);
+  color: var(--theme-dark);
+  border: 1px solid var(--theme-primary);
+}
+
+.feature-badge.validation {
+  background: var(--theme-light);
+  color: var(--theme-dark);
+  border: 1px solid var(--theme-primary);
+}
+
+.feature-badge.warnings {
+  background: var(--theme-light);
+  color: var(--theme-dark);
+  border: 1px solid var(--theme-primary);
+}
+
+/* Inventory Warnings */
+.inventory-warnings {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffffff 100%);
+  border: 1px solid #ffc107;
+  border-left: 4px solid #ff9800;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 20px 0;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.1);
+}
+
+.inventory-warnings h3 {
+  color: #e65100;
+  font-size: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.warnings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.warning-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  border-left: 3px solid #ffc107;
+}
+
+.warning-item.high {
+  border-left-color: #dc3545;
+  background: rgba(248, 215, 218, 0.3);
+}
+
+.warning-item.medium {
+  border-left-color: #ffc107;
+  background: rgba(255, 243, 205, 0.3);
+}
+
+.warning-message {
+  flex: 1;
+  color: #495057;
+  font-size: 14px;
+}
+
+.warning-type {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  background: rgba(108, 117, 125, 0.1);
+  border-radius: 12px;
+}
+
+/* Manufacturing Export Button */
+.export-btn.manufacturer-export {
+  background: var(--theme-primary);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.export-btn.manufacturer-export:hover:not(:disabled) {
+  background: var(--theme-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.export-btn.manufacturer-export:disabled {
+  background: #e0e0e0;
+  color: #9e9e9e;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.export-btn.manufacturer-export svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Header actions spacing */
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Override popup overlay for large inventory forms */
+.large-popup {
+  align-items: flex-start !important;
+  padding-top: 2vh;
+}
+
 /* Dashboard Stats */
 .inventory-dashboard {
   margin-bottom: 2rem;
@@ -367,7 +566,7 @@
 }
 
 .edit-btn {
-  background: #007bff;
+  background: var(--theme-primary);
   color: white;
 }
 
@@ -404,11 +603,12 @@
 
 /* Comprehensive Form Styles */
 .large-popup .popup-container {
-  max-width: 1000px;
-  max-height: 95vh;
-  width: 90vw;
-  display: flex;
-  flex-direction: column;
+  max-width: 1000px !important;
+  max-height: 95vh !important;
+  width: 90vw !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: visible !important;
 }
 
 .large-popup .popup-header {
@@ -424,7 +624,8 @@
 .comprehensive-form {
   flex: 1;
   overflow-y: auto;
-  padding: 0 1.5rem;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  max-height: calc(95vh - 80px);
   scrollbar-width: thin;
   scrollbar-color: #cbd5e0 #f7fafc;
 }

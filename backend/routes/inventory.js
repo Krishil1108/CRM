@@ -158,9 +158,12 @@ router.post('/items', async (req, res) => {
     
     // Log activity
     await Activity.create({
-      type: 'inventory',
+      type: 'inventory_added',
       description: `Created new inventory item: ${item.name} (SKU: ${item.sku})`,
-      user: req.body.createdBy || 'System',
+      entityId: item._id,
+      entityType: 'Inventory',
+      entityName: item.name,
+      userId: req.body.createdBy || 'System',
       metadata: { itemId: item._id, sku: item.sku, quantity: item.stock.currentQuantity }
     });
     
@@ -290,9 +293,12 @@ router.put('/items/:id', async (req, res) => {
     
     // Log activity
     await Activity.create({
-      type: 'inventory',
+      type: 'inventory_updated',
       description: `Updated inventory item: ${item.name}`,
-      user: req.body.updatedBy || 'System',
+      entityId: item._id,
+      entityType: 'Inventory',
+      entityName: item.name,
+      userId: req.body.updatedBy || 'System',
       metadata: { itemId: item._id, sku: item.sku }
     });
     
@@ -300,6 +306,41 @@ router.put('/items/:id', async (req, res) => {
   } catch (error) {
     console.error('Error updating inventory item:', error);
     res.status(500).json({ message: 'Error updating inventory item', error: error.message });
+  }
+});
+
+// Delete inventory item
+router.delete('/items/:id', async (req, res) => {
+  try {
+    const deletedItem = await InventoryItem.findByIdAndDelete(req.params.id);
+    
+    if (!deletedItem) {
+      return res.status(404).json({ message: 'Inventory item not found' });
+    }
+    
+    // Create activity log
+    try {
+      await Activity.create({
+        type: 'inventory_updated', // Using existing enum value
+        description: `Deleted inventory item: ${deletedItem.name}`,
+        entityId: deletedItem._id,
+        entityType: 'Inventory',
+        entityName: deletedItem.name,
+        userId: 'System',
+        metadata: {
+          name: deletedItem.name,
+          sku: deletedItem.sku,
+          category: deletedItem.category
+        }
+      });
+    } catch (activityError) {
+      console.warn('Failed to create activity log:', activityError);
+    }
+    
+    res.json({ message: 'Inventory item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting inventory item:', error);
+    res.status(500).json({ message: 'Error deleting inventory item', error: error.message });
   }
 });
 

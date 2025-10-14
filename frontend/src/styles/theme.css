@@ -1,0 +1,192 @@
+/* Global Theme System */
+:root {
+  /* Default theme colors (Test mode) */
+  --theme-primary: #4CAF50;
+  --theme-secondary: #66BB6A;
+  --theme-light: #E8F5E8;
+  --theme-dark: #2E7D32;
+  --theme-mode: 'test';
+  
+  /* Transitions */
+  --theme-transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* Global theme transitions */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Theme-based button styling */
+.add-client-btn,
+.btn-primary,
+.primary-button {
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%) !important;
+  border-color: var(--theme-primary) !important;
+  color: white !important;
+  transition: var(--theme-transition);
+}
+
+.add-client-btn:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.primary-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--theme-dark) 0%, var(--theme-primary) 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--theme-primary-rgb), 0.3);
+}
+
+/* Theme-based secondary buttons */
+.btn-secondary,
+.secondary-button {
+  background: var(--theme-light) !important;
+  border-color: var(--theme-primary) !important;
+  color: var(--theme-dark) !important;
+}
+
+.btn-secondary:hover:not(:disabled),
+.secondary-button:hover:not(:disabled) {
+  background: var(--theme-primary) !important;
+  color: white !important;
+}
+
+/* Theme-based input fields */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  border-color: rgba(var(--theme-primary-rgb), 0.3) !important;
+  transition: var(--theme-transition);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--theme-primary) !important;
+  box-shadow: 0 0 0 3px rgba(var(--theme-primary-rgb), 0.1) !important;
+}
+
+/* Theme-based form labels */
+.form-group label,
+.form-label {
+  color: var(--theme-dark) !important;
+  font-weight: 600;
+}
+
+/* Theme-based cards and containers */
+.stat-card,
+.card,
+.popup-content {
+  border-left-color: var(--theme-primary) !important;
+}
+
+.stat-card:hover,
+.card:hover {
+  box-shadow: 0 4px 20px rgba(var(--theme-primary-rgb), 0.15) !important;
+}
+
+/* Theme-based links and navigation */
+.nav-link.active,
+.sidebar-item.active {
+  background: var(--theme-light) !important;
+  color: var(--theme-dark) !important;
+  border-right: 3px solid var(--theme-primary) !important;
+}
+
+/* Theme-based progress indicators */
+.progress-bar,
+.loading-bar {
+  background: var(--theme-primary) !important;
+}
+
+/* Theme-based badges and chips */
+.badge,
+.chip,
+.tag {
+  background: var(--theme-light) !important;
+  color: var(--theme-dark) !important;
+  border: 1px solid var(--theme-primary) !important;
+}
+
+/* Theme-based alerts and notifications */
+.success-message,
+.notification-success {
+  background: var(--theme-light) !important;
+  color: var(--theme-dark) !important;
+  border-left: 4px solid var(--theme-primary) !important;
+}
+
+/* Mode-specific page backgrounds */
+body.theme-test {
+  --theme-primary-rgb: 76, 175, 80;
+}
+
+body.theme-quotation {
+  --theme-primary-rgb: 33, 150, 243;
+}
+
+body.theme-manufacturer {
+  --theme-primary-rgb: 141, 110, 99;
+}
+
+/* Theme-based table headers */
+.table-header,
+.table th {
+  background: var(--theme-light) !important;
+  color: var(--theme-dark) !important;
+  border-bottom: 2px solid var(--theme-primary) !important;
+}
+
+/* Theme-based pagination */
+.pagination-btn:not(:disabled) {
+  background: var(--theme-light) !important;
+  color: var(--theme-dark) !important;
+  border: 1px solid var(--theme-primary) !important;
+}
+
+.pagination-btn:not(:disabled):hover {
+  background: var(--theme-primary) !important;
+  color: white !important;
+}
+
+/* Theme-based checkboxes and radios */
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background-color: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+}
+
+/* Theme-based scrollbars */
+::-webkit-scrollbar-thumb {
+  background: var(--theme-primary) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-dark) !important;
+}
+
+/* Theme-based selection */
+::selection {
+  background: var(--theme-light) !important;
+  color: var(--theme-dark) !important;
+}
+
+/* Theme transitions for smooth mode switching */
+.page-container,
+.main-content,
+.popup-content,
+.sidebar {
+  transition: var(--theme-transition);
+}
+
+/* Override for manufacturing export button to use theme colors */
+.export-btn.manufacturer-export {
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%) !important;
+}
+
+.export-btn.manufacturer-export:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--theme-dark) 0%, var(--theme-primary) 100%) !important;
+}

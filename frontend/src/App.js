@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import './styles/theme.css';
 import { CompanyProvider } from './CompanyContext';
+import { AppModeProvider } from './contexts/AppModeContext';
 import Sidebar from './Sidebar';
 import HomePage from './HomePage';
 import ClientsPage from './ClientsPage';
@@ -10,6 +12,7 @@ import ReportsPage from './ReportsPage';
 import SettingsPage from './SettingsPage';
 import QuotationPage from './QuotationPageADS';
 import QuoteHistoryPage from './QuoteHistoryPage';
+import ModeSelector from './components/ModeSelector';
 
 function App() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
@@ -56,19 +59,24 @@ function App() {
 
   return (
     <CompanyProvider>
-      <div className="App">
-        <Sidebar 
-          isExpanded={isSidebarExpanded} 
-          toggleSidebar={toggleSidebar}
-          currentPage={currentPage}
-          onPageChange={handlePageChange}
-        />
-        
-        {/* Main content area - Dynamic page content */}
-        <div className={`main-content ${isSidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
-          {renderCurrentPage()}
+      <AppModeProvider>
+        <div className="App">
+          <Sidebar 
+            isExpanded={isSidebarExpanded} 
+            toggleSidebar={toggleSidebar}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+          />
+          
+          {/* Fixed Mode Selector */}
+          <ModeSelector />
+          
+          {/* Main content area - Dynamic page content */}
+          <div className={`main-content ${isSidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+            {renderCurrentPage()}
+          </div>
         </div>
-      </div>
+      </AppModeProvider>
     </CompanyProvider>
   );
 }
