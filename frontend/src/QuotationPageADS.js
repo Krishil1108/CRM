@@ -17,7 +17,6 @@ const QuotationPage = () => {
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
-  const [showConfigInfoModal, setShowConfigInfoModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', description: '' });
   const [activeTab, setActiveTab] = useState('configuration');
   const [quotationData, setQuotationData] = useState({
@@ -338,6 +337,22 @@ const QuotationPage = () => {
         email: ''
       },
       selectedWindowType: null,
+      slidingConfig: {
+        panels: 2,
+        combination: null
+      },
+      bayConfig: {
+        combination: null,
+        angle: 30,
+        style: 'traditional'
+      },
+      doubleHungConfig: {
+        combination: null
+      },
+      casementConfig: {
+        direction: 'outward',
+        hinge: 'left'
+      },
       windowSpecs: {
         width: '',
         height: '',
@@ -1940,7 +1955,7 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Number of Panels</label>
                             <select
-                              value={quotationData.slidingConfig.panels}
+                              value={quotationData.slidingConfig?.panels || 2}
                               onChange={(e) => {
                                 const panels = parseInt(e.target.value);
                                 setQuotationData(prev => ({
@@ -1966,7 +1981,7 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Panel Operation</label>
                             <select
-                              value={quotationData.slidingConfig.combination || ''}
+                              value={quotationData.slidingConfig?.combination || ''}
                               onChange={(e) => {
                                 setQuotationData(prev => ({
                                   ...prev,
@@ -2000,7 +2015,7 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Bay Angle</label>
                             <select
-                              value={quotationData.bayConfig.angle}
+                              value={quotationData.bayConfig?.angle || 30}
                               onChange={(e) => {
                                 setQuotationData(prev => ({
                                   ...prev,
@@ -2023,7 +2038,7 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Bay Style</label>
                             <select
-                              value={quotationData.bayConfig.style || 'traditional'}
+                              value={quotationData.bayConfig?.style || 'traditional'}
                               onChange={(e) => {
                                 setQuotationData(prev => ({
                                   ...prev,
@@ -2659,18 +2674,6 @@ const QuotationPage = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Info Button to Show Configuration Details */}
-                <div className="diagram-info-section">
-                  <button 
-                    className="config-info-button"
-                    onClick={() => setShowConfigInfoModal(true)}
-                    title="View Current Configuration Details"
-                  >
-                    <span className="info-icon">ℹ️</span>
-                    <span>Configuration Details</span>
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="no-selection">
@@ -2783,158 +2786,6 @@ const QuotationPage = () => {
               <button className="btn-secondary" onClick={closeDescriptionModal}>
                 Close
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Configuration Info Modal */}
-      {showConfigInfoModal && (
-        <div className="modal-overlay" onClick={() => setShowConfigInfoModal(false)}>
-          <div className="config-info-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Current Configuration Details</h3>
-              <button 
-                className="modal-close"
-                onClick={() => setShowConfigInfoModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="modal-content">
-              <div className="config-summary-panel">
-                <div className="summary-grid">
-                  {/* Material & Finish Summary */}
-                  <div className="summary-card">
-                    <div className="summary-title">
-                      <span className="summary-icon">🏗️</span>
-                      Materials & Finish
-                    </div>
-                    <div className="summary-details">
-                      <div className="detail-item">
-                        <span>Frame:</span>
-                        <span>{quotationData.windowSpecs.frame?.charAt(0).toUpperCase() + quotationData.windowSpecs.frame?.slice(1)} {quotationData.windowSpecs.frameColor && `(${quotationData.windowSpecs.frameColor})`}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>Glass:</span>
-                        <span>{quotationData.windowSpecs.glass?.charAt(0).toUpperCase() + quotationData.windowSpecs.glass?.slice(1)} {quotationData.windowSpecs.glassTint && quotationData.windowSpecs.glassTint !== 'clear' && `(${quotationData.windowSpecs.glassTint})`}</span>
-                      </div>
-                      {quotationData.windowSpecs.hardware && quotationData.windowSpecs.hardware !== 'standard' && (
-                        <div className="detail-item">
-                          <span>Hardware:</span>
-                          <span>{quotationData.windowSpecs.hardware.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Installation Summary */}
-                  <div className="summary-card">
-                    <div className="summary-title">
-                      <span className="summary-icon">🔧</span>
-                      Installation
-                    </div>
-                    <div className="summary-details">
-                      {quotationData.windowSpecs.location && (
-                        <div className="detail-item">
-                          <span>Location:</span>
-                          <span>{quotationData.windowSpecs.location.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                      {quotationData.windowSpecs.wallType && (
-                        <div className="detail-item">
-                          <span>Wall Type:</span>
-                          <span>{quotationData.windowSpecs.wallType.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                      {quotationData.windowSpecs.replacement && (
-                        <div className="detail-item">
-                          <span>Installation:</span>
-                          <span>{quotationData.windowSpecs.replacement.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Features Summary */}
-                  <div className="summary-card">
-                    <div className="summary-title">
-                      <span className="summary-icon">✨</span>
-                      Features
-                    </div>
-                    <div className="summary-details">
-                      {quotationData.windowSpecs.grilles && quotationData.windowSpecs.grilles !== 'none' && (
-                        <div className="detail-item">
-                          <span>Grills:</span>
-                          <span>{quotationData.windowSpecs.grilles.replace('-', ' ')} {quotationData.windowSpecs.grillColor && `(${quotationData.windowSpecs.grillColor})`}</span>
-                        </div>
-                      )}
-                      {quotationData.windowSpecs.security && quotationData.windowSpecs.security !== 'standard' && (
-                        <div className="detail-item">
-                          <span>Security:</span>
-                          <span>{quotationData.windowSpecs.security.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                      
-                      {/* Feature badges */}
-                      <div className="feature-badges">
-                        {quotationData.windowSpecs.screenIncluded && (
-                          <span className="feature-badge">Screen</span>
-                        )}
-                        {quotationData.windowSpecs.blindsIntegrated && (
-                          <span className="feature-badge">Blinds</span>
-                        )}
-                        {quotationData.windowSpecs.tiltAndTurn && (
-                          <span className="feature-badge">Tilt & Turn</span>
-                        )}
-                        {quotationData.windowSpecs.childSafety && (
-                          <span className="feature-badge">Child Safety</span>
-                        )}
-                        {quotationData.windowSpecs.motorized && (
-                          <span className="feature-badge">Motorized</span>
-                        )}
-                        {quotationData.windowSpecs.smartHome && (
-                          <span className="feature-badge">Smart</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Performance Summary */}
-                  <div className="summary-card">
-                    <div className="summary-title">
-                      <span className="summary-icon">📊</span>
-                      Performance
-                    </div>
-                    <div className="summary-details">
-                      <div className="detail-item">
-                        <span>U-Value:</span>
-                        <span>
-                          {quotationData.windowSpecs.glass === 'single' ? '5.7' : 
-                           quotationData.windowSpecs.glass === 'double' ? '2.8' :
-                           quotationData.windowSpecs.glass === 'triple' ? '1.6' :
-                           quotationData.windowSpecs.glass === 'low-e' ? '1.8' : '2.5'} W/m²K
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span>Sound Reduction:</span>
-                        <span>
-                          {quotationData.windowSpecs.glass === 'single' ? '25' : 
-                           quotationData.windowSpecs.glass === 'double' ? '35' :
-                           quotationData.windowSpecs.glass === 'acoustic' ? '45' : '40'} dB
-                        </span>
-                      </div>
-                      {quotationData.windowSpecs.width && quotationData.windowSpecs.height && (
-                        <div className="detail-item">
-                          <span>Area:</span>
-                          <span>{((quotationData.windowSpecs.width * quotationData.windowSpecs.height) / 1000000).toFixed(2)} m²</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
