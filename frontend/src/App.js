@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import './styles/theme.css';
 import { CompanyProvider } from './CompanyContext';
@@ -12,72 +13,44 @@ import ReportsPage from './ReportsPage';
 import SettingsPage from './SettingsPage';
 import QuotationPage from './QuotationPageADS';
 import QuoteHistoryPage from './QuoteHistoryPage';
-import ModeSelector from './components/ModeSelector';
 
 function App() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
-  const [currentPage, setCurrentPage] = useState('home');
 
   const toggleSidebar = () => {
     setIsSidebarExpanded(!isSidebarExpanded);
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const renderCurrentPage = () => {
-    switch (currentPage) {
-      case 'home':
-        return <HomePage />;
-      case 'clients':
-        return <ClientsPage />;
-      case 'inventory':
-        return <InventoryPage />;
-      case 'dashboard':
-        return <DashboardPage />;
-      case 'reports':
-        return <ReportsPage />;
-      case 'quotation':
-        return <QuotationPage />;
-      case 'quote-history':
-        return <QuoteHistoryPage />;
-      case 'settings':
-        return <SettingsPage />;
-      default:
-        return <HomePage />;
-    }
-  };
-
-  // No need to prevent body scroll since sidebar is always visible
-  useEffect(() => {
-    // Cleanup on unmount if needed
-    return () => {
-      document.body.classList.remove('sidebar-open');
-    };
-  }, []);
-
   return (
-    <CompanyProvider>
-      <AppModeProvider>
-        <div className="App">
-          <Sidebar 
-            isExpanded={isSidebarExpanded} 
-            toggleSidebar={toggleSidebar}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-          />
-          
-          {/* Fixed Mode Selector */}
-          <ModeSelector />
-          
-          {/* Main content area - Dynamic page content */}
-          <div className={`main-content ${isSidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
-            {renderCurrentPage()}
+    <Router>
+      <CompanyProvider>
+        <AppModeProvider>
+          <div className="App">
+            <Sidebar 
+              isExpanded={isSidebarExpanded} 
+              toggleSidebar={toggleSidebar}
+            />
+            
+            {/* Main content area - Dynamic page content */}
+            <div className={`main-content ${isSidebarExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'}`}>
+              <Routes>
+                <Route path="/" element={<Navigate to="/home" replace />} />
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/clients" element={<ClientsPage />} />
+                <Route path="/inventory" element={<InventoryPage />} />
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
+                <Route path="/quotation-ads" element={<QuotationPage />} />
+                <Route path="/quote-history" element={<QuoteHistoryPage />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                {/* Fallback route for any unmatched paths */}
+                <Route path="*" element={<Navigate to="/home" replace />} />
+              </Routes>
+            </div>
           </div>
-        </div>
-      </AppModeProvider>
-    </CompanyProvider>
+        </AppModeProvider>
+      </CompanyProvider>
+    </Router>
   );
 }
 

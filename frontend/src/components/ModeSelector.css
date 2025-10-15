@@ -1,9 +1,9 @@
-/* Fixed Mode Selector - Top Right Corner */
+/* Mode Selector - Page Integrated */
 .mode-selector-fixed {
-  position: fixed;
+  position: absolute;
   top: 20px;
   right: 20px;
-  z-index: 1000;
+  z-index: 100;
   display: flex;
   align-items: center;
   gap: 12px;

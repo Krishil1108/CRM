@@ -769,6 +769,15 @@
   overflow: hidden;
 }
 
+.title-header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
 .quotation-title-section::before {
   content: '';
   position: absolute;
@@ -791,6 +800,36 @@
   text-shadow: 0 1px 2px rgba(0,0,0,0.15);
   position: relative;
   z-index: 1;
+}
+
+/* Auto-save Indicator */
+.auto-save-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(34, 197, 94, 0.2);
+  padding: 8px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.save-icon {
+  font-size: 14px;
+  animation: pulse 2s infinite;
+}
+
+.save-text {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0.5px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 /* Client Information Section */
@@ -895,9 +934,10 @@
 /* Dashboard-style Layout */
 .builder-layout {
   display: grid;
-  grid-template-columns: 1fr 1.5fr;
+  grid-template-columns: 1.3fr 1.2fr; /* Increased left panel, reduced right panel */
   gap: 30px;
   min-height: 500px;
+  align-items: start; /* Prevent panels from stretching to match height */
 }
 
 /* Left Panel - Configuration */
@@ -907,6 +947,8 @@
   border-radius: 10px;
   padding: 25px;
   height: fit-content;
+  max-height: 800px; /* Limit maximum height */
+  overflow-y: auto; /* Add scrolling when content exceeds max height */
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
@@ -1462,6 +1504,9 @@
   display: flex;
   flex-direction: column;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  height: 600px; /* Fixed height for consistent diagram viewing */
+  position: sticky; /* Stick to top when scrolling */
+  top: 20px; /* Small offset from top */
 }
 
 .window-preview {
@@ -1478,20 +1523,42 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 20px;
-  min-height: 300px;
+  min-height: 350px; /* Increased for much better diagram visibility */
+  max-height: 500px; /* Significantly increased max height */
+  overflow: hidden; /* Remove scrollbar */
+  padding: 20px; /* Increased padding for more space */
 }
 
 .window-diagram-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden; /* Remove scrollbar */
+  width: 100%;
+  height: 100%;
+  min-width: 400px; /* Increased minimum width for better visibility */
+  min-height: 300px; /* Added minimum height */
+  padding: 20px; /* Increased padding for more space */
 }
 
 .window-diagram {
   border: 1px solid #ddd;
   border-radius: 4px;
   background: #fafafa;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden; /* Remove scrollbar */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: auto;
+  aspect-ratio: auto; /* Maintain proper aspect ratio */
+  min-width: 350px; /* Increased minimum width for better diagram display */
+  min-height: 250px; /* Added minimum height */
 }
 
 .diagram-dimensions {
@@ -1646,8 +1713,9 @@
   background: white;
   border: 2px solid #003366;
   border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 25px;
+  padding: 15px; /* Reduced padding */
+  margin-bottom: 20px; /* Reduced margin */
+  max-height: 400px; /* Add max height constraint */
 }
 
 .window-preview h3 {
@@ -1658,12 +1726,25 @@
 
 .window-diagram {
   margin: 20px 0;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .window-diagram svg {
   max-width: 100%;
+  max-height: 100%;
   height: auto;
   border: 1px solid #ddd;
+  object-fit: contain; /* Ensure the diagram scales properly */
+  width: 100% !important; /* Force responsive width */
+  height: auto !important; /* Force responsive height */
+  max-height: 400px; /* Significantly increased for better visibility */
+  min-width: 300px; /* Increased minimum width for very narrow diagrams */
+  min-height: 200px; /* Added minimum height for better visibility */
 }
 
 /* Pricing Section */
@@ -1815,6 +1896,18 @@
   box-shadow: 0 4px 12px rgba(108,117,125,0.3);
 }
 
+.btn-warning {
+  background: #ff6b6b;
+  color: white;
+  border: 2px solid #ff5252;
+}
+
+.btn-warning:hover {
+  background: #ff5252;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255,107,107,0.4);
+}
+
 .btn-success {
   background: #28a745;
   color: white;
@@ -1876,6 +1969,15 @@
   .builder-layout {
     grid-template-columns: 1fr;
     gap: 20px;
+  }
+  
+  .builder-right-panel {
+    height: 400px; /* Smaller height for mobile */
+    position: static; /* Remove sticky on mobile */
+  }
+  
+  .builder-left-panel {
+    max-height: none; /* Remove height limit on mobile */
   }
   
   .dimension-inputs {
@@ -2072,35 +2174,30 @@
   align-items: center;
 }
 
-/* Info Button for Configuration Details */
-.diagram-info-section {
-  margin-top: 15px;
-  text-align: center;
+/* Responsive diagram scaling */
+@media (max-width: 768px) {
+  .preview-container {
+    max-height: 400px;
+    min-height: 250px;
+  }
+  
+  .window-diagram svg {
+    width: 100%;
+    height: auto;
+  }
 }
 
-.config-info-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-size: 0.9em;
-  font-weight: 500;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+/* For very tall diagrams, ensure proper scaling */
+.window-diagram svg[height] {
+  max-height: 500px; /* Limit very tall diagrams */
 }
 
-.config-info-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.info-icon {
-  font-size: 1.1em;
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: 100%;
 }
 
 /* Modal Styles */
@@ -2118,103 +2215,3 @@
   backdrop-filter: blur(4px);
 }
 
-.config-info-modal {
-  background: white;
-  border-radius: 12px;
-  max-width: 1200px;
-  width: 95vw;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-  animation: modalSlideIn 0.3s ease-out;
-}
-
-@keyframes modalSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9) translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e0e6ed;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-radius: 12px 12px 0 0;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #2d3748;
-  font-size: 1.3em;
-  font-weight: 600;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  font-size: 1.5em;
-  cursor: pointer;
-  color: #718096;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-}
-
-.modal-close:hover {
-  background: rgba(0, 0, 0, 0.1);
-  color: #2d3748;
-}
-
-.modal-content {
-  padding: 32px 40px;
-}
-
-.modal-content .config-summary-panel {
-  margin: 0;
-  background: none;
-  box-shadow: none;
-  padding: 0;
-  border-radius: 0;
-}
-
-.modal-content .summary-card {
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e5e7eb;
-}
-
-.modal-content .summary-grid {
-  gap: 24px;
-  grid-template-columns: repeat(2, 1fr);
-  max-width: none;
-}
-
-/* Responsive modal */
-@media (max-width: 768px) {
-  .config-info-modal {
-    max-width: 95vw;
-    margin: 10px;
-  }
-  
-  .modal-content {
-    padding: 16px;
-  }
-  
-  .modal-content .summary-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-}

@@ -3,6 +3,7 @@ import './QuotationPageADS.css';
 import ClientService from './services/ClientService';
 import { useCompany } from './CompanyContext';
 import { useAppMode } from './contexts/AppModeContext';
+import ModeSelector from './components/ModeSelector';
 
 const QuotationPage = () => {
   const { companyInfo, getNextQuotationNumber } = useCompany();
@@ -17,54 +18,141 @@ const QuotationPage = () => {
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
-  const [showConfigInfoModal, setShowConfigInfoModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', description: '' });
   const [activeTab, setActiveTab] = useState('configuration');
-  const [quotationData, setQuotationData] = useState({
-    quotationNumber: '',
-    date: new Date().toISOString().split('T')[0],
-    validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    clientInfo: {
-      name: '',
-      address: '',
-      city: '',
-      phone: '',
-      email: ''
-    },
-    selectedWindowType: null,
-    slidingConfig: {
-      panels: 2,
-      combination: null
-    },
-    bayConfig: {
-      combination: null,
-      angle: 30 // Default angle in degrees
-    },
-    doubleHungConfig: {
-      combination: null
-    },
-    casementConfig: {
-      direction: 'outward',
-      hinge: 'left'
-    },
-    windowSpecs: {
-      width: '',
-      height: '',
-      quantity: 1,
-      frame: 'aluminum',
-      glass: 'single',
-      color: 'white',
-      hardware: 'standard',
-      opening: 'fixed',
-      grilles: 'none'
-    },
-    pricing: {
-      unitPrice: 0,
-      totalPrice: 0,
-      tax: 0,
-      finalTotal: 0
+
+  // Load quotation data from localStorage or use default
+  const loadQuotationData = () => {
+    try {
+      const savedData = localStorage.getItem('quotationData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        // Ensure all required fields exist by merging with default structure
+        return {
+          quotationNumber: '',
+          date: new Date().toISOString().split('T')[0],
+          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          clientInfo: {
+            name: '',
+            address: '',
+            city: '',
+            phone: '',
+            email: ''
+          },
+          selectedWindowType: null,
+          slidingConfig: {
+            panels: 2,
+            combination: null
+          },
+          bayConfig: {
+            combination: null,
+            angle: 30
+          },
+          doubleHungConfig: {
+            combination: null
+          },
+          singleHungConfig: {
+            combination: 'sh-standard'
+          },
+          casementConfig: {
+            direction: 'outward',
+            hinge: 'left'
+          },
+          windowSpecs: {
+            width: '',
+            height: '',
+            quantity: 1,
+            frame: 'aluminum',
+            glass: 'single',
+            color: 'white',
+            hardware: 'standard',
+            opening: 'fixed',
+            grilles: 'none'
+          },
+          pricing: {
+            unitPrice: 0,
+            totalPrice: 0,
+            tax: 0,
+            finalTotal: 0
+          },
+          ...parsedData // Override with saved data
+        };
+      }
+    } catch (error) {
+      console.error('Error loading quotation data from localStorage:', error);
     }
-  });
+    
+    // Return default data if no saved data or error occurred
+    return {
+      quotationNumber: '',
+      date: new Date().toISOString().split('T')[0],
+      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      clientInfo: {
+        name: '',
+        address: '',
+        city: '',
+        phone: '',
+        email: ''
+      },
+      selectedWindowType: null,
+      slidingConfig: {
+        panels: 2,
+        combination: null
+      },
+      bayConfig: {
+        combination: null,
+        angle: 30
+      },
+      doubleHungConfig: {
+        combination: null
+      },
+      singleHungConfig: {
+        combination: 'sh-standard'
+      },
+      casementConfig: {
+        direction: 'outward',
+        hinge: 'left'
+      },
+      windowSpecs: {
+        width: '',
+        height: '',
+        quantity: 1,
+        frame: 'aluminum',
+        glass: 'single',
+        color: 'white',
+        hardware: 'standard',
+        opening: 'fixed',
+        grilles: 'none'
+      },
+      pricing: {
+        unitPrice: 0,
+        totalPrice: 0,
+        tax: 0,
+        finalTotal: 0
+      }
+    };
+  };
+
+  const [quotationData, setQuotationData] = useState(loadQuotationData);
+
+  // Save quotation data to localStorage whenever it changes
+  const saveQuotationData = (data) => {
+    try {
+      localStorage.setItem('quotationData', JSON.stringify(data));
+      console.log('Quotation data saved successfully');
+    } catch (error) {
+      console.error('Error saving quotation data to localStorage:', error);
+    }
+  };
+
+  // Enhanced setQuotationData that also saves to localStorage
+  const updateQuotationData = (updater) => {
+    setQuotationData(prevData => {
+      const newData = typeof updater === 'function' ? updater(prevData) : updater;
+      saveQuotationData(newData);
+      return newData;
+    });
+  };
 
   // Window Types as shown in the attachment
   const WINDOW_TYPES = [
@@ -147,42 +235,44 @@ const QuotationPage = () => {
     return FRAME_MATERIAL_COLORS[material] || '#003366'; // Default color if material not found
   };
 
-  // Sliding Window Combinations
+  // Sliding Window Combinations - Comprehensive Professional Specifications
   const SLIDING_COMBINATIONS = {
-    1: [
-      { id: '1-fixed', name: '1 Fixed', pattern: ['F'] },
-      { id: '1-sliding', name: '1 Sliding', pattern: ['S'] }
-    ],
     2: [
-      { id: '2-fixed-sliding-left', name: '1 Fixed + 1 Sliding (Left Fixed)', pattern: ['F', 'S'] },
-      { id: '2-fixed-sliding-right', name: '1 Fixed + 1 Sliding (Right Fixed)', pattern: ['S', 'F'] },
-      { id: '2-both-sliding', name: '2 Sliding (Both Move)', pattern: ['S', 'S'] }
+      // 🪟 2-Panel Sliding Window Combinations
+      { id: '2-ss', name: 'S - S → Both panels slide (2-track system)', pattern: ['S', 'S'], description: 'Most common for bedrooms, small openings' },
+      { id: '2-fs', name: 'F - S → One fixed, one sliding (1.5-track)', pattern: ['F', 'S'], description: 'Cost-effective option' },
+      { id: '2-sf', name: 'S - F → One sliding, one fixed (mirror)', pattern: ['S', 'F'], description: 'Alternative orientation' }
     ],
     3: [
-      { id: '3-fsf', name: 'Fixed–Sliding–Fixed', pattern: ['F', 'S', 'F'] },
-      { id: '3-sfs', name: 'Sliding–Fixed–Sliding', pattern: ['S', 'F', 'S'] },
-      { id: '3-fss', name: 'Fixed–Sliding–Sliding', pattern: ['F', 'S', 'S'] },
-      { id: '3-ssf', name: 'Sliding–Sliding–Fixed', pattern: ['S', 'S', 'F'] }
+      // 🪟 3-Panel Sliding Window Combinations
+      { id: '3-fsf', name: 'F - S - F → Center panel slides between fixed', pattern: ['F', 'S', 'F'], description: 'Good for medium openings — flexible airflow' },
+      { id: '3-sfs', name: 'S - F - S → Two sliding ends, fixed center', pattern: ['S', 'F', 'S'], description: 'Balanced ventilation from both sides' },
+      { id: '3-ssf', name: 'S - S - F → Two slide one way, one fixed', pattern: ['S', 'S', 'F'], description: 'Progressive opening configuration' },
+      { id: '3-fss', name: 'F - S - S → One fixed, two slide opposite', pattern: ['F', 'S', 'S'], description: 'Wide opening capability' }
     ],
     4: [
-      { id: '4-fssf', name: 'Fixed–Sliding–Sliding–Fixed', pattern: ['F', 'S', 'S', 'F'] },
-      { id: '4-sffs', name: 'Sliding–Fixed–Fixed–Sliding', pattern: ['S', 'F', 'F', 'S'] },
-      { id: '4-ffss', name: 'Fixed–Fixed–Sliding–Sliding', pattern: ['F', 'F', 'S', 'S'] },
-      { id: '4-ssff', name: 'Sliding–Sliding–Fixed–Fixed', pattern: ['S', 'S', 'F', 'F'] },
-      { id: '4-ssss', name: 'All 4 Sliding (Stackable)', pattern: ['S', 'S', 'S', 'S'] }
+      // 🪟 4-Panel Sliding Window Combinations
+      { id: '4-fssf', name: 'F - S - S - F → Center-opening (sliders meet middle)', pattern: ['F', 'S', 'S', 'F'], description: 'Popular for balconies and living rooms' },
+      { id: '4-sffs', name: 'S - F - F - S → Two sliders on sides, middle fixed', pattern: ['S', 'F', 'F', 'S'], description: 'Side ventilation with central fixed view' },
+      { id: '4-ssss', name: 'S - S - S - S → All sliding (4-track system)', pattern: ['S', 'S', 'S', 'S'], description: 'Maximum opening flexibility' },
+      { id: '4-ffss', name: 'F - F - S - S → Two fixed + two sliders (one side)', pattern: ['F', 'F', 'S', 'S'], description: 'Open from one side only' },
+      { id: '4-ssff', name: 'S - S - F - F → Mirror of above', pattern: ['S', 'S', 'F', 'F'], description: 'Alternative side opening' }
     ],
     5: [
-      { id: '5-fsfsf', name: 'Fixed–Sliding–Fixed–Sliding–Fixed', pattern: ['F', 'S', 'F', 'S', 'F'] },
-      { id: '5-sfsfs', name: 'Sliding–Fixed–Sliding–Fixed–Sliding', pattern: ['S', 'F', 'S', 'F', 'S'] },
-      { id: '5-fsssf', name: 'Fixed–Sliding–Sliding–Sliding–Fixed', pattern: ['F', 'S', 'S', 'S', 'F'] },
-      { id: '5-sssss', name: 'All 5 Sliding (Stackable)', pattern: ['S', 'S', 'S', 'S', 'S'] }
+      // 🪟 5-Panel Sliding Window Combinations
+      { id: '5-fsfsf', name: 'F - S - F - S - F → Alternate fixed and sliding', pattern: ['F', 'S', 'F', 'S', 'F'], description: 'Used for large spans and balanced aesthetics' },
+      { id: '5-sfsfs', name: 'S - F - S - F - S → Alternate starting with sliding', pattern: ['S', 'F', 'S', 'F', 'S'], description: 'Reverse alternate pattern' },
+      { id: '5-fsssf', name: 'F - S - S - S - F → Center 3 slide, sides fixed', pattern: ['F', 'S', 'S', 'S', 'F'], description: 'Wide central opening' },
+      { id: '5-ssfss', name: 'S - S - F - S - S → Center fixed, 4 sliding', pattern: ['S', 'S', 'F', 'S', 'S'], description: 'Maximum ventilation with central anchor' },
+      { id: '5-sssss', name: 'S - S - S - S - S → All sliding (5-track system)', pattern: ['S', 'S', 'S', 'S', 'S'], description: 'Complete opening capability' }
     ],
     6: [
-      { id: '6-fsssf', name: 'Fixed–Sliding–Sliding–Sliding–Sliding–Fixed', pattern: ['F', 'S', 'S', 'S', 'S', 'F'] },
-      { id: '6-sfsfsf', name: 'Sliding–Fixed–Sliding–Fixed–Sliding–Fixed', pattern: ['S', 'F', 'S', 'F', 'S', 'F'] },
-      { id: '6-ffssff', name: 'Fixed–Fixed–Sliding–Sliding–Fixed–Fixed', pattern: ['F', 'F', 'S', 'S', 'F', 'F'] },
-      { id: '6-ssffss', name: 'Sliding–Sliding–Fixed–Fixed–Sliding–Sliding', pattern: ['S', 'S', 'F', 'F', 'S', 'S'] },
-      { id: '6-ssssss', name: 'All 6 Sliding (Stackable)', pattern: ['S', 'S', 'S', 'S', 'S', 'S'] }
+      // 🪟 6-Panel Sliding Window Combinations
+      { id: '6-fsfsfs', name: 'F - S - F - S - F - S → Alternate fixed + sliding', pattern: ['F', 'S', 'F', 'S', 'F', 'S'], description: 'Ideal for full-wall openings or premium facades' },
+      { id: '6-sfsfsf', name: 'S - F - S - F - S - F → Reverse alternate', pattern: ['S', 'F', 'S', 'F', 'S', 'F'], description: 'Alternative aesthetic pattern' },
+      { id: '6-fssssf', name: 'F - S - S - S - S - F → Center-opening wide sliders', pattern: ['F', 'S', 'S', 'S', 'S', 'F'], description: 'Maximum central opening' },
+      { id: '6-ffssss', name: 'F - F - S - S - S - S → Two fixed sides, four slide', pattern: ['F', 'F', 'S', 'S', 'S', 'S'], description: 'Progressive opening from one side' },
+      { id: '6-ssssss', name: 'S - S - S - S - S - S → All sliding (6-track system)', pattern: ['S', 'S', 'S', 'S', 'S', 'S'], description: 'Ultimate flexibility and opening' }
     ]
   };
 
@@ -207,6 +297,15 @@ const QuotationPage = () => {
     { id: 'dh-split-glass', name: 'Split Glass Style', pattern: ['Split', 'Split'] }
   ];
 
+  // Single Hung Window Combinations
+  const SINGLE_HUNG_COMBINATIONS = [
+    { id: 'sh-standard', name: 'Standard Single Hung (Top Fixed, Bottom Movable)', pattern: ['Fixed', 'Movable'], description: 'Classic single hung with top sash fixed and bottom sash sliding up' },
+    { id: 'sh-reverse', name: 'Reverse Single Hung (Top Movable, Bottom Fixed)', pattern: ['Movable', 'Fixed'], description: 'Uncommon variation with top sash movable and bottom sash fixed' },
+    { id: 'sh-tilt-in', name: 'Tilt-In Single Hung', pattern: ['Fixed', 'Tilt-In'], description: 'Bottom sash tilts inward for easy cleaning, top sash fixed' },
+    { id: 'sh-awning-bottom', name: 'Single Hung with Awning Bottom', pattern: ['Fixed', 'Awning'], description: 'Top sash fixed, bottom sash opens outward like awning' },
+    { id: 'sh-hopper-bottom', name: 'Single Hung with Hopper Bottom', pattern: ['Fixed', 'Hopper'], description: 'Top sash fixed, bottom sash opens inward from top' }
+  ];
+
   useEffect(() => {
     loadClients();
   }, []);
@@ -216,14 +315,14 @@ const QuotationPage = () => {
     if (!quotationData.quotationNumber && getNextQuotationNumber && companyInfo) {
       try {
         const nextNumber = getNextQuotationNumber();
-        setQuotationData(prev => ({
+        updateQuotationData(prev => ({
           ...prev,
           quotationNumber: nextNumber
         }));
       } catch (error) {
         console.error('Error generating quotation number:', error);
         // Fallback to simple number if there's an error
-        setQuotationData(prev => ({
+        updateQuotationData(prev => ({
           ...prev,
           quotationNumber: `Q${Date.now().toString().slice(-4)}`
         }));
@@ -244,7 +343,7 @@ const QuotationPage = () => {
     const client = clients.find(c => c._id === clientId);
     if (client) {
       setSelectedClient(client);
-      setQuotationData(prev => ({
+      updateQuotationData(prev => ({
         ...prev,
         clientInfo: {
           name: client.name,
@@ -258,7 +357,7 @@ const QuotationPage = () => {
   };
 
   const handleWindowTypeSelect = (windowType) => {
-    setQuotationData(prev => {
+    updateQuotationData(prev => {
       const newData = {
         ...prev,
         selectedWindowType: windowType,
@@ -273,7 +372,7 @@ const QuotationPage = () => {
   };
 
   const handleSpecChange = (field, value) => {
-    setQuotationData(prev => {
+    updateQuotationData(prev => {
       const newSpecs = { ...prev.windowSpecs, [field]: value };
       const newData = { ...prev, windowSpecs: newSpecs };
       
@@ -290,7 +389,7 @@ const QuotationPage = () => {
     const tax = totalPrice * 0.1; // 10% tax
     const finalTotal = totalPrice + tax;
     
-    setQuotationData(prev => ({
+    updateQuotationData(prev => ({
       ...prev,
       pricing: {
         unitPrice,
@@ -326,7 +425,7 @@ const QuotationPage = () => {
   const handleNewQuotation = () => {
     // Reset all form data and generate new quotation number
     setSelectedClient(null);
-    setQuotationData({
+    const newData = {
       quotationNumber: getNextQuotationNumber(),
       date: new Date().toISOString().split('T')[0],
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -355,7 +454,20 @@ const QuotationPage = () => {
         tax: 0,
         finalTotal: 0
       }
-    });
+    };
+    updateQuotationData(newData);
+    // Clear localStorage for the new quotation
+    localStorage.removeItem('quotationData');
+  };
+
+  // Clear auto-saved data function
+  const handleClearAutoSavedData = () => {
+    if (window.confirm('Are you sure you want to clear all auto-saved data? This cannot be undone.')) {
+      localStorage.removeItem('quotationData');
+      alert('Auto-saved data has been cleared successfully!');
+      // Optionally refresh the page to show clean state
+      window.location.reload();
+    }
   };
 
   const generatePDF = () => {
@@ -483,6 +595,7 @@ const QuotationPage = () => {
     slidingConfig, 
     bayConfig, 
     doubleHungConfig, 
+    singleHungConfig,
     casementConfig,
     onShowDescription 
   }) => {
@@ -910,6 +1023,44 @@ const QuotationPage = () => {
                       fill="#666"
                     />
                   </>
+                )}
+                
+                {/* Panel type label and movement indicator */}
+                <text 
+                  x={panelX + panelWidth/2} 
+                  y={height/2 - 15} 
+                  textAnchor="middle" 
+                  fontSize="12" 
+                  fill={isSliding ? "#e74c3c" : "#95a5a6"} 
+                  fontWeight="bold"
+                >
+                  {panelType}
+                </text>
+                
+                {/* Movement indicator for sliding panels */}
+                {isSliding && (
+                  <text 
+                    x={panelX + panelWidth/2} 
+                    y={height/2 + 5} 
+                    textAnchor="middle" 
+                    fontSize="16" 
+                    fill="#e74c3c"
+                  >
+                    ⬌
+                  </text>
+                )}
+                
+                {/* Fixed panel indicator */}
+                {!isSliding && (
+                  <text 
+                    x={panelX + panelWidth/2} 
+                    y={height/2 + 5} 
+                    textAnchor="middle" 
+                    fontSize="14" 
+                    fill="#95a5a6"
+                  >
+                    ▪
+                  </text>
                 )}
                 
                 {/* Track indicator for sliding panels */}
@@ -1398,22 +1549,139 @@ const QuotationPage = () => {
             Bottom: {config.pattern[1]}
           </text>
 
-          {/* Movement indicators */}
+          {/* Movement indicators - following reference image pattern */}
           {(config.pattern[0] === 'Sliding' || config.pattern[0] === 'Tilt-In') && (
-            <text x={width/2} y={height/4+28} textAnchor="middle" fontSize="12" fill="#e74c3c">↕</text>
+            <text x={width/2} y={height/4+18} textAnchor="middle" fontSize="16" fill="#e74c3c">↓</text>
           )}
           {config.pattern[0] === 'Split' && (
-            <text x={width/2} y={height/4+28} textAnchor="middle" fontSize="12" fill="#e74c3c">⊞</text>
+            <text x={width/2} y={height/4+18} textAnchor="middle" fontSize="12" fill="#e74c3c">⊞</text>
           )}
 
           {(config.pattern[1] === 'Sliding' || config.pattern[1] === 'Tilt-In') && (
-            <text x={width/2} y={height*3/4+28} textAnchor="middle" fontSize="12" fill="#e74c3c">↕</text>
+            <text x={width/2} y={height*3/4+18} textAnchor="middle" fontSize="16" fill="#e74c3c">↑</text>
           )}
           {config.pattern[1] === 'Split' && (
-            <text x={width/2} y={height*3/4+28} textAnchor="middle" fontSize="12" fill="#e74c3c">⊞</text>
+            <text x={width/2} y={height*3/4+18} textAnchor="middle" fontSize="12" fill="#e74c3c">⊞</text>
+          )}
+
+          {/* Show both arrows for standard double hung (both sashes move) */}
+          {config.id === 'dh-both-sliding' && (
+            <>
+              <text x={width/2} y={height/4+18} textAnchor="middle" fontSize="16" fill="#e74c3c">↓</text>
+              <text x={width/2} y={height*3/4+18} textAnchor="middle" fontSize="16" fill="#e74c3c">↑</text>
+            </>
           )}
 
 
+        </g>
+      );
+    };
+
+    // Enhanced Single Hung Window Renderer
+    const renderSingleHungWindowSVG = (combination) => {
+      const frameColor = getEnhancedFrameColor(specs.frame, specs.frameColor);
+      const glassColor = getGlassColor(specs.glass, specs.glassTint);
+      const hardwareColor = getHardwareColor(specs.hardware);
+      
+      const config = SINGLE_HUNG_COMBINATIONS.find(c => c.id === combination) || SINGLE_HUNG_COMBINATIONS[0];
+      
+      const sashColors = {
+        'Fixed': '#e8f4fd',      // Light blue for fixed
+        'Movable': '#c3e9ff',    // Slightly darker blue for movable
+        'Tilt-In': '#a8d8ff',    // Medium blue for tilt-in
+        'Awning': '#ff9999',     // Light red for awning
+        'Hopper': '#99ff99'      // Light green for hopper
+      };
+
+      return (
+        <g>
+          {/* Window frame with enhanced styling */}
+          <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="3"/>
+          
+          {/* Top sash */}
+          <rect 
+            x="16" 
+            y="16" 
+            width={width-32} 
+            height={(height-32)/2-4} 
+            fill={sashColors[config.pattern[0]] || glassColor} 
+            stroke={config.pattern[0] === 'Fixed' ? "#999" : "#333"} 
+            strokeWidth={config.pattern[0] === 'Fixed' ? "1" : "2"}
+          />
+          
+          {/* Bottom sash */}
+          <rect 
+            x="18" 
+            y={20+(height-32)/2} 
+            width={width-36} 
+            height={(height-32)/2-8} 
+            fill={sashColors[config.pattern[1]] || glassColor} 
+            stroke={config.pattern[1] === 'Fixed' ? "#999" : "#333"} 
+            strokeWidth={config.pattern[1] === 'Fixed' ? "1" : "2"}
+          />
+          
+          {/* Meeting rail (middle horizontal divider) */}
+          <rect x="14" y={16+(height-32)/2-2} width={width-28} height="4" fill={frameColor}/>
+          
+          {/* Enhanced grills on both sashes */}
+          {renderGrills(18, 18, width-36, (height-32)/2-8, specs.grilles, specs.grillColor)}
+          {renderGrills(20, 22+(height-32)/2, width-40, (height-32)/2-12, specs.grilles, specs.grillColor)}
+          
+          {/* Sash labels for clarity */}
+          <text x={width/2} y={height/4+5} textAnchor="middle" fontSize="9" fill="#333" fontWeight="bold">
+            Top: {config.pattern[0]}
+          </text>
+          <text x={width/2} y={height*3/4+5} textAnchor="middle" fontSize="9" fill="#333" fontWeight="bold">
+            Bottom: {config.pattern[1]}
+          </text>
+          
+          {/* Movement indicators based on the reference image */}
+          {config.pattern[0] === 'Movable' && (
+            <>
+              <text x={width/2} y={height/4+18} textAnchor="middle" fontSize="14" fill="#e74c3c">↓</text>
+              <text x={width/2} y={height/4+30} textAnchor="middle" fontSize="14" fill="#e74c3c">↑</text>
+            </>
+          )}
+          
+          {config.pattern[1] === 'Movable' && (
+            <text x={width/2} y={height*3/4+18} textAnchor="middle" fontSize="16" fill="#e74c3c">↑</text>
+          )}
+          
+          {config.pattern[1] === 'Tilt-In' && (
+            <text x={width/2} y={height*3/4+18} textAnchor="middle" fontSize="14" fill="#3498db">⤴</text>
+          )}
+          
+          {config.pattern[1] === 'Awning' && (
+            <text x={width/2} y={height*3/4+18} textAnchor="middle" fontSize="14" fill="#f39c12">↗</text>
+          )}
+          
+          {config.pattern[1] === 'Hopper' && (
+            <text x={width/2} y={height*3/4+18} textAnchor="middle" fontSize="14" fill="#27ae60">↘</text>
+          )}
+          
+          {/* Hardware elements */}
+          {/* Sash lock on meeting rail */}
+          <rect x={width-28} y={16+(height-32)/2-1} width="8" height="2" fill={hardwareColor} stroke="#444" strokeWidth="0.5"/>
+          
+          {/* Bottom sash hardware based on type */}
+          {config.pattern[1] === 'Movable' && (
+            <>
+              <circle cx="25" cy={height-25} r="2" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <circle cx={width-25} cy={height-25} r="2" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+            </>
+          )}
+          
+          {config.pattern[1] === 'Tilt-In' && (
+            <>
+              <rect x="22" y={height-28} width="6" height="3" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+              <rect x={width-28} y={height-28} width="6" height="3" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
+            </>
+          )}
+          
+          {/* Weatherstripping indication on movable parts */}
+          {config.pattern[1] !== 'Fixed' && (
+            <line x1="18" y1={20+(height-32)/2} x2={width-18} y2={20+(height-32)/2} stroke="#444" strokeWidth="0.5" strokeDasharray="2,2"/>
+          )}
         </g>
       );
     };
@@ -1582,23 +1850,7 @@ const QuotationPage = () => {
       
       switch (windowType.id) {
         case 'single-hung':
-          return (
-            <g>
-              {/* Enhanced outer frame */}
-              <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="2"/>
-              {/* Glass areas with enhanced colors */}
-              <rect x="18" y="18" width={width-36} height={(height-36)/2-4} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
-              <rect x="18" y={18+(height-36)/2+4} width={width-36} height={(height-36)/2-4} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
-              {/* Enhanced middle rail */}
-              <rect x="14" y={14+(height-28)/2-2} width={width-28} height="4" fill={frameColor}/>
-              {/* Enhanced grills */}
-              {renderGrills(20, 20, width-40, (height-36)/2-8, specs.grilles, specs.grillColor)}
-              {renderGrills(20, 20+(height-36)/2+8, width-40, (height-36)/2-8, specs.grilles, specs.grillColor)}
-              {/* Enhanced sash locks with hardware color */}
-              <circle cx={width-25} cy={14+(height-28)/2} r="4" fill={hardwareColor} stroke="#666" strokeWidth="1"/>
-              <circle cx={width-25} cy={14+(height-28)/2} r="2" fill="#666"/>
-            </g>
-          );
+          return renderSingleHungWindowSVG(singleHungConfig?.combination);
           
         case 'double-hung':
         case 'Double Hung Windows':
@@ -1727,6 +1979,9 @@ const QuotationPage = () => {
 
   return (
     <div className="quotation-container">
+      {/* Mode Selector - Only visible on quotation page */}
+      <ModeSelector />
+      
       {/* Header Section */}
       <div className="quotation-header">
         <div className="header-top">
@@ -1766,7 +2021,13 @@ const QuotationPage = () => {
 
       {/* Title Section */}
       <div className="quotation-title-section">
-        <h1 className="quotation-main-title">WINDOW QUOTATION</h1>
+        <div className="title-header">
+          <h1 className="quotation-main-title">WINDOW QUOTATION</h1>
+          <div className="auto-save-indicator">
+            <span className="save-icon">💾</span>
+            <span className="save-text">Auto-saving enabled</span>
+          </div>
+        </div>
       </div>
 
       {/* Mode Indicator */}
@@ -1948,7 +2209,7 @@ const QuotationPage = () => {
                                   slidingConfig: {
                                     ...prev.slidingConfig,
                                     panels: panels,
-                                    combination: null
+                                    combination: null // Reset combination when panel count changes
                                   }
                                 }));
                               }}
@@ -1979,12 +2240,16 @@ const QuotationPage = () => {
                               className="field-select"
                             >
                               <option value="">Select configuration...</option>
-                              <option value="all-sliding">All Panels Sliding</option>
-                              <option value="fixed-center">Fixed Center Panel</option>
-                              <option value="fixed-ends">Fixed End Panels</option>
-                              <option value="custom">Custom Configuration</option>
+                              {SLIDING_COMBINATIONS[quotationData.slidingConfig.panels]?.map(combo => (
+                                <option key={combo.id} value={combo.id}>
+                                  {combo.name}
+                                </option>
+                              ))}
                             </select>
-                            <small className="field-hint">Choose how panels operate</small>
+                            <small className="field-hint">
+                              {quotationData.slidingConfig.combination && 
+                               SLIDING_COMBINATIONS[quotationData.slidingConfig.panels]?.find(c => c.id === quotationData.slidingConfig.combination)?.description}
+                            </small>
                           </div>
                         </div>
                       </div>
@@ -2095,6 +2360,79 @@ const QuotationPage = () => {
                               <option value="bottom">Bottom Hinged (Hopper)</option>
                             </select>
                             <small className="field-hint">Position of window hinges</small>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Single Hung Configuration */}
+                    {quotationData.selectedWindowType?.name === 'Single Hung Windows' && (
+                      <div className="form-section">
+                        <h4 className="section-heading">
+                          <span className="section-icon">↕</span>
+                          Single Hung Configuration
+                        </h4>
+                        <div className="form-grid">
+                          <div className="form-field">
+                            <label className="field-label">Window Type</label>
+                            <select
+                              value={quotationData.singleHungConfig?.combination || 'sh-standard'}
+                              onChange={(e) => {
+                                setQuotationData(prev => ({
+                                  ...prev,
+                                  singleHungConfig: {
+                                    ...prev.singleHungConfig,
+                                    combination: e.target.value
+                                  }
+                                }));
+                              }}
+                              className="field-select"
+                            >
+                              {SINGLE_HUNG_COMBINATIONS.map(combo => (
+                                <option key={combo.id} value={combo.id}>
+                                  {combo.name}
+                                </option>
+                              ))}
+                            </select>
+                            <small className="field-hint">
+                              {SINGLE_HUNG_COMBINATIONS.find(c => c.id === quotationData.singleHungConfig?.combination)?.description || 'Select single hung configuration'}
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Double Hung Configuration */}
+                    {quotationData.selectedWindowType?.name === 'Double Hung Windows' && (
+                      <div className="form-section">
+                        <h4 className="section-heading">
+                          <span className="section-icon">↕</span>
+                          Double Hung Configuration
+                        </h4>
+                        <div className="form-grid">
+                          <div className="form-field">
+                            <label className="field-label">Sash Operation</label>
+                            <select
+                              value={quotationData.doubleHungConfig?.combination || ''}
+                              onChange={(e) => {
+                                setQuotationData(prev => ({
+                                  ...prev,
+                                  doubleHungConfig: {
+                                    ...prev.doubleHungConfig,
+                                    combination: e.target.value
+                                  }
+                                }));
+                              }}
+                              className="field-select"
+                            >
+                              <option value="">Select configuration...</option>
+                              {DOUBLE_HUNG_COMBINATIONS.map(combo => (
+                                <option key={combo.id} value={combo.id}>
+                                  {combo.name}
+                                </option>
+                              ))}
+                            </select>
+                            <small className="field-hint">Choose how both sashes operate</small>
                           </div>
                         </div>
                       </div>
@@ -2640,6 +2978,7 @@ const QuotationPage = () => {
                     slidingConfig={quotationData.slidingConfig}
                     bayConfig={quotationData.bayConfig}
                     doubleHungConfig={quotationData.doubleHungConfig}
+                    singleHungConfig={quotationData.singleHungConfig}
                     casementConfig={quotationData.casementConfig}
                     onShowDescription={openDescriptionModal}
                   />
@@ -2648,28 +2987,6 @@ const QuotationPage = () => {
                   <div className="preview-details">
                     <h4>{quotationData.selectedWindowType.name}</h4>
                   </div>
-                  <div className="preview-pricing">
-                    <div className="price-display">
-                      <span className="price-label">Unit Price:</span>
-                      <span className="price-value">${quotationData.pricing.unitPrice.toFixed(2)}</span>
-                    </div>
-                    <div className="price-display total">
-                      <span className="price-label">Total:</span>
-                      <span className="price-value">${quotationData.pricing.finalTotal.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Info Button to Show Configuration Details */}
-                <div className="diagram-info-section">
-                  <button 
-                    className="config-info-button"
-                    onClick={() => setShowConfigInfoModal(true)}
-                    title="View Current Configuration Details"
-                  >
-                    <span className="info-icon">ℹ️</span>
-                    <span>Configuration Details</span>
-                  </button>
                 </div>
               </div>
             ) : (
@@ -2754,6 +3071,9 @@ const QuotationPage = () => {
         <button className="btn-secondary" onClick={generatePDF}>
           Generate PDF
         </button>
+        <button className="btn-warning" onClick={handleClearAutoSavedData}>
+          Clear Auto-saved Data
+        </button>
       </div>
 
       {/* Description Modal */}
@@ -2783,158 +3103,6 @@ const QuotationPage = () => {
               <button className="btn-secondary" onClick={closeDescriptionModal}>
                 Close
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Configuration Info Modal */}
-      {showConfigInfoModal && (
-        <div className="modal-overlay" onClick={() => setShowConfigInfoModal(false)}>
-          <div className="config-info-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Current Configuration Details</h3>
-              <button 
-                className="modal-close"
-                onClick={() => setShowConfigInfoModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="modal-content">
-              <div className="config-summary-panel">
-                <div className="summary-grid">
-                  {/* Material & Finish Summary */}
-                  <div className="summary-card">
-                    <div className="summary-title">
-                      <span className="summary-icon">🏗️</span>
-                      Materials & Finish
-                    </div>
-                    <div className="summary-details">
-                      <div className="detail-item">
-                        <span>Frame:</span>
-                        <span>{quotationData.windowSpecs.frame?.charAt(0).toUpperCase() + quotationData.windowSpecs.frame?.slice(1)} {quotationData.windowSpecs.frameColor && `(${quotationData.windowSpecs.frameColor})`}</span>
-                      </div>
-                      <div className="detail-item">
-                        <span>Glass:</span>
-                        <span>{quotationData.windowSpecs.glass?.charAt(0).toUpperCase() + quotationData.windowSpecs.glass?.slice(1)} {quotationData.windowSpecs.glassTint && quotationData.windowSpecs.glassTint !== 'clear' && `(${quotationData.windowSpecs.glassTint})`}</span>
-                      </div>
-                      {quotationData.windowSpecs.hardware && quotationData.windowSpecs.hardware !== 'standard' && (
-                        <div className="detail-item">
-                          <span>Hardware:</span>
-                          <span>{quotationData.windowSpecs.hardware.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Installation Summary */}
-                  <div className="summary-card">
-                    <div className="summary-title">
-                      <span className="summary-icon">🔧</span>
-                      Installation
-                    </div>
-                    <div className="summary-details">
-                      {quotationData.windowSpecs.location && (
-                        <div className="detail-item">
-                          <span>Location:</span>
-                          <span>{quotationData.windowSpecs.location.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                      {quotationData.windowSpecs.wallType && (
-                        <div className="detail-item">
-                          <span>Wall Type:</span>
-                          <span>{quotationData.windowSpecs.wallType.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                      {quotationData.windowSpecs.replacement && (
-                        <div className="detail-item">
-                          <span>Installation:</span>
-                          <span>{quotationData.windowSpecs.replacement.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Features Summary */}
-                  <div className="summary-card">
-                    <div className="summary-title">
-                      <span className="summary-icon">✨</span>
-                      Features
-                    </div>
-                    <div className="summary-details">
-                      {quotationData.windowSpecs.grilles && quotationData.windowSpecs.grilles !== 'none' && (
-                        <div className="detail-item">
-                          <span>Grills:</span>
-                          <span>{quotationData.windowSpecs.grilles.replace('-', ' ')} {quotationData.windowSpecs.grillColor && `(${quotationData.windowSpecs.grillColor})`}</span>
-                        </div>
-                      )}
-                      {quotationData.windowSpecs.security && quotationData.windowSpecs.security !== 'standard' && (
-                        <div className="detail-item">
-                          <span>Security:</span>
-                          <span>{quotationData.windowSpecs.security.replace('-', ' ')}</span>
-                        </div>
-                      )}
-                      
-                      {/* Feature badges */}
-                      <div className="feature-badges">
-                        {quotationData.windowSpecs.screenIncluded && (
-                          <span className="feature-badge">Screen</span>
-                        )}
-                        {quotationData.windowSpecs.blindsIntegrated && (
-                          <span className="feature-badge">Blinds</span>
-                        )}
-                        {quotationData.windowSpecs.tiltAndTurn && (
-                          <span className="feature-badge">Tilt & Turn</span>
-                        )}
-                        {quotationData.windowSpecs.childSafety && (
-                          <span className="feature-badge">Child Safety</span>
-                        )}
-                        {quotationData.windowSpecs.motorized && (
-                          <span className="feature-badge">Motorized</span>
-                        )}
-                        {quotationData.windowSpecs.smartHome && (
-                          <span className="feature-badge">Smart</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Performance Summary */}
-                  <div className="summary-card">
-                    <div className="summary-title">
-                      <span className="summary-icon">📊</span>
-                      Performance
-                    </div>
-                    <div className="summary-details">
-                      <div className="detail-item">
-                        <span>U-Value:</span>
-                        <span>
-                          {quotationData.windowSpecs.glass === 'single' ? '5.7' : 
-                           quotationData.windowSpecs.glass === 'double' ? '2.8' :
-                           quotationData.windowSpecs.glass === 'triple' ? '1.6' :
-                           quotationData.windowSpecs.glass === 'low-e' ? '1.8' : '2.5'} W/m²K
-                        </span>
-                      </div>
-                      <div className="detail-item">
-                        <span>Sound Reduction:</span>
-                        <span>
-                          {quotationData.windowSpecs.glass === 'single' ? '25' : 
-                           quotationData.windowSpecs.glass === 'double' ? '35' :
-                           quotationData.windowSpecs.glass === 'acoustic' ? '45' : '40'} dB
-                        </span>
-                      </div>
-                      {quotationData.windowSpecs.width && quotationData.windowSpecs.height && (
-                        <div className="detail-item">
-                          <span>Area:</span>
-                          <span>{((quotationData.windowSpecs.width * quotationData.windowSpecs.height) / 1000000).toFixed(2)} m²</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

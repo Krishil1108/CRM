@@ -1,11 +1,15 @@
 import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 import './HamburgerMenu.css';
 
-const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
+const Sidebar = ({ isExpanded, toggleSidebar }) => {
+  const location = useLocation();
+  
   const menuItems = [
     { 
       id: 'home', 
+      path: '/home',
       name: 'Home', 
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -15,6 +19,7 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
     },
     { 
       id: 'clients', 
+      path: '/clients',
       name: 'Clients', 
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -24,6 +29,7 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
     },
     { 
       id: 'inventory', 
+      path: '/inventory',
       name: 'Inventory Management', 
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -33,6 +39,7 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
     },
     { 
       id: 'dashboard', 
+      path: '/dashboard',
       name: 'Dashboard & Analytics', 
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -42,6 +49,7 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
     },
     { 
       id: 'reports', 
+      path: '/reports',
       name: 'Reports', 
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -51,6 +59,7 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
     },
     { 
       id: 'quotation', 
+      path: '/quotation-ads',
       name: 'Quotation', 
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -60,6 +69,7 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
     },
     { 
       id: 'quote-history', 
+      path: '/quote-history',
       name: 'Quote History', 
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -69,6 +79,7 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
     },
     { 
       id: 'settings', 
+      path: '/settings',
       name: 'Settings', 
       icon: (
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -78,9 +89,10 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
     }
   ];
 
-  const handleNavClick = (pageId, event) => {
-    event.preventDefault();
-    onPageChange(pageId);
+  const handleNavClick = () => {
+    if (window.innerWidth <= 768) {
+      toggleSidebar();
+    }
   };
 
   return (
@@ -106,14 +118,14 @@ const Sidebar = ({ isExpanded, toggleSidebar, currentPage, onPageChange }) => {
         <ul>
           {menuItems.map((item) => (
             <li key={item.id}>
-              <a 
-                href="#"
-                className={`nav-item ${currentPage === item.id ? 'active' : ''}`}
-                onClick={(e) => handleNavClick(item.id, e)}
+              <Link 
+                to={item.path}
+                className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                onClick={handleNavClick}
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-text">{item.name}</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
