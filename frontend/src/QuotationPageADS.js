@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './QuotationPageADS.css';
 import ClientService from './services/ClientService';
+import InventoryService from './services/InventoryService';
 import { useCompany } from './CompanyContext';
 import { useAppMode } from './contexts/AppModeContext';
 import ModeSelector from './components/ModeSelector';
@@ -20,6 +21,7 @@ const QuotationPage = () => {
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: '', description: '' });
   const [activeTab, setActiveTab] = useState('configuration');
+  const [inventoryItems, setInventoryItems] = useState([]);
 
   // Load quotation data from localStorage or use default
   const loadQuotationData = () => {
@@ -160,64 +162,55 @@ const QuotationPage = () => {
       id: 'sliding',
       icon: '🪟',
       name: 'Sliding Windows',
-      description: 'Horizontal sliding windows with multiple tracks',
-      basePrice: 250
+      description: 'Horizontal sliding windows with multiple tracks'
     },
     {
       id: 'casement',
       icon: '🚪',
       name: 'Casement Windows',
-      description: 'Side-hinged windows that open outward',
-      basePrice: 280
+      description: 'Side-hinged windows that open outward'
     },
     {
       id: 'bay',
       icon: '🏠',
       name: 'Bay Windows',
-      description: 'Protruding windows with multiple angles',
-      basePrice: 450
+      description: 'Protruding windows with multiple angles'
     },
     {
       id: 'fixed',
       icon: '🖼️',
       name: 'Fixed Windows',
-      description: 'Non-opening windows for light and view',
-      basePrice: 200
+      description: 'Non-opening windows for light and view'
     },
     {
       id: 'awning',
       icon: '🌬️',
       name: 'Awning Windows',
-      description: 'Top-hinged windows that open outward',
-      basePrice: 270
+      description: 'Top-hinged windows that open outward'
     },
     {
       id: 'picture',
       icon: '🖼️',
       name: 'Picture Windows',
-      description: 'Large fixed windows for unobstructed views',
-      basePrice: 350
+      description: 'Large fixed windows for unobstructed views'
     },
     {
       id: 'double-hung',
       icon: '⬆️',
       name: 'Double Hung Windows',
-      description: 'Two vertically sliding sashes',
-      basePrice: 300
+      description: 'Two vertically sliding sashes'
     },
     {
       id: 'single-hung',
       icon: '⬇️',
       name: 'Single Hung Windows',
-      description: 'Bottom sash slides up, top is fixed',
-      basePrice: 260
+      description: 'Bottom sash slides up, top is fixed'
     },
     {
       id: 'pivot',
       icon: '🔄',
       name: 'Pivot Windows',
-      description: 'Central pivot rotation mechanism',
-      basePrice: 320
+      description: 'Central pivot rotation mechanism'
     }
   ];
 
@@ -308,6 +301,7 @@ const QuotationPage = () => {
 
   useEffect(() => {
     loadClients();
+    loadInventoryItems();
   }, []);
 
   useEffect(() => {
@@ -339,6 +333,40 @@ const QuotationPage = () => {
     }
   };
 
+  const loadInventoryItems = async () => {
+    try {
+      const items = await InventoryService.getAllItems();
+      console.log('Loaded inventory items:', items.length, 'items');
+      const hardwareItems = items.filter(item => item.categoryType === 'hardware');
+      console.log('Hardware items:', hardwareItems);
+      hardwareItems.forEach(item => {
+        console.log(`Hardware item: ${item.name}, specifications:`, item.specifications);
+      });
+      setInventoryItems(items);
+    } catch (error) {
+      console.error('Error loading inventory items:', error);
+    }
+  };
+
+  // Function to map quotation specifications to inventory items
+  const getInventoryItemForMaterial = (materialType, materialValue) => {
+    return inventoryItems.find(item => {
+      switch (materialType) {
+        case 'frame':
+          return item.categoryType === 'frame_material' && 
+                 item.specifications?.frameMaterial === materialValue;
+        case 'glass':
+          return item.categoryType === 'glass_type' && 
+                 item.specifications?.glassType === materialValue;
+        case 'hardware':
+          return item.categoryType === 'hardware' && 
+                 item.specifications?.hardwareType === materialValue;
+        default:
+          return false;
+      }
+    });
+  };
+
   const handleClientSelect = (clientId) => {
     const client = clients.find(c => c._id === clientId);
     if (client) {
@@ -357,59 +385,114 @@ const QuotationPage = () => {
   };
 
   const handleWindowTypeSelect = (windowType) => {
-    updateQuotationData(prev => {
-      const newData = {
-        ...prev,
-        selectedWindowType: windowType,
-        pricing: {
-          ...prev.pricing,
-          unitPrice: windowType.basePrice
-        }
-      };
-      calculatePricing(windowType.basePrice, prev.windowSpecs.quantity);
-      return newData;
-    });
+    updateQuotationData(prev => ({
+      ...prev,
+      selectedWindowType: windowType
+    }));
   };
 
   const handleSpecChange = (field, value) => {
     updateQuotationData(prev => {
       const newSpecs = { ...prev.windowSpecs, [field]: value };
-      const newData = { ...prev, windowSpecs: newSpecs };
-      
-      if (field === 'quantity' && prev.selectedWindowType) {
-        calculatePricing(prev.pricing.unitPrice, value);
-      }
-      
-      return newData;
+      return { ...prev, windowSpecs: newSpecs };
     });
   };
 
-  const calculatePricing = (unitPrice, quantity) => {
-    const totalPrice = unitPrice * quantity;
-    const tax = totalPrice * 0.1; // 10% tax
-    const finalTotal = totalPrice + tax;
-    
-    updateQuotationData(prev => ({
-      ...prev,
-      pricing: {
-        unitPrice,
-        totalPrice,
-        tax,
-        finalTotal
-      }
-    }));
+  const handleSaveQuotation = async () => {
+    try {
+      // Consume stock for materials used in the quotation
+      await consumeStockForQuotation();
+      
+      // Save quotation to localStorage
+      const quotations = JSON.parse(localStorage.getItem('quotations') || '[]');
+      const newQuotation = {
+        ...quotationData,
+        id: quotationData.quotationNumber,
+        createdAt: new Date().toISOString()
+      };
+      quotations.push(newQuotation);
+      localStorage.setItem('quotations', JSON.stringify(quotations));
+      alert('Quotation saved successfully! (Note: Inventory integration is temporarily disabled)');
+    } catch (error) {
+      console.error('Error saving quotation:', error);
+      alert(`Error saving quotation: ${error.message}`);
+    }
   };
 
-  const handleSaveQuotation = () => {
-    const quotations = JSON.parse(localStorage.getItem('quotations') || '[]');
-    const newQuotation = {
-      ...quotationData,
-      id: quotationData.quotationNumber,
-      createdAt: new Date().toISOString()
-    };
-    quotations.push(newQuotation);
-    localStorage.setItem('quotations', JSON.stringify(quotations));
-    alert('Quotation saved successfully!');
+  const consumeStockForQuotation = async () => {
+    const { windowSpecs } = quotationData;
+    const quantity = windowSpecs.quantity || 1;
+    
+    console.log('Stock consumption requested:', {
+      frame: windowSpecs.frame,
+      glass: windowSpecs.glass,
+      hardware: windowSpecs.hardware,
+      quantity: quantity,
+      quotationNumber: quotationData.quotationNumber
+    });
+
+    // TODO: Temporarily disabled inventory consumption due to backend Activity validation issues
+    // This will be re-enabled once the backend is fixed
+    
+    // Define materials to check and consume stock for
+    const materialsToConsume = [
+      { type: 'frame', value: windowSpecs.frame },
+      { type: 'glass', value: windowSpecs.glass },
+      { type: 'hardware', value: windowSpecs.hardware }
+    ];
+
+    // Check if we have the inventory items mapped (for logging purposes)
+    for (const material of materialsToConsume) {
+      if (material.value) {
+        const inventoryItem = getInventoryItemForMaterial(material.type, material.value);
+        
+        if (inventoryItem && inventoryItem !== null) {
+          console.log(`✓ Found inventory item for ${material.type}: ${material.value} (Available: ${inventoryItem.stock?.currentQuantity || 0})`);
+        } else {
+          console.log(`⚠ No inventory item found for ${material.type}: ${material.value}`);
+        }
+      }
+    }
+
+    console.log('Note: Stock consumption is temporarily disabled. Quotation saved without inventory update.');
+    
+    /* TEMPORARILY DISABLED - TO BE RE-ENABLED AFTER BACKEND FIX
+    const stockConsumptionPromises = [];
+
+    for (const material of materialsToConsume) {
+      if (material.value) {
+        const inventoryItem = getInventoryItemForMaterial(material.type, material.value);
+        
+        if (inventoryItem && inventoryItem !== null) {
+          // Check if we have enough stock
+          if (inventoryItem.stock?.currentQuantity < quantity) {
+            throw new Error(`Insufficient stock for ${material.type}: ${material.value}. Available: ${inventoryItem.stock?.currentQuantity}, Required: ${quantity}`);
+          }
+
+          // Consume stock
+          const stockData = {
+            quantity: quantity,
+            reason: `Consumed for quotation ${quotationData.quotationNumber}`,
+            notes: `Window type: ${quotationData.selectedWindowType?.name || 'Unknown'}`
+          };
+
+          stockConsumptionPromises.push(
+            InventoryService.consumeStock(inventoryItem._id, stockData)
+          );
+        } else {
+          console.warn(`No inventory item found for ${material.type}: ${material.value}`);
+        }
+      }
+    }
+
+    // Execute all stock consumption operations
+    if (stockConsumptionPromises.length > 0) {
+      await Promise.all(stockConsumptionPromises);
+      
+      // Refresh inventory items to reflect updated quantities
+      await loadInventoryItems();
+    }
+    */
   };
 
   const openDescriptionModal = (title, description) => {
@@ -770,6 +853,13 @@ const QuotationPage = () => {
       height = baseHeight;
       width = baseHeight * aspectRatio;
     }
+    
+    // Ensure minimum dimensions to prevent negative values in calculations
+    width = Math.max(width, 100);
+    height = Math.max(height, 80);
+
+    // Safe calculation function to prevent negative dimensions
+    const safeCalc = (value, minValue = 1) => Math.max(value, minValue);
 
     // Function to render grills/grids on glass panels with enhanced styling
     const renderGrills = (panelX, panelY, panelWidth, panelHeight, grillType, grillColor = 'white') => {
@@ -1499,13 +1589,13 @@ const QuotationPage = () => {
         return (
           <g>
             <rect x="10" y="10" width={width-20} height={height-20} fill={frameColor} stroke={frameColor} strokeWidth="2"/>
-            <rect x="18" y="18" width={width-36} height={(height-36)/2-4} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
-            <rect x="18" y={18+(height-36)/2+4} width={width-36} height={(height-36)/2-4} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
+            <rect x="18" y="18" width={safeCalc(width-36)} height={safeCalc((height-36)/2-4)} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
+            <rect x="18" y={18+(height-36)/2+4} width={safeCalc(width-36)} height={safeCalc((height-36)/2-4)} fill={glassColor} stroke="#ccc" strokeWidth="1"/>
             <rect x="10" y={height/2-2} width={width-20} height="4" fill={frameColor}/>
             {/* Grills on top sash */}
-            {renderGrills(20, 20, width-40, (height-36)/2-8, specs.grilles)}
+            {renderGrills(20, 20, safeCalc(width-40), safeCalc((height-36)/2-8), specs.grilles)}
             {/* Grills on bottom sash */}
-            {renderGrills(20, 18+(height-36)/2+8, width-40, (height-36)/2-8, specs.grilles)}
+            {renderGrills(20, 18+(height-36)/2+8, safeCalc(width-40), safeCalc((height-36)/2-8), specs.grilles)}
 
           </g>
         );
@@ -3002,16 +3092,6 @@ const QuotationPage = () => {
                 <div className="preview-info">
                   <div className="preview-details">
                     <h4>{quotationData.selectedWindowType.name}</h4>
-                  </div>
-                  <div className="preview-pricing">
-                    <div className="price-display">
-                      <span className="price-label">Unit Price:</span>
-                      <span className="price-value">${quotationData.pricing.unitPrice.toFixed(2)}</span>
-                    </div>
-                    <div className="price-display total">
-                      <span className="price-label">Total:</span>
-                      <span className="price-value">${quotationData.pricing.finalTotal.toFixed(2)}</span>
-                    </div>
                   </div>
                 </div>
               </div>

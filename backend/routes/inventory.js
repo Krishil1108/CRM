@@ -49,9 +49,12 @@ router.post('/categories', async (req, res) => {
     
     // Log activity
     await Activity.create({
-      type: 'inventory',
+      type: 'inventory_added',
       description: `Created new inventory category: ${category.name}`,
-      user: req.body.createdBy || 'System',
+      entityId: category._id,
+      entityType: 'Inventory',
+      entityName: category.name,
+      userId: req.body.createdBy || 'System',
       metadata: { categoryId: category._id, categoryType: category.type }
     });
     
@@ -373,9 +376,12 @@ router.post('/items/:id/stock/add', async (req, res) => {
     
     // Log activity
     await Activity.create({
-      type: 'inventory',
+      type: 'inventory_updated',
       description: `Added ${quantity} units to ${item.name} (SKU: ${item.sku})`,
-      user: performedBy,
+      entityId: item._id,
+      entityType: 'Inventory',
+      entityName: item.name,
+      userId: performedBy,
       metadata: { 
         itemId: item._id, 
         sku: item.sku, 
@@ -432,9 +438,12 @@ router.post('/items/:id/stock/consume', async (req, res) => {
     
     // Log activity
     await Activity.create({
-      type: 'inventory',
+      type: 'inventory_updated',
       description: `Consumed ${consumedQuantity} units from ${item.name} (SKU: ${item.sku})`,
-      user: performedBy,
+      entityId: item._id,
+      entityType: 'Inventory',
+      entityName: item.name,
+      userId: performedBy,
       metadata: { 
         itemId: item._id, 
         sku: item.sku, 
@@ -664,9 +673,11 @@ router.delete('/:id', async (req, res) => {
     try {
       await Activity.create({
         type: 'inventory_deleted',
-        inventoryId: deletedItem._id,
         description: `Deleted inventory item: ${deletedItem.name}`,
-        user: 'System',
+        entityId: deletedItem._id,
+        entityType: 'Inventory',
+        entityName: deletedItem.name,
+        userId: 'System',
         metadata: {
           name: deletedItem.name,
           category: deletedItem.category

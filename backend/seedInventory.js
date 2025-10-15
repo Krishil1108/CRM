@@ -79,6 +79,19 @@ const seedCategories = [
         { key: 'customizable', label: 'Customizable', type: 'boolean' }
       ]
     }
+  },
+  {
+    name: 'Hardware Components',
+    code: 'HARDWARE',
+    type: 'hardware',
+    description: 'Window hardware components and mechanisms',
+    specifications: {
+      properties: [
+        { key: 'material', label: 'Material', type: 'string', options: ['stainless_steel', 'aluminum', 'brass', 'zinc'] },
+        { key: 'finish', label: 'Finish', type: 'string', options: ['anodized', 'powder_coated', 'chrome', 'brass'] },
+        { key: 'operationType', label: 'Operation Type', type: 'string', options: ['manual', 'automatic', 'chain_operated'] }
+      ]
+    }
   }
 ];
 
@@ -354,6 +367,56 @@ const seedInventoryItems = [
     pricing: { unitPrice: 600, costPrice: 480, currency: 'INR' },
     description: 'Modern charcoal grey powder coating',
     unit: 'sq.ft'
+  },
+
+  // Hardware Components
+  {
+    name: 'Standard Window Hardware Set',
+    sku: 'HRD-STD-SET-001',
+    categoryType: 'hardware',
+    specifications: {
+      hardwareType: 'standard',
+      material: 'stainless_steel',
+      finish: 'anodized',
+      operationType: 'manual',
+      components: ['hinges', 'handles', 'locks', 'stays']
+    },
+    stock: { currentQuantity: 50, reorderLevel: 10, reorderQuantity: 100 },
+    pricing: { unitPrice: 1200, costPrice: 960, currency: 'INR' },
+    description: 'Complete standard hardware set for windows',
+    unit: 'set'
+  },
+  {
+    name: 'Premium Window Hardware Set',
+    sku: 'HRD-PRM-SET-001',
+    categoryType: 'hardware',
+    specifications: {
+      hardwareType: 'premium',
+      material: 'stainless_steel',
+      finish: 'anodized',
+      operationType: 'manual',
+      components: ['heavy_duty_hinges', 'ergonomic_handles', 'multi_point_locks', 'friction_stays']
+    },
+    stock: { currentQuantity: 30, reorderLevel: 5, reorderQuantity: 50 },
+    pricing: { unitPrice: 2500, costPrice: 2000, currency: 'INR' },
+    description: 'Premium hardware set with enhanced security features',
+    unit: 'set'
+  },
+  {
+    name: 'Heavy Duty Hardware Set',
+    sku: 'HRD-HVY-SET-001',
+    categoryType: 'hardware',
+    specifications: {
+      hardwareType: 'heavy_duty',
+      material: 'stainless_steel',
+      finish: 'powder_coated',
+      operationType: 'manual',
+      components: ['commercial_hinges', 'heavy_handles', 'security_locks', 'wind_braces']
+    },
+    stock: { currentQuantity: 25, reorderLevel: 5, reorderQuantity: 40 },
+    pricing: { unitPrice: 3200, costPrice: 2560, currency: 'INR' },
+    description: 'Heavy duty hardware for commercial applications',
+    unit: 'set'
   }
 ];
 
