@@ -437,6 +437,22 @@ const QuotationPage = () => {
         email: ''
       },
       selectedWindowType: null,
+      slidingConfig: {
+        panels: 2,
+        combination: null
+      },
+      bayConfig: {
+        combination: null,
+        angle: 30,
+        style: 'traditional'
+      },
+      doubleHungConfig: {
+        combination: null
+      },
+      casementConfig: {
+        direction: 'outward',
+        hinge: 'left'
+      },
       windowSpecs: {
         width: '',
         height: '',
@@ -2201,7 +2217,7 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Number of Panels</label>
                             <select
-                              value={quotationData.slidingConfig.panels}
+                              value={quotationData.slidingConfig?.panels || 2}
                               onChange={(e) => {
                                 const panels = parseInt(e.target.value);
                                 setQuotationData(prev => ({
@@ -2227,7 +2243,7 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Panel Operation</label>
                             <select
-                              value={quotationData.slidingConfig.combination || ''}
+                              value={quotationData.slidingConfig?.combination || ''}
                               onChange={(e) => {
                                 setQuotationData(prev => ({
                                   ...prev,
@@ -2265,7 +2281,7 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Bay Angle</label>
                             <select
-                              value={quotationData.bayConfig.angle}
+                              value={quotationData.bayConfig?.angle || 30}
                               onChange={(e) => {
                                 setQuotationData(prev => ({
                                   ...prev,
@@ -2288,7 +2304,7 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Bay Style</label>
                             <select
-                              value={quotationData.bayConfig.style || 'traditional'}
+                              value={quotationData.bayConfig?.style || 'traditional'}
                               onChange={(e) => {
                                 setQuotationData(prev => ({
                                   ...prev,
@@ -2986,6 +3002,16 @@ const QuotationPage = () => {
                 <div className="preview-info">
                   <div className="preview-details">
                     <h4>{quotationData.selectedWindowType.name}</h4>
+                  </div>
+                  <div className="preview-pricing">
+                    <div className="price-display">
+                      <span className="price-label">Unit Price:</span>
+                      <span className="price-value">${quotationData.pricing.unitPrice.toFixed(2)}</span>
+                    </div>
+                    <div className="price-display total">
+                      <span className="price-label">Total:</span>
+                      <span className="price-value">${quotationData.pricing.finalTotal.toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
