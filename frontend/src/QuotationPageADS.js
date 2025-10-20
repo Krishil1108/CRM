@@ -5,6 +5,7 @@ import InventoryService from './services/InventoryService';
 import { useCompany } from './CompanyContext';
 import { useAppMode } from './contexts/AppModeContext';
 import ModeSelector from './components/ModeSelector';
+import { generateQuotationPDF } from './utils/pdfGenerator';
 
 const QuotationPage = () => {
   const { companyInfo, getNextQuotationNumber } = useCompany();
@@ -569,8 +570,160 @@ const QuotationPage = () => {
     }
   };
 
-  const generatePDF = () => {
-    window.print();
+  const generatePDF = async () => {
+    // Validate that we have the necessary data
+    // Check if we have window specifications filled out
+    if (!quotationData.windowSpecs || 
+        !quotationData.windowSpecs.width || 
+        !quotationData.windowSpecs.height) {
+      alert('Please fill in window specifications (width and height) to generate PDF');
+      return;
+    }
+
+    if (!quotationData.clientInfo || !quotationData.clientInfo.name) {
+      alert('Please fill in client information before generating PDF');
+      return;
+    }
+
+    try {
+      // Capture the diagram snapshot before generating PDF
+      let diagramSnapshot = null;
+      const diagramElement = document.querySelector('.window-diagram-container');
+      
+      if (diagramElement) {
+        try {
+          // Import html2canvas dynamically if not already loaded
+          const html2canvas = (await import('html2canvas')).default;
+          
+          const canvas = await html2canvas(diagramElement, {
+            backgroundColor: '#ffffff',
+            scale: 4, // Ultra high quality capture
+            logging: false,
+            useCORS: true,
+            allowTaint: false,
+            removeContainer: true,
+            imageTimeout: 0,
+            windowWidth: diagramElement.scrollWidth,
+            windowHeight: diagramElement.scrollHeight,
+            scrollY: -window.scrollY, // Ensure proper positioning
+            scrollX: -window.scrollX,
+            onclone: (clonedDoc) => {
+              // Ensure SVG elements render properly with full borders
+              const svgElements = clonedDoc.querySelectorAll('svg');
+              svgElements.forEach(svg => {
+                svg.style.maxWidth = 'none';
+                svg.style.maxHeight = 'none';
+                svg.style.overflow = 'visible'; // Ensure borders aren't clipped
+              });
+              
+              // Add extra padding to ensure all borders are captured
+              const container = clonedDoc.querySelector('.window-diagram-container');
+              if (container) {
+                container.style.padding = '10px';
+                container.style.overflow = 'visible';
+              }
+            }
+          });
+          
+          diagramSnapshot = canvas.toDataURL('image/png');
+          console.log('✓ Diagram snapshot captured successfully');
+        } catch (error) {
+          console.warn('Could not capture diagram snapshot:', error);
+        }
+      }
+      
+      // Create a window configuration from the current windowSpecs
+      const windowConfig = {
+        id: 'W1',
+        type: quotationData.selectedWindowType || 'sliding',
+        name: `${quotationData.selectedWindowType || 'Window'} - ${quotationData.windowSpecs.location || 'Custom'}`,
+        location: quotationData.windowSpecs.location || 'Not specified',
+        dimensions: {
+          width: parseInt(quotationData.windowSpecs.width) || 1000,
+          height: parseInt(quotationData.windowSpecs.height) || 1000,
+          radius: quotationData.bayConfig?.angle || 0
+        },
+        specifications: {
+          glass: quotationData.windowSpecs.glass || 'single',
+          glassType: quotationData.windowSpecs.glass || 'single',
+          glassTint: quotationData.windowSpecs.glassTint || 'clear',
+          glassThickness: quotationData.windowSpecs.glass === 'double' ? 10 : 5,
+          lockPosition: 'right',
+          openingType: quotationData.windowSpecs.opening || 'fixed',
+          fixedPanels: [],
+          grille: {
+            enabled: quotationData.windowSpecs.grilles !== 'none',
+            style: quotationData.windowSpecs.grilles || 'none',
+            pattern: 'grid'
+          },
+          grilles: quotationData.windowSpecs.grilles || 'none',
+          grillColor: quotationData.windowSpecs.grillColor || 'white',
+          frame: {
+            material: quotationData.windowSpecs.frame || 'aluminum',
+            color: quotationData.windowSpecs.frameColor || quotationData.windowSpecs.color || 'white',
+            customColor: ''
+          },
+          frameMaterial: quotationData.windowSpecs.frame || 'aluminum',
+          frameColor: quotationData.windowSpecs.frameColor || quotationData.windowSpecs.color || 'white',
+          hardware: quotationData.windowSpecs.hardware || 'standard',
+          panels: quotationData.slidingConfig?.panels || 2,
+          tracks: 1,
+          screenIncluded: quotationData.windowSpecs.screenIncluded || false,
+          motorized: quotationData.windowSpecs.motorized || false,
+          security: quotationData.windowSpecs.security || 'standard'
+        },
+        // Store complete configuration for accurate diagram rendering
+        slidingConfig: quotationData.slidingConfig,
+        bayConfig: quotationData.bayConfig,
+        casementConfig: quotationData.casementConfig,
+        doubleHungConfig: quotationData.doubleHungConfig,
+        singleHungConfig: quotationData.singleHungConfig,
+        // Include the captured diagram snapshot
+        diagramSnapshot: diagramSnapshot,
+        pricing: {
+          basePrice: quotationData.pricing?.unitPrice || 5000,
+          sqFtPrice: 450,
+          quantity: parseInt(quotationData.windowSpecs.quantity) || 1,
+          customPricing: false
+        },
+        computedValues: {
+          sqFtPerWindow: ((quotationData.windowSpecs.width * quotationData.windowSpecs.height) / 92903) || 0, // Convert mm² to sqft
+          totalPrice: quotationData.pricing?.totalPrice || 0,
+          weight: ((quotationData.windowSpecs.width * quotationData.windowSpecs.height) / 92903) * 15 || 0
+        }
+      };
+
+      // Transform QuotationPageADS data to match the PDF generator's expected format
+      const pdfData = {
+        quotationNumber: quotationData.quotationNumber || 'QT-' + Date.now(),
+        project: quotationData.projectName || 'Window Project',
+        date: new Date(quotationData.date).toLocaleDateString('en-GB') || new Date().toLocaleDateString('en-GB'),
+        companyDetails: {
+          name: companyInfo?.name || 'ADS SYSTEMS',
+          phone: companyInfo?.phone || '9574544012',
+          email: companyInfo?.email || 'support@adssystem.co.in',
+          website: companyInfo?.website || 'adssystem.co.in',
+          gstin: companyInfo?.gstin || '24APJPP8011N1ZK'
+        },
+        clientDetails: {
+          name: quotationData.clientInfo.name || '',
+          address: `${quotationData.clientInfo.address || ''}\n${quotationData.clientInfo.city || ''}\nPhone: ${quotationData.clientInfo.phone || ''}\nEmail: ${quotationData.clientInfo.email || ''}`
+        },
+        windowSpecs: [windowConfig] // Single window in an array
+      };
+
+      // Generate the PDF
+      const result = await generateQuotationPDF(pdfData);
+      
+      if (result.success) {
+        alert(`PDF generated successfully: ${result.fileName}`);
+      } else {
+        alert(`Error generating PDF: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('An error occurred while generating the PDF. Please try again.');
+    }
   };
 
   // Function to generate key-value format descriptions for window configurations
@@ -2073,7 +2226,13 @@ const QuotationPage = () => {
     
     return (
       <div className="window-diagram-container">
-        <svg width={svgWidth} height={svgHeight} className="window-diagram" viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
+        <svg 
+          width={svgWidth} 
+          height={svgHeight} 
+          className="window-diagram" 
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          style={{ display: 'block', overflow: 'visible', margin: '5px' }}
+        >
           {renderShape()}
         </svg>
         <div className="diagram-dimensions">

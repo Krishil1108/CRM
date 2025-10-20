@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import './QuotationPage.css';
 import ClientService from './services/ClientService';
 import InventoryService from './services/InventoryService';
+import { generateQuotationPDF } from './utils/pdfGenerator';
 
 // Window Types Configuration
 const WINDOW_TYPES = {
@@ -185,8 +186,6 @@ const COLOR_OPTIONS = [
 ];
 
 const QuotationPage = () => {
-  const printRef = useRef();
-  const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [clients, setClients] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -458,16 +457,30 @@ const QuotationPage = () => {
     alert('Quotation saved successfully!');
   };
 
-  const handlePrintQuote = () => {
+  const handleDownloadPDF = async () => {
     if (quotationData.windowSpecs.length === 0) {
-      alert('Please add at least one window specification to print quote');
+      alert('Please add at least one window specification to generate PDF');
       return;
     }
-    setShowPDFPreview(true);
-  };
 
-  const handlePrint = () => {
-    window.print();
+    if (!quotationData.clientDetails.name) {
+      alert('Please select a client before generating PDF');
+      return;
+    }
+
+    try {
+      // Show loading state
+      const result = await generateQuotationPDF(quotationData);
+      
+      if (result.success) {
+        alert(`PDF generated successfully: ${result.fileName}`);
+      } else {
+        alert(`Error generating PDF: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      alert('An error occurred while generating the PDF. Please try again.');
+    }
   };
 
   if (loading) {
@@ -481,34 +494,13 @@ const QuotationPage = () => {
     );
   }
 
-  if (showPDFPreview) {
-    return (
-      <div className="pdf-preview-container">
-        <div className="pdf-preview-header">
-          <h2>Quotation Preview</h2>
-          <div className="preview-actions">
-            <button className="btn-print" onClick={handlePrint}>
-              🖨️ Print PDF
-            </button>
-            <button className="btn-back" onClick={() => setShowPDFPreview(false)}>
-              ← Back to Edit
-            </button>
-          </div>
-        </div>
-        <div className="pdf-preview-document" ref={printRef}>
-          <ADSQuotationPDF quotationData={quotationData} />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="quotation-container">
       <div className="quotation-header">
         <h1>🪟 Advanced Window Quotation Builder</h1>
         <div className="quotation-actions">
-          <button className="btn-print-quote" onClick={handlePrintQuote}>
-            📋 Print Quote
+          <button className="btn-print-quote" onClick={handleDownloadPDF}>
+            📄 Download PDF
           </button>
           <button className="btn-save" onClick={saveQuotation}>
             💾 Save Quotation
@@ -1517,234 +1509,6 @@ const DynamicWindowShape = ({ windowType, dimensions, specifications }) => {
       <div className="window-dimensions">
         <span>{width} × {height} mm</span>
         {radius > 0 && <span>Angle: {radius}°</span>}
-      </div>
-    </div>
-  );
-};
-
-// ADS Quotation PDF Component
-const ADSQuotationPDF = ({ quotationData }) => {
-  return (
-    <div className="ads-quotation-pdf">
-      {/* Header */}
-      <div className="ads-header">
-        <div className="ads-logo">
-          <div className="logo-text">
-            <div className="logo-main">ADS</div>
-            <div className="logo-sub">SYSTEMS</div>
-          </div>
-        </div>
-        <div className="company-contact">
-          <div className="contact-line">Contact No. : {quotationData.companyDetails.phone}</div>
-          <div className="contact-line">Email : {quotationData.companyDetails.email}</div>
-          <div className="contact-line">Website : {quotationData.companyDetails.website}</div>
-          <div className="contact-line">GSTIN : {quotationData.companyDetails.gstin}</div>
-        </div>
-      </div>
-
-      {/* Quote Info */}
-      <div className="quote-info-line">
-        Quote No. : {quotationData.quotationNumber} / Project : {quotationData.project} / Date : {quotationData.date}
-      </div>
-
-      {/* Client Details */}
-      <div className="client-section-pdf">
-        <div className="client-title">To</div>
-        <div className="client-details-pdf">
-          {quotationData.clientDetails.address.split('\n').map((line, index) => (
-            <div key={index}>{line}</div>
-          ))}
-        </div>
-      </div>
-
-      {/* Introduction */}
-      <div className="introduction">
-        <p>Dear Sir,</p>
-        <p>We are delighted that you are considering our range of Windows and Doors for your premises.</p>
-        <p>It has gained rapid acceptance across all cities of India for the overwhelming advantages of better protection from noise, heat, rain, dust and pollution.</p>
-        <p>In drawing this proposal, it has been our endeavour to suggest designs which would enhance your comfort and aesthetics from inside and improve the facade of the building.</p>
-        <p>It has a well-established service network to deliver seamless service at your doorstep. Our offer comprises of the following in enclosure for your kind perusal:</p>
-        <ol style={{paddingLeft: '20px'}}>
-          <li>Window design, specification and value</li>
-          <li>Terms and Conditions</li>
-        </ol>
-        <p>We now look forward to be of service to you.</p>
-        <p>For , KAPISH METAL</p>
-        <br />
-        <p>Authorized Signatory</p>
-      </div>
-
-      {/* Window Specifications */}
-      {quotationData.windowSpecs.map((spec, index) => (
-        <div key={spec.id} className="window-spec-pdf" style={{ pageBreakBefore: index > 0 ? 'always' : 'auto' }}>
-          {/* Header for each page */}
-          <div className="ads-header">
-            <div className="ads-logo">
-              <div className="logo-text">
-                <div className="logo-main">ADS</div>
-                <div className="logo-sub">SYSTEMS</div>
-              </div>
-            </div>
-            <div className="company-contact">
-              <div className="contact-line">Contact No. : {quotationData.companyDetails.phone}</div>
-              <div className="contact-line">Email : {quotationData.companyDetails.email}</div>
-              <div className="contact-line">Website : {quotationData.companyDetails.website}</div>
-              <div className="contact-line">GSTIN : {quotationData.companyDetails.gstin}</div>
-            </div>
-          </div>
-
-          <div className="quote-info-line">
-            Quote No. : {quotationData.quotationNumber} / Project : {quotationData.project} / Date : {quotationData.date}
-          </div>
-
-          <div className="window-spec-row">
-            <div className="spec-left">
-              <table className="spec-basic-info">
-                <tbody>
-                  <tr>
-                    <td><strong>Code :</strong></td>
-                    <td>{spec.id}</td>
-                    <td><strong>Size :</strong></td>
-                    <td>{spec.size}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Name :</strong></td>
-                    <td>{spec.name}</td>
-                    <td><strong>Profile System :</strong></td>
-                    <td>{spec.profileSystem}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Location :</strong></td>
-                    <td>{spec.location}</td>
-                    <td><strong>Glass :</strong></td>
-                    <td>{spec.glass}</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <div className="window-diagram-pdf">
-                <DynamicWindowShape 
-                  windowType={spec.windowType}
-                  dimensions={spec.dimensions}
-                  specifications={spec}
-                />
-              </div>
-            </div>
-
-            <div className="spec-right">
-              <div className="computed-values-pdf">
-                <h4>Computed Values</h4>
-                <table className="computed-table-pdf">
-                  <tbody>
-                    <tr>
-                      <td>Sq.Ft. per window</td>
-                      <td>{spec.computedValues.sqFtPerWindow.toFixed(3)} Sq.Ft.</td>
-                    </tr>
-                    <tr>
-                      <td>Value per Sq.Ft.</td>
-                      <td>{spec.computedValues.valuePerSqFt.toFixed(2)} INR</td>
-                    </tr>
-                    <tr>
-                      <td>Unit Price</td>
-                      <td>{spec.computedValues.unitPrice.toFixed(2)} INR</td>
-                    </tr>
-                    <tr>
-                      <td>Quantity</td>
-                      <td>{spec.computedValues.quantity} Pcs</td>
-                    </tr>
-                    <tr>
-                      <td>Value</td>
-                      <td>{spec.computedValues.value.toFixed(2)} INR</td>
-                    </tr>
-                    <tr>
-                      <td>Weight</td>
-                      <td>{spec.computedValues.weight.toFixed(3)} KG</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="profile-accessories">
-                <div className="profile-section">
-                  <h4>Profile</h4>
-                  <table className="profile-table">
-                    <tbody>
-                      <tr>
-                        <td>Profile Color : {spec.profile.color}</td>
-                        <td>Locking : {spec.accessories.locking}</td>
-                      </tr>
-                      <tr>
-                        <td>MeshType : {spec.profile.meshType}</td>
-                        <td>Handle color : {spec.accessories.handleColor}</td>
-                      </tr>
-                      <tr>
-                        <td>{spec.profile.guideRail}</td>
-                        <td>Handle Type : {spec.accessories.handleType}</td>
-                      </tr>
-                      <tr>
-                        <td>{spec.profile.slidingSash}</td>
-                        <td>{spec.accessories.handle}</td>
-                      </tr>
-                      <tr>
-                        <td>{spec.profile.interlockSash}</td>
-                        <td>Handle Type : {spec.accessories.handleType}</td>
-                      </tr>
-                      <tr>
-                        <td>{spec.profile.topBottomSash}</td>
-                        <td>Roller : {spec.accessories.roller}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-
-      {/* Quote Total */}
-      <div className="quote-total-pdf">
-        <h3>Quote Total</h3>
-        <table className="total-table-pdf">
-          <tbody>
-            <tr>
-              <td>No. of Components</td>
-              <td>{quotationData.windowSpecs.length} Pcs</td>
-            </tr>
-            <tr>
-              <td>Total Area</td>
-              <td>{quotationData.windowSpecs.reduce((sum, spec) => sum + spec.computedValues.sqFtPerWindow, 0).toFixed(2)} Sq.Ft.</td>
-            </tr>
-            <tr>
-              <td>Basic Value</td>
-              <td>{quotationData.windowSpecs.reduce((sum, spec) => sum + spec.computedValues.value, 0).toFixed(2)} INR</td>
-            </tr>
-            <tr>
-              <td>Sub Total</td>
-              <td>{quotationData.windowSpecs.reduce((sum, spec) => sum + spec.computedValues.value, 0).toFixed(2)} INR</td>
-            </tr>
-            <tr>
-              <td>Transportation Cost</td>
-              <td>1,000 INR</td>
-            </tr>
-            <tr>
-              <td>Loading And Unloading</td>
-              <td>1,000 INR</td>
-            </tr>
-            <tr>
-              <td>Total Project Cost</td>
-              <td>{(quotationData.windowSpecs.reduce((sum, spec) => sum + spec.computedValues.value, 0) + 2000).toFixed(2)} INR</td>
-            </tr>
-            <tr>
-              <td>Gst @18%</td>
-              <td>{(quotationData.windowSpecs.reduce((sum, spec) => sum + spec.computedValues.value, 0) * 0.18).toFixed(2)} INR</td>
-            </tr>
-            <tr className="grand-total">
-              <td><strong>Grand Total</strong></td>
-              <td><strong>{(quotationData.windowSpecs.reduce((sum, spec) => sum + spec.computedValues.value, 0) * 1.18 + 2000).toFixed(2)} INR</strong></td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   );

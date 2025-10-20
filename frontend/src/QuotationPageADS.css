@@ -1373,7 +1373,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 15px;
+  padding: 20px; /* Increased padding to ensure borders are fully visible */
+  overflow: visible; /* Ensure nothing is clipped */
 }
 
 .window-diagram {
@@ -1381,6 +1382,8 @@
   border-radius: 8px;
   background: white;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: visible; /* Ensure SVG borders aren't clipped */
+  display: block; /* Ensure proper rendering */
 }
 
 .diagram-dimensions {
@@ -1536,12 +1539,12 @@
   gap: 15px;
   max-width: 100%;
   max-height: 100%;
-  overflow: hidden; /* Remove scrollbar */
+  overflow: visible; /* Changed from hidden to ensure borders are fully visible */
   width: 100%;
   height: 100%;
   min-width: 400px; /* Increased minimum width for better visibility */
   min-height: 300px; /* Added minimum height */
-  padding: 20px; /* Increased padding for more space */
+  padding: 25px; /* Increased padding to ensure all borders are captured */
 }
 
 .window-diagram {
@@ -1550,7 +1553,7 @@
   background: #fafafa;
   max-width: 100%;
   max-height: 100%;
-  overflow: hidden; /* Remove scrollbar */
+  overflow: visible; /* Changed to visible to ensure borders aren't clipped */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2140,6 +2143,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 20px; /* Added padding to ensure borders are captured */
+  overflow: visible; /* Ensure all borders are visible */
 }
 
 /* Responsive diagram scaling */

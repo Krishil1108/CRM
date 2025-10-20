@@ -29,3 +29,12 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Generated quotation files (PDFs and Excel)
+Quotation_*.pdf
+**/Quotation_*.pdf
+*.xlsx
+*.xls
+**/quotations/*.pdf
+**/quotations/*.xlsx
+**/quotations/*.xls

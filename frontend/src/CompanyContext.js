@@ -38,20 +38,33 @@ export const CompanyProvider = ({ children }) => {
   useEffect(() => {
     const savedCompanyInfo = localStorage.getItem('companyInfo');
     if (savedCompanyInfo) {
-      const parsedInfo = JSON.parse(savedCompanyInfo);
-      // Ensure quotationSettings exists with defaults
-      const mergedInfo = {
-        ...parsedInfo,
-        quotationSettings: parsedInfo.quotationSettings || {
-          prefix: 'Q',
-          startingNumber: 1001,
-          currentNumber: 1001,
-          separator: '-',
-          suffix: '',
-          resetPeriod: 'never'
-        }
-      };
-      setCompanyInfo(mergedInfo);
+      try {
+        const parsedInfo = JSON.parse(savedCompanyInfo);
+        
+        // Restore the default logo since it can't be saved
+        const defaultLogo = (
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/>
+          </svg>
+        );
+        
+        // Ensure quotationSettings exists with defaults
+        const mergedInfo = {
+          ...parsedInfo,
+          logo: defaultLogo, // Restore default logo
+          quotationSettings: parsedInfo.quotationSettings || {
+            prefix: 'Q',
+            startingNumber: 1001,
+            currentNumber: 1001,
+            separator: '-',
+            suffix: '',
+            resetPeriod: 'never'
+          }
+        };
+        setCompanyInfo(mergedInfo);
+      } catch (error) {
+        console.error('Error loading company info from localStorage:', error);
+      }
     }
   }, []);
 
@@ -59,7 +72,14 @@ export const CompanyProvider = ({ children }) => {
   const updateCompanyInfo = (newInfo) => {
     const updatedInfo = { ...companyInfo, ...newInfo };
     setCompanyInfo(updatedInfo);
-    localStorage.setItem('companyInfo', JSON.stringify(updatedInfo));
+    
+    // Create a copy without the logo (React component) for localStorage
+    const { logo, ...serializableInfo } = updatedInfo;
+    try {
+      localStorage.setItem('companyInfo', JSON.stringify(serializableInfo));
+    } catch (error) {
+      console.error('Error saving company info to localStorage:', error);
+    }
   };
 
   // Generate next quotation number and increment counter
