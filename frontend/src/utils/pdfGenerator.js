@@ -416,7 +416,7 @@ class QuotationPDFGenerator {
   }
 
   /**
-   * Add basic information table (enhanced)
+   * Add basic information table (clean professional design matching screenshot)
    */
   addBasicInfoTableEnhanced(spec, startX, columnWidth) {
     // Extract dimensions safely - handle both old and new data structures
@@ -431,34 +431,35 @@ class QuotationPDFGenerator {
       ['Dimensions', `${this.formatNumber(width)} × ${this.formatNumber(height)} mm`]
     ];
     
-    this.pdf.setFillColor(245, 245, 245);
-    this.pdf.setDrawColor(200, 200, 200);
-    this.pdf.setLineWidth(0.1);
+    // Clean simple borders
+    this.pdf.setDrawColor(180, 180, 180);
+    this.pdf.setLineWidth(0.3);
     
-    const rowHeight = 7;
-    const labelWidth = columnWidth * 0.4;
-    const valueWidth = columnWidth * 0.6;
+    const rowHeight = 6; // More compact
+    const labelWidth = columnWidth * 0.45;
+    const valueWidth = columnWidth * 0.55;
     
     tableData.forEach((row, index) => {
       const y = this.currentY + index * rowHeight;
       
-      // Label cell
-      this.pdf.rect(startX, y, labelWidth, rowHeight, 'S');
-      this.pdf.setFillColor(240, 240, 240);
-      this.pdf.rect(startX, y, labelWidth, rowHeight, 'F');
-      this.pdf.setFontSize(9);
-      this.pdf.setFont('helvetica', 'bold');
-      this.pdf.setTextColor(60, 60, 60);
-      this.pdf.text(row[0], startX + 2, y + 5);
-      
-      // Value cell
-      this.pdf.rect(startX + labelWidth, y, valueWidth, rowHeight, 'S');
+      // Label cell - clean white with border
+      this.pdf.setFillColor(255, 255, 255);
+      this.pdf.rect(startX, y, labelWidth, rowHeight, 'FD');
+      this.pdf.setFontSize(7); // Smaller font
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setTextColor(40, 40, 40);
-      this.pdf.text(row[1], startX + labelWidth + 2, y + 5);
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.text(row[0] + ' :', startX + 2, y + 4.5);
+      
+      // Value cell - clean white with border
+      this.pdf.setFillColor(255, 255, 255);
+      this.pdf.rect(startX + labelWidth, y, valueWidth, rowHeight, 'FD');
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.setFontSize(7); // Smaller font
+      this.pdf.text(row[1], startX + labelWidth + 2, y + 4.5);
     });
     
-    this.currentY += tableData.length * rowHeight + 5;
+    this.currentY += tableData.length * rowHeight + 3; // Reduced spacing
   }
 
   /**
@@ -642,23 +643,23 @@ class QuotationPDFGenerator {
    */
   async addWindowDiagramEnhanced(spec, startX, columnWidth) {
     // Calculate available space to ensure diagram fits without cutting
-    const availableHeight = this.pageHeight - this.currentY - this.margin - 25; // Reserve extra space for footer and buffer
+    const availableHeight = this.pageHeight - this.currentY - this.margin - 20; // Reduced buffer for compact layout
     
     // First, try to use the pre-captured diagram snapshot if available
     if (spec.diagramSnapshot) {
       try {
         const imgWidth = columnWidth - 4; // Minimal padding
-        // Smart dynamic height with better balance
+        // Compact dynamic height for space efficiency
         let imgHeight = Math.min(
-          70, // Slightly larger for better visibility
-          imgWidth * 0.90, // Match original aspect ratio
-          availableHeight * 0.70 // Conservative 70% usage
+          50, // Reduced from 70 for more compact layout
+          imgWidth * 0.75, // Tighter aspect ratio
+          availableHeight * 0.60 // More conservative usage
         );
         
         // Add the diagram image directly (as it appears in app)
         this.pdf.addImage(spec.diagramSnapshot, 'PNG', startX + 2, this.currentY, imgWidth, imgHeight);
         
-        this.currentY += imgHeight + 10; // Spacing after diagram
+        this.currentY += imgHeight + 5; // Reduced spacing for compact layout
         return;
       } catch (error) {
         console.warn('Error using pre-captured diagram snapshot, falling back to SVG generation:', error);
@@ -693,16 +694,16 @@ class QuotationPDFGenerator {
         const imgData = canvas.toDataURL('image/png');
         const imgWidth = columnWidth - 4; // Minimal padding
         const availableHeight = this.pageHeight - this.currentY - this.margin - 15;
-        // Smart dynamic height with better balance
+        // Compact dynamic height for space efficiency
         let imgHeight = Math.min(
           (canvas.height * imgWidth) / canvas.width,
-          70, // Slightly larger for better visibility
-          availableHeight * 0.70 // Conservative 70% usage
+          50, // Reduced from 70 for more compact layout
+          availableHeight * 0.60 // More conservative usage
         );
         
         // Add the diagram image directly (as it appears in app)
         this.pdf.addImage(imgData, 'PNG', startX + 2, this.currentY, imgWidth, imgHeight);
-        this.currentY += imgHeight + 10;
+        this.currentY += imgHeight + 5; // Reduced spacing
         
         document.body.removeChild(clonedDiagram);
         return;
@@ -739,16 +740,16 @@ class QuotationPDFGenerator {
       const imgData = canvas.toDataURL('image/png');
       const imgWidth = columnWidth - 4; // Minimal padding
       const availableHeight = this.pageHeight - this.currentY - this.margin - 15;
-      // Smart dynamic height with better balance
+      // Compact dynamic height for space efficiency
       let imgHeight = Math.min(
         (canvas.height * imgWidth) / canvas.width,
-        70, // Slightly larger for better visibility
-        availableHeight * 0.70 // Conservative 70% usage
+        50, // Reduced from 70 for more compact layout
+        availableHeight * 0.60 // More conservative usage
       );
       
       // Add the diagram image directly (as it appears in app)
       this.pdf.addImage(imgData, 'PNG', startX + 2, this.currentY, imgWidth, imgHeight);
-      this.currentY += imgHeight + 10;
+      this.currentY += imgHeight + 5; // Reduced spacing
     } catch (error) {
       console.error('Error adding diagram:', error);
       this.pdf.setFontSize(9);
@@ -981,95 +982,130 @@ class QuotationPDFGenerator {
    * Add specifications table (enhanced with two-column grid)
    */
   addSpecificationsTableEnhanced(spec, startX, columnWidth) {
-    // Extract specifications safely from either old or new data structure
+    // Extract ALL specifications from the data structure
     const specifications = spec.specifications || {};
     const glassType = specifications.glass || spec.glassType || 'single';
+    const glassTint = specifications.glassTint || spec.glassTint || 'clear';
+    const glassThickness = specifications.glassThickness || (glassType === 'double' ? 10 : 5);
     const frameMaterial = specifications.frame?.material || spec.frameMaterial || 'aluminum';
     const frameColor = specifications.frame?.color || spec.frameColor || 'white';
-    const lockPosition = specifications.lockPosition || spec.lockPosition || 'center';
+    const lockPosition = specifications.lockPosition || spec.lockPosition || 'right';
     const openingType = specifications.openingType || spec.openingType || 'fixed';
-    const grille = specifications.grille?.enabled ? 
-      `${specifications.grille.style} grille` : 
-      (spec.grille || 'No grille');
+    const hardware = specifications.hardware || spec.hardware || 'standard';
+    const panels = specifications.panels || spec.panels || 2;
+    const tracks = specifications.tracks || spec.tracks || 1;
+    const screenIncluded = specifications.screenIncluded || spec.screenIncluded || false;
+    const motorized = specifications.motorized || spec.motorized || false;
+    const security = specifications.security || spec.security || 'standard';
     
+    // Grille information
+    const grilleEnabled = specifications.grille?.enabled || false;
+    const grilleStyle = specifications.grille?.style || specifications.grilles || spec.grilles || 'none';
+    const grillColor = specifications.grillColor || spec.grillColor || 'white';
+    const grillePattern = specifications.grille?.pattern || 'grid';
+    
+    // Build comprehensive specs array with ALL available data
     const specs = [
       ['Glass Type', this.formatGlassType(glassType)],
+      ['Glass Tint', String(glassTint).charAt(0).toUpperCase() + String(glassTint).slice(1)],
+      ['Glass Thickness', `${glassThickness}mm`],
       ['Frame Material', this.formatFrameMaterial(frameMaterial)],
-      ['Frame Color', String(frameColor)],
-      ['Lock Position', String(lockPosition)],
-      ['Opening Type', String(openingType)],
-      ['Grille', String(grille)]
+      ['Frame Color', String(frameColor).charAt(0).toUpperCase() + String(frameColor).slice(1)],
+      ['Hardware', String(hardware).charAt(0).toUpperCase() + String(hardware).slice(1)],
+      ['Lock Position', String(lockPosition).charAt(0).toUpperCase() + String(lockPosition).slice(1)],
+      ['Opening Type', String(openingType).charAt(0).toUpperCase() + String(openingType).slice(1)],
+      ['Panels', String(panels)],
+      ['Tracks', String(tracks)],
+      ['Grille Style', grilleStyle === 'none' ? 'No Grille' : this.formatGrilleStyle(grilleStyle)],
+      ['Grille Color', grilleEnabled ? String(grillColor).charAt(0).toUpperCase() + String(grillColor).slice(1) : 'N/A'],
+      ['Screen Included', screenIncluded ? 'Yes' : 'No'],
+      ['Motorized', motorized ? 'Yes' : 'No'],
+      ['Security Level', String(security).charAt(0).toUpperCase() + String(security).slice(1)]
     ];
     
-    this.pdf.setFillColor(...this.colors.lightGray);
-    this.pdf.setDrawColor(200, 200, 200);
-    this.pdf.setLineWidth(0.1);
-    
-    const rowHeight = 7;
-    const col1Width = columnWidth * 0.5 - 2;
-    const col2Width = columnWidth * 0.5 - 2;
-    
-    // Header
-    this.pdf.setFillColor(...this.colors.secondary);
-    this.pdf.rect(startX, this.currentY, columnWidth, 8, 'F');
-    this.pdf.setTextColor(...this.colors.white);
-    this.pdf.setFontSize(10);
+    // Simple header with light blue/gray background
+    this.pdf.setFillColor(173, 216, 230); // Light blue like screenshot
+    this.pdf.rect(startX, this.currentY, columnWidth, 6, 'F'); // Smaller header
+    this.pdf.setDrawColor(180, 180, 180);
+    this.pdf.setLineWidth(0.3);
+    this.pdf.rect(startX, this.currentY, columnWidth, 6, 'D');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFontSize(8);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Specifications', startX + 3, this.currentY + 5.5);
-    this.currentY += 10;
+    this.pdf.text('Glass :', startX + 2, this.currentY + 4.5);
+    this.currentY += 6;
     
-    // Specs in two columns
-    for (let i = 0; i < specs.length; i += 2) {
-      const y = this.currentY + Math.floor(i / 2) * rowHeight;
-      
-      // Left pair
-      if (specs[i]) {
-        const x1 = startX;
-        this.pdf.setFillColor(245, 245, 245);
-        this.pdf.rect(x1, y, col1Width, rowHeight, 'FD');
-        this.pdf.setFontSize(8);
-        this.pdf.setFont('helvetica', 'bold');
-        this.pdf.setTextColor(60, 60, 60);
-        this.pdf.text(specs[i][0], x1 + 1.5, y + 5);
-        this.pdf.setFont('helvetica', 'normal');
-        this.pdf.setTextColor(40, 40, 40);
-        const val1 = this.pdf.splitTextToSize(specs[i][1], col1Width * 0.45);
-        this.pdf.text(val1[0], x1 + col1Width * 0.5, y + 5);
-      }
-      
-      // Right pair
-      if (specs[i + 1]) {
-        const x2 = startX + col1Width + 4;
-        this.pdf.setFillColor(245, 245, 245);
-        this.pdf.rect(x2, y, col2Width, rowHeight, 'FD');
-        this.pdf.setFontSize(8);
-        this.pdf.setFont('helvetica', 'bold');
-        this.pdf.setTextColor(60, 60, 60);
-        this.pdf.text(specs[i + 1][0], x2 + 1.5, y + 5);
-        this.pdf.setFont('helvetica', 'normal');
-        this.pdf.setTextColor(40, 40, 40);
-        const val2 = this.pdf.splitTextToSize(specs[i + 1][1], col2Width * 0.45);
-        this.pdf.text(val2[0], x2 + col2Width * 0.5, y + 5);
-      }
-    }
+    // Clean grid layout - single column for clarity
+    this.pdf.setDrawColor(180, 180, 180);
+    this.pdf.setLineWidth(0.3);
     
-    this.currentY += Math.ceil(specs.length / 2) * rowHeight + 5;
+    const rowHeight = 6; // More compact
+    const labelWidthPercent = 0.50;
+    const valueWidthPercent = 0.50;
+    
+    // Render all specs in single column format like screenshot
+    specs.forEach((spec, index) => {
+      const y = this.currentY + index * rowHeight;
+      const labelW = columnWidth * labelWidthPercent;
+      const valueW = columnWidth * valueWidthPercent;
+      
+      // Label cell - clean white
+      this.pdf.setFillColor(255, 255, 255);
+      this.pdf.rect(startX, y, labelW, rowHeight, 'FD');
+      this.pdf.setFontSize(7); // Smaller font
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.text(spec[0] + ' :', startX + 2, y + 4.5);
+      
+      // Value cell - clean white
+      this.pdf.setFillColor(255, 255, 255);
+      this.pdf.rect(startX + labelW, y, valueW, rowHeight, 'FD');
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.setFontSize(7); // Smaller font
+      // Truncate if too long
+      const maxValueLength = 30;
+      const displayValue = spec[1].length > maxValueLength ? 
+        spec[1].substring(0, maxValueLength - 3) + '...' : 
+        spec[1];
+      this.pdf.text(displayValue, startX + labelW + 2, y + 4.5);
+    });
+    
+    this.currentY += specs.length * rowHeight + 3; // Reduced spacing
   }
 
   /**
-   * Add computed values (enhanced for right column placement)
+   * Format grille style for display
+   */
+  formatGrilleStyle(style) {
+    if (!style || style === 'none') return 'None';
+    const styles = {
+      'colonial': 'Colonial',
+      'prairie': 'Prairie',
+      'diamond': 'Diamond',
+      'georgian': 'Georgian',
+      'custom': 'Custom'
+    };
+    return styles[String(style).toLowerCase()] || String(style).charAt(0).toUpperCase() + String(style).slice(1);
+  }
+
+  /**
+   * Add computed values (clean professional design matching screenshot)
    */
   addComputedValuesEnhanced(spec, startX, columnWidth, startY) {
     let localY = startY;
     
-    // Header
-    this.pdf.setFillColor(...this.colors.accent);
-    this.pdf.rect(startX, localY, columnWidth, 8, 'F');
-    this.pdf.setTextColor(...this.colors.white);
-    this.pdf.setFontSize(10);
+    // Simple header with light blue background like screenshot
+    this.pdf.setFillColor(173, 216, 230); // Light blue
+    this.pdf.rect(startX, localY, columnWidth, 6, 'F'); // Smaller header
+    this.pdf.setDrawColor(180, 180, 180);
+    this.pdf.setLineWidth(0.3);
+    this.pdf.rect(startX, localY, columnWidth, 6, 'D');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFontSize(8);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Pricing', startX + 3, localY + 5.5);
-    localY += 10;
+    this.pdf.text('Computed Values', startX + 2, localY + 4.5);
+    localY += 6;
     
     // Extract data safely from both old and new structures
     const width = spec.dimensions?.width || spec.width || 0;
@@ -1078,47 +1114,43 @@ class QuotationPDFGenerator {
     const sqFtPrice = spec.pricing?.sqFtPrice || spec.sqFtPrice || 450;
     const quantity = spec.pricing?.quantity || spec.quantity || 1;
     const totalPrice = spec.computedValues?.totalPrice || spec.totalPrice || (area * sqFtPrice * quantity);
+    const weight = spec.computedValues?.weight || spec.weight || 0;
     
     const values = [
-      ['Area', `${this.formatNumber(area)} Sq.Ft.`],
-      ['Rate/Sq.Ft.', this.formatCurrency(sqFtPrice)],
+      ['Sq.Ft. per window', `${this.formatNumber(area)} Sq.Ft.`],
+      ['Value per Sq.Ft.', `${this.formatCurrency(sqFtPrice)} INR`],
+      ['Unit Price', `${this.formatCurrency(totalPrice)} INR`],
       ['Quantity', `${quantity} Pcs`],
-      ['Basic Value', this.formatCurrency(totalPrice)]
+      ['Value', `${this.formatCurrency(totalPrice * quantity)} INR`],
+      ['Weight', `${this.formatNumber(weight)} KG`]
     ];
     
-    this.pdf.setDrawColor(200, 200, 200);
-    this.pdf.setLineWidth(0.1);
+    this.pdf.setDrawColor(180, 180, 180);
+    this.pdf.setLineWidth(0.3);
+    
+    const rowHeight = 6; // More compact
+    const labelWidth = columnWidth * 0.50;
+    const valueWidth = columnWidth * 0.50;
     
     values.forEach((row, index) => {
-      const y = localY + index * 8;
+      const y = localY + index * rowHeight;
       
-      // Alternating colors
-      if (index % 2 === 0) {
-        this.pdf.setFillColor(250, 250, 250);
-      } else {
-        this.pdf.setFillColor(255, 255, 255);
-      }
-      this.pdf.rect(startX, y, columnWidth, 8, 'FD');
-      
-      this.pdf.setFontSize(9);
-      this.pdf.setFont('helvetica', 'bold');
-      this.pdf.setTextColor(60, 60, 60);
-      this.pdf.text(row[0], startX + 2, y + 5.5);
-      
+      // Label cell - clean white
+      this.pdf.setFillColor(255, 255, 255);
+      this.pdf.rect(startX, y, labelWidth, rowHeight, 'FD');
+      this.pdf.setFontSize(7); // Smaller font
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setTextColor(40, 40, 40);
-      this.pdf.text(row[1], startX + columnWidth - 2, y + 5.5, { align: 'right' });
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.text(row[0], startX + 2, y + 4.5);
+      
+      // Value cell - clean white, right aligned
+      this.pdf.setFillColor(255, 255, 255);
+      this.pdf.rect(startX + labelWidth, y, valueWidth, rowHeight, 'FD');
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.setFontSize(7); // Smaller font
+      this.pdf.text(row[1], startX + columnWidth - 2, y + 4.5, { align: 'right' });
     });
-    
-    // Grand total
-    localY += values.length * 8 + 2;
-    this.pdf.setFillColor(...this.colors.gold);
-    this.pdf.rect(startX, localY, columnWidth, 10, 'F');
-    this.pdf.setTextColor(...this.colors.white);
-    this.pdf.setFontSize(11);
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Total:', startX + 2, localY + 7);
-    this.pdf.text(this.formatCurrency(totalPrice), startX + columnWidth - 2, localY + 7, { align: 'right' });
   }
 
   /**
@@ -1132,24 +1164,25 @@ class QuotationPDFGenerator {
     this.pdf.setFillColor(...this.colors.primary);
     this.pdf.rect(this.margin, this.currentY, tableWidth, 12, 'F');
     
-    this.pdf.setFillColor(...this.colors.gold);
-    this.pdf.rect(this.margin, this.currentY, 5, 12, 'F');
-    
-    this.pdf.setTextColor(...this.colors.white);
+    this.pdf.setTextColor(255, 255, 255);
     this.pdf.setFontSize(14);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('QUOTATION SUMMARY', this.margin + 10, this.currentY + 8.5);
+    this.pdf.text('QUOTATION SUMMARY', this.margin + 10, this.currentY + 8);
     
-    this.currentY += 17;
+    this.currentY += 15;
     
-    // Calculate totals with safe fallbacks
-    const totalComponents = quotationData.windowSpecs.length || 0;
+    // Calculate totals safely
     const totalArea = quotationData.windowSpecs.reduce((sum, spec) => {
-      // Handle both data structures
+      // Try multiple paths for dimensions
       const width = spec.dimensions?.width || spec.width || 0;
       const height = spec.dimensions?.height || spec.height || 0;
-      const area = (width * height) / 92903; // mm² to sq.ft
+      const area = (width * height) / 92903; // mm² to sq.ft.
       return sum + area;
+    }, 0);
+    
+    const totalComponents = quotationData.windowSpecs.reduce((sum, spec) => {
+      const quantity = spec.pricing?.quantity || spec.quantity || 1;
+      return sum + quantity;
     }, 0);
     
     const basicValue = quotationData.windowSpecs.reduce((sum, spec) => {
