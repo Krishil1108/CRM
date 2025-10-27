@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './QuotationPageADS.css';
 import ClientService from './services/ClientService';
 import InventoryService from './services/InventoryService';
+import QuoteService from './services/QuoteService';
 import { useCompany } from './CompanyContext';
 import { useAppMode } from './contexts/AppModeContext';
 import ModeSelector from './components/ModeSelector';
@@ -23,6 +24,7 @@ const QuotationPage = () => {
   const [modalContent, setModalContent] = useState({ title: '', description: '' });
   const [activeTab, setActiveTab] = useState('configuration');
   const [inventoryItems, setInventoryItems] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load quotation data from localStorage or use default
   const loadQuotationData = () => {
@@ -401,10 +403,21 @@ const QuotationPage = () => {
 
   const handleSaveQuotation = async () => {
     try {
+      // Validate required fields
+      if (!quotationData.clientInfo.name) {
+        alert('Please fill in client name before saving quotation');
+        return;
+      }
+
+      if (!quotationData.windowSpecs.width || !quotationData.windowSpecs.height) {
+        alert('Please fill in window specifications (width and height) before saving');
+        return;
+      }
+
       // Consume stock for materials used in the quotation
       await consumeStockForQuotation();
       
-      // Save quotation to localStorage
+      // Save quotation to localStorage (keeping existing functionality)
       const quotations = JSON.parse(localStorage.getItem('quotations') || '[]');
       const newQuotation = {
         ...quotationData,
@@ -413,10 +426,235 @@ const QuotationPage = () => {
       };
       quotations.push(newQuotation);
       localStorage.setItem('quotations', JSON.stringify(quotations));
-      alert('Quotation saved successfully! (Note: Inventory integration is temporarily disabled)');
+
+      // Transform data for Quote History database
+      const quoteData = transformQuotationToQuoteFormat(quotationData);
+      
+      // Save to Quote History database
+      try {
+        const savedQuote = await QuoteService.saveQuotation(quoteData);
+        console.log('Quote saved:', savedQuote);
+        
+        // Check if backend was available
+        const backendAvailable = await QuoteService.isBackendAvailable();
+        if (backendAvailable) {
+          alert('Quotation saved successfully to both local storage and Quote History database!');
+        } else {
+          alert('Quotation saved to local storage. Backend server is not available - please start the server for database functionality.');
+        }
+      } catch (dbError) {
+        console.error('Database save error:', dbError);
+        alert('Quotation saved to local storage, but failed to save to Quote History database. Please check if the backend server is running.');
+      }
+
     } catch (error) {
       console.error('Error saving quotation:', error);
       alert(`Error saving quotation: ${error.message}`);
+    }
+  };
+
+  // Transform QuotationPageADS data to Quote History format
+  const transformQuotationToQuoteFormat = (quotationData) => {
+    // Calculate pricing totals
+    const unitPrice = quotationData.pricing?.unitPrice || 0;
+    const quantity = parseInt(quotationData.windowSpecs?.quantity) || 1;
+    const subtotal = unitPrice * quantity;
+    const taxRate = 0.18; // 18% GST
+    const tax = subtotal * taxRate;
+    const discount = 0; // Can be added later if needed
+    const grandTotal = subtotal + tax - discount;
+
+    // Extract window type as string (handle both object and string formats)
+    const windowTypeString = typeof quotationData.selectedWindowType === 'object' 
+      ? quotationData.selectedWindowType?.id || 'sliding'
+      : quotationData.selectedWindowType || 'sliding';
+
+    // Debug: Log the data being transformed
+    console.log('Transforming quotation data:', {
+      selectedWindowType: quotationData.selectedWindowType,
+      windowTypeString: windowTypeString,
+      clientName: quotationData.clientInfo?.name
+    });
+
+    const transformedData = {
+      quotationNumber: quotationData.quotationNumber || `QT-${Date.now()}`,
+      date: new Date(),
+      validUntil: new Date(quotationData.validUntil || Date.now() + 30 * 24 * 60 * 60 * 1000),
+      
+      clientInfo: {
+        name: quotationData.clientInfo?.name || '',
+        email: quotationData.clientInfo?.email || '',
+        phone: quotationData.clientInfo?.phone || '',
+        address: `${quotationData.clientInfo?.address || ''}, ${quotationData.clientInfo?.city || ''}`.trim().replace(/^,\s*/, ''),
+        city: quotationData.clientInfo?.city || ''
+      },
+      
+      companyDetails: {
+        name: companyInfo?.name || 'ADS SYSTEMS',
+        phone: companyInfo?.phone || '9574544012',
+        email: companyInfo?.email || 'support@adssystem.co.in',
+        website: companyInfo?.website || 'adssystem.co.in',
+        gstin: companyInfo?.gstin || '24APJPP8011N1ZK'
+      },
+      
+      windowSpecs: [{
+        id: 'W1',
+        name: `${typeof quotationData.selectedWindowType === 'object' ? quotationData.selectedWindowType?.name : windowTypeString} - ${quotationData.windowSpecs?.location || 'Custom'}`,
+        location: quotationData.windowSpecs?.location || 'Not specified',
+        type: windowTypeString,
+        
+        dimensions: {
+          width: parseInt(quotationData.windowSpecs?.width) || 0,
+          height: parseInt(quotationData.windowSpecs?.height) || 0
+        },
+        
+        specifications: {
+          glass: quotationData.windowSpecs?.glass || 'single',
+          glassTint: quotationData.windowSpecs?.glassTint || 'clear',
+          glassThickness: quotationData.windowSpecs?.glass === 'double' ? 10 : 5,
+          
+          frame: {
+            material: quotationData.windowSpecs?.frame || 'aluminum',
+            color: quotationData.windowSpecs?.frameColor || quotationData.windowSpecs?.color || 'white'
+          },
+          frameMaterial: quotationData.windowSpecs?.frame || 'aluminum',
+          frameColor: quotationData.windowSpecs?.frameColor || quotationData.windowSpecs?.color || 'white',
+          
+          lockPosition: 'right',
+          openingType: quotationData.windowSpecs?.opening || 'fixed',
+          hardware: quotationData.windowSpecs?.hardware || 'standard',
+          panels: quotationData.slidingConfig?.panels || 2,
+          tracks: 1,
+          screenIncluded: quotationData.windowSpecs?.screenIncluded || false,
+          motorized: quotationData.windowSpecs?.motorized || false,
+          security: quotationData.windowSpecs?.security || 'standard',
+          
+          grille: {
+            enabled: quotationData.windowSpecs?.grilles !== 'none',
+            style: quotationData.windowSpecs?.grilles || 'none',
+            pattern: 'grid'
+          },
+          grillColor: quotationData.windowSpecs?.grillColor || 'white'
+        },
+        
+        pricing: {
+          sqFtPrice: 450,
+          quantity: parseInt(quotationData.windowSpecs?.quantity) || 1,
+          unitPrice: unitPrice,
+          totalPrice: unitPrice * quantity
+        }
+      }],
+      
+      selectedWindowType: windowTypeString,
+      
+      slidingConfig: {
+        panels: quotationData.slidingConfig?.panels || 2,
+        combination: quotationData.slidingConfig?.combination || null
+      },
+      
+      bayConfig: {
+        windows: quotationData.bayConfig?.windows || 3,
+        angle: quotationData.bayConfig?.angle || 30,
+        fixedSides: quotationData.bayConfig?.fixedSides || false
+      },
+      
+      casementConfig: {
+        openingType: quotationData.casementConfig?.direction || 'outward',
+        panels: quotationData.casementConfig?.panels || 1
+      },
+      
+      awningConfig: {
+        size: quotationData.awningConfig?.size || 'standard',
+        orientation: quotationData.awningConfig?.orientation || 'horizontal'
+      },
+      
+      pricing: {
+        subtotal: subtotal,
+        tax: tax,
+        discount: discount,
+        total: grandTotal,
+        currency: 'INR'
+      },
+      
+      notes: quotationData.notes || `Project: ${quotationData.projectName || 'Window Project'}`,
+      createdBy: 'System User',
+      lastModifiedBy: 'System User'
+    };
+
+    // Debug: Log the final transformed data
+    console.log('Transformed data for backend:', transformedData);
+    
+    return transformedData;
+  };
+
+  // Handle submit quotation (save + submit)
+  const handleSubmitQuotation = async () => {
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      console.log('Submission already in progress, ignoring duplicate request');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      
+      // First validate and save
+      if (!quotationData.clientInfo.name) {
+        alert('Please fill in client name before submitting quotation');
+        return;
+      }
+
+      if (!quotationData.windowSpecs.width || !quotationData.windowSpecs.height) {
+        alert('Please fill in window specifications (width and height) before submitting');
+        return;
+      }
+
+      // Consume stock for materials used in the quotation
+      await consumeStockForQuotation();
+      
+      // Save quotation to localStorage (keeping existing functionality)
+      const quotations = JSON.parse(localStorage.getItem('quotations') || '[]');
+      const newQuotation = {
+        ...quotationData,
+        id: quotationData.quotationNumber,
+        createdAt: new Date().toISOString(),
+        status: 'submitted'
+      };
+      quotations.push(newQuotation);
+      localStorage.setItem('quotations', JSON.stringify(quotations));
+
+      // Transform data for Quote History database
+      const quoteData = transformQuotationToQuoteFormat(quotationData);
+      
+      // Submit to Quote History database (save + submit)
+      try {
+        const submittedQuote = await QuoteService.submitQuotation(quoteData, 'System User');
+        console.log('Quote submitted:', submittedQuote);
+        
+        // Check if backend was available
+        const backendAvailable = await QuoteService.isBackendAvailable();
+        if (backendAvailable) {
+          alert('Quotation saved and submitted successfully! The quotation is now available in Quote History database.');
+        } else {
+          alert('Quotation saved and submitted to local storage. Backend server is not available - please start the server for database functionality.');
+        }
+        
+        // Optionally generate PDF after submission
+        const shouldGeneratePDF = window.confirm('Would you like to generate a PDF for the submitted quotation?');
+        if (shouldGeneratePDF) {
+          await generatePDF();
+        }
+        
+      } catch (dbError) {
+        console.error('Database submit error:', dbError);
+        alert('Quotation saved locally, but failed to submit to Quote History database. Please check if the backend server is running.');
+      }
+
+    } catch (error) {
+      console.error('Error submitting quotation:', error);
+      alert(`Error submitting quotation: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -3332,6 +3570,13 @@ const QuotationPage = () => {
         </button>
         <button className="btn-primary" onClick={handleSaveQuotation}>
           Save Quotation
+        </button>
+        <button 
+          className="btn-info" 
+          onClick={handleSubmitQuotation}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Submitting...' : 'Save & Submit'}
         </button>
         <button className="btn-secondary" onClick={generatePDF}>
           Generate PDF

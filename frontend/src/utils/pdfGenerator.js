@@ -18,6 +18,9 @@ class QuotationPDFGenerator {
     this.lineHeight = 7;
     this.lineSpacing = 1.3; // 1.3x line spacing for better readability
     this.sectionGap = 12; // Gap between major sections
+    this.footerHeight = 20; // Reserve space for footer
+    this.headerHeight = 30; // Reserve space for header on continuation pages
+    this.quotationData = null; // Store quotation data for headers
     this.colors = {
       primary: [26, 82, 118], // Professional dark blue
       secondary: [41, 128, 185], // Medium blue
@@ -46,28 +49,30 @@ class QuotationPDFGenerator {
       // Generate the PDF content
       this.addHeader(quotationData);
       this.addQuoteInfo(quotationData);
+      this.addSectionSpacing('small');
       this.addSectionDivider(); // Visual separator
+      this.addSectionSpacing('small');
       this.addClientDetails(quotationData);
+      this.addSectionSpacing('small');
       this.addSectionDivider(); // Visual separator
+      this.addSectionSpacing('medium');
       this.addIntroduction();
+      this.addSectionSpacing('large');
       
-      // Add window specifications
+      // Add window specifications with proper page management
       for (let i = 0; i < quotationData.windowSpecs.length; i++) {
+        // Check if we need a new page for this specification
         if (i > 0) {
-          this.pdf.addPage();
-          this.currentY = this.margin;
-          this.addHeader(quotationData);
-          this.addQuoteInfo(quotationData);
+          this.ensureSpace(120); // Ensure space for specification or create new page
         }
         await this.addWindowSpecification(quotationData.windowSpecs[i], i);
+        this.addSectionSpacing('medium');
       }
 
-      // Add totals on a new page
-      this.pdf.addPage();
-      this.currentY = this.margin;
-      this.addHeader(quotationData);
-      this.addQuoteInfo(quotationData);
+      // Add totals section with proper spacing
+      this.ensureSpace(100); // Ensure space for totals section
       this.addQuoteTotals(quotationData);
+      this.addSectionSpacing('large');
       this.addTermsAndConditions();
       
       // Add page numbers to all pages
@@ -82,6 +87,159 @@ class QuotationPDFGenerator {
       console.error('Error generating PDF:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  /**
+   * Check if content will fit on current page, if not create new page with header
+   * @param {number} requiredHeight - Height needed for the content
+   * @param {boolean} addHeader - Whether to add continuation header on new page
+   */
+  checkPageBreak(requiredHeight, addHeader = true) {
+    const availableHeight = this.pageHeight - this.currentY - this.footerHeight;
+    
+    if (requiredHeight > availableHeight) {
+      this.pdf.addPage();
+      this.currentY = this.margin;
+      
+      if (addHeader) {
+        this.addContinuationHeader();
+        this.currentY += this.headerHeight;
+      }
+      
+      return true; // New page was created
+    }
+    return false; // Content fits on current page
+  }
+
+  /**
+   * Add a simplified header for continuation pages
+   */
+  addContinuationHeader() {
+    const companyDetails = this.quotationData?.companyDetails || {
+      name: 'ADS SYSTEMS',
+      tagline: 'Finvent Windows & Doors',
+      phone: '(561) 123-4567',
+      email: 'info@adssystem.com',
+      website: 'www.findsys.com'
+    };
+
+    // Ensure all values are valid strings
+    const companyName = String(companyDetails.name || 'ADS SYSTEMS');
+    const companyTagline = String(companyDetails.tagline || 'Finvent Windows & Doors');
+    const quotationNumber = String(this.quotationData?.quotationNumber || 'Q/###');
+
+    // Company info box
+    this.pdf.setFillColor(255, 255, 255);
+    this.pdf.setDrawColor(0, 0, 0);
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 20, 2, 2, 'FD');
+    
+    // Company name
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFontSize(14);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text(companyName, this.margin + 5, this.currentY + 8);
+    
+    // Tagline
+    this.pdf.setFontSize(10);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text(companyTagline, this.margin + 5, this.currentY + 15);
+    
+    // Contact info (right aligned)
+    this.pdf.setFontSize(8);
+    const currentDate = new Date().toLocaleDateString('en-IN');
+    this.pdf.text(`Quote: ${quotationNumber}`, this.pageWidth - this.margin - 5, this.currentY + 8, { align: 'right' });
+    this.pdf.text(`Date: ${currentDate}`, this.pageWidth - this.margin - 5, this.currentY + 15, { align: 'right' });
+  }
+
+  /**
+   * Add consistent section spacing
+   * @param {string} size - 'small', 'medium', 'large'
+   */
+  addSectionSpacing(size = 'medium') {
+    const spacing = {
+      small: 5,
+      medium: 10,
+      large: 15
+    };
+    this.currentY += spacing[size] || spacing.medium;
+  }
+
+  /**
+   * Ensure minimum space available, create new page if needed
+   * @param {number} minSpace - Minimum space required
+   */
+  ensureSpace(minSpace) {
+    const availableSpace = this.pageHeight - this.currentY - this.footerHeight;
+    if (availableSpace < minSpace) {
+      this.checkPageBreak(minSpace);
+    }
+  }
+
+  /**
+   * Enhanced method to ensure tables have proper borders and formatting
+   * @param {Array} headers - Table headers
+   * @param {Array} rows - Table data rows
+   * @param {Object} options - Formatting options
+   */
+  addFormattedTable(headers, rows, options = {}) {
+    const startX = options.startX || this.margin;
+    const tableWidth = options.width || (this.pageWidth - 2 * this.margin);
+    const columnWidth = tableWidth / headers.length;
+    const rowHeight = options.rowHeight || 8;
+    const headerHeight = options.headerHeight || 10;
+    
+    // Calculate total required height
+    const totalHeight = headerHeight + (rows.length * rowHeight);
+    
+    // Check if table fits on current page
+    this.checkPageBreak(totalHeight + 10);
+    
+    const startY = this.currentY;
+    
+    // Draw table header with borders
+    this.pdf.setFillColor(245, 245, 245); // Light gray background
+    this.pdf.setDrawColor(0, 0, 0);
+    this.pdf.setLineWidth(0.5);
+    this.pdf.rect(startX, startY, tableWidth, headerHeight, 'FD');
+    
+    // Header text
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFontSize(9);
+    this.pdf.setFont('helvetica', 'bold');
+    
+    headers.forEach((header, index) => {
+      const cellX = startX + (index * columnWidth);
+      // Vertical lines between columns
+      if (index > 0) {
+        this.pdf.line(cellX, startY, cellX, startY + headerHeight);
+      }
+      this.pdf.text(header, cellX + 2, startY + 6);
+    });
+    
+    // Draw table rows with borders
+    this.pdf.setFillColor(255, 255, 255); // White background
+    rows.forEach((row, rowIndex) => {
+      const rowY = startY + headerHeight + (rowIndex * rowHeight);
+      
+      // Row background and border
+      this.pdf.rect(startX, rowY, tableWidth, rowHeight, 'FD');
+      
+      // Row text
+      this.pdf.setFontSize(8);
+      this.pdf.setFont('helvetica', 'normal');
+      
+      row.forEach((cell, cellIndex) => {
+        const cellX = startX + (cellIndex * columnWidth);
+        // Vertical lines between columns
+        if (cellIndex > 0) {
+          this.pdf.line(cellX, rowY, cellX, rowY + rowHeight);
+        }
+        this.pdf.text(String(cell), cellX + 2, rowY + 5);
+      });
+    });
+    
+    this.currentY = startY + totalHeight + 5;
   }
 
   /**
@@ -239,73 +397,143 @@ class QuotationPDFGenerator {
   }
 
   /**
-   * Add introduction text
+   * Add introduction text with enhanced formatting and professional structure
    */
   addIntroduction() {
+    // Professional header section
+    this.pdf.setFillColor(41, 128, 185); // Blue header only
+    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 8, 'F');
+    
+    this.pdf.setTextColor(255, 255, 255);
+    this.pdf.setFontSize(11);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('PROPOSAL OVERVIEW', this.margin + 4, this.currentY + 5.5);
+    
+    this.currentY += 12;
+    
+    // Greeting section
     this.pdf.setFontSize(10);
     this.pdf.setFont('helvetica', 'normal');
-    this.pdf.setTextColor(...this.colors.text);
+    this.pdf.setTextColor(44, 62, 80);
     
-    const introText = [
-      'Dear Sir/Madam,',
-      '',
-      'We are delighted that you are considering our range of Windows and Doors for your premises.',
-      'Our products have gained rapid acceptance across India for their superior protection from',
-      'noise, heat, rain, dust, and pollution.',
-      '',
-      'This proposal suggests designs that enhance comfort and aesthetics while improving your',
-      'building\'s facade. Our offer includes:',
-      '',
-      '1. Window design, specifications, and pricing',
-      '2. Terms and conditions',
-      '',
-      'We look forward to serving you.',
+    this.pdf.text('Dear Valued Client,', this.margin, this.currentY);
+    this.currentY += 8;
+    
+    // Main description with improved formatting
+    const mainDescription = [
+      'We are delighted to present our comprehensive range of premium Windows and Doors',
+      'designed specifically for your project requirements. Our products have gained rapid',
+      'acceptance across India for their superior protection against noise, heat, rain, dust,',
+      'and environmental pollution.'
     ];
     
-    introText.forEach(line => {
-      this.pdf.text(line, this.margin, this.currentY);
-      this.currentY += 5;
+    // Render main description with justified text
+    this.pdf.setFontSize(9.5);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setTextColor(60, 60, 60);
+    
+    mainDescription.forEach(line => {
+      const maxWidth = this.pageWidth - 2 * this.margin;
+      const wrappedLines = this.pdf.splitTextToSize(line, maxWidth);
+      wrappedLines.forEach(wrappedLine => {
+        this.pdf.text(wrappedLine, this.margin, this.currentY);
+        this.currentY += 5.5;
+      });
     });
     
+    this.currentY += 6;
+    
+    // Benefits section with bullet points
+    this.pdf.setFillColor(255, 255, 255); // White background
+    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 35, 'F');
+    this.pdf.setDrawColor(0, 0, 0); // Black border
+    this.pdf.setLineWidth(0.3);
+    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 35, 'D');
+    
     this.currentY += 5;
+    
+    this.pdf.setFontSize(9);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(41, 128, 185);
+    this.pdf.text('This comprehensive proposal includes:', this.margin + 4, this.currentY);
+    
+    this.currentY += 8;
+    
+    const proposalItems = [
+      'Complete window design specifications and technical details',
+      'Accurate pricing breakdown with transparent calculations',
+      'Professional terms and conditions for your peace of mind',
+      'Quality assurance and warranty information'
+    ];
+    
+    this.pdf.setFontSize(9);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setTextColor(52, 73, 94);
+    
+    proposalItems.forEach((item, index) => {
+      // Enhanced bullet points
+      this.pdf.setFillColor(0, 0, 0); // Black bullet points
+      this.pdf.circle(this.margin + 8, this.currentY - 1, 1.2, 'F');
+      
+      // Item text with proper wrapping
+      const maxWidth = this.pageWidth - 2 * this.margin - 16;
+      const lines = this.pdf.splitTextToSize(item, maxWidth);
+      
+      lines.forEach((line, lineIndex) => {
+        this.pdf.text(line, this.margin + 14, this.currentY + (lineIndex * 5));
+      });
+      
+      this.currentY += Math.max(lines.length * 5, 6);
+    });
+    
+    this.currentY += 8;
+    
+    // Closing statement
+    this.pdf.setFontSize(9);
+    this.pdf.setFont('helvetica', 'italic');
+    this.pdf.setTextColor(41, 128, 185);
+    this.pdf.text('We look forward to the opportunity to serve you and exceed your expectations.', 
+                  this.margin, this.currentY);
+    
+    this.currentY += 12;
   }
 
   /**
    * Add window specification with diagram
    */
   async addWindowSpecification(spec, index) {
-    // Check if we need a new page (more conservative check for diagram space)
-    if (this.currentY > this.pageHeight - 140) {
-      this.pdf.addPage();
-      this.currentY = this.margin;
-      this.addHeader(this.quotationData);
-      this.addQuoteInfo(this.quotationData);
-    }
+    // Estimate total height needed for this specification
+    const estimatedHeight = 120; // Diagram + tables + spacing
+    
+    // Check if we need a page break with improved logic
+    this.checkPageBreak(estimatedHeight);
 
-    // Section title with gold accent
-    this.pdf.setFillColor(...this.colors.primary);
-    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 10, 'F');
+    // Section title with professional black and white styling
+    this.pdf.setFillColor(245, 245, 245); // Light gray background
+    this.pdf.setDrawColor(0, 0, 0);
+    this.pdf.setLineWidth(0.5);
+    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 10, 'FD');
     
-    this.pdf.setFillColor(...this.colors.gold);
-    this.pdf.rect(this.margin, this.currentY, 4, 10, 'F');
-    
-    this.pdf.setTextColor(...this.colors.white);
+    this.pdf.setTextColor(0, 0, 0); // Black text
     this.pdf.setFontSize(12);
     this.pdf.setFont('helvetica', 'bold');
     
     // Extract readable name - handle object, string, or undefined
     let windowName = 'Custom Window';
-    if (typeof spec.name === 'string') {
-      windowName = spec.name;
+    if (typeof spec.name === 'string' && spec.name.trim()) {
+      windowName = spec.name.trim();
     } else if (spec.name && typeof spec.name === 'object') {
       // If name is an object, try to extract meaningful info
-      windowName = spec.name.location || spec.name.type || 'Custom Window';
-    } else if (spec.location) {
-      windowName = spec.location;
+      windowName = String(spec.name.location || spec.name.type || 'Custom Window');
+    } else if (spec.location && typeof spec.location === 'string') {
+      windowName = spec.location.trim();
     } else if (spec.type || spec.selectedWindowType) {
       const type = this.formatWindowType(spec.type || spec.selectedWindowType);
-      windowName = type;
+      windowName = String(type || 'Custom Window');
     }
+    
+    // Ensure windowName is always a valid string
+    windowName = String(windowName || 'Custom Window');
     
     this.pdf.text(`Window Specification ${index + 1}: ${windowName}`, this.margin + 8, this.currentY + 7);
     
@@ -426,8 +654,8 @@ class QuotationPDFGenerator {
     const openingType = spec.specifications?.openingType || spec.openingType || 'N/A';
     
     const tableData = [
-      ['Window Type', this.formatWindowType(windowType)],
-      ['Opening Type', String(openingType)],
+      ['Window Type', String(this.formatWindowType(windowType) || 'N/A')],
+      ['Opening Type', String(openingType || 'N/A')],
       ['Dimensions', `${this.formatNumber(width)} × ${this.formatNumber(height)} mm`]
     ];
     
@@ -448,7 +676,7 @@ class QuotationPDFGenerator {
       this.pdf.setFontSize(7); // Smaller font
       this.pdf.setFont('helvetica', 'normal');
       this.pdf.setTextColor(0, 0, 0);
-      this.pdf.text(row[0] + ' :', startX + 2, y + 4.5);
+      this.pdf.text(String(row[0] || '') + ' :', startX + 2, y + 4.5);
       
       // Value cell - clean white with border
       this.pdf.setFillColor(255, 255, 255);
@@ -456,7 +684,7 @@ class QuotationPDFGenerator {
       this.pdf.setFont('helvetica', 'normal');
       this.pdf.setTextColor(0, 0, 0);
       this.pdf.setFontSize(7); // Smaller font
-      this.pdf.text(row[1], startX + labelWidth + 2, y + 4.5);
+      this.pdf.text(String(row[1] || 'N/A'), startX + labelWidth + 2, y + 4.5);
     });
     
     this.currentY += tableData.length * rowHeight + 3; // Reduced spacing
@@ -979,7 +1207,7 @@ class QuotationPDFGenerator {
   }
 
   /**
-   * Add specifications table (enhanced with two-column grid)
+   * Add specifications table (enhanced with dynamic sections and improved formatting)
    */
   addSpecificationsTableEnhanced(spec, startX, columnWidth) {
     // Extract ALL specifications from the data structure
@@ -1004,74 +1232,127 @@ class QuotationPDFGenerator {
     const grillColor = specifications.grillColor || spec.grillColor || 'white';
     const grillePattern = specifications.grille?.pattern || 'grid';
     
-    // Build comprehensive specs array with ALL available data
-    const specs = [
-      ['Glass Type', this.formatGlassType(glassType)],
-      ['Glass Tint', String(glassTint).charAt(0).toUpperCase() + String(glassTint).slice(1)],
-      ['Glass Thickness', `${glassThickness}mm`],
-      ['Frame Material', this.formatFrameMaterial(frameMaterial)],
-      ['Frame Color', String(frameColor).charAt(0).toUpperCase() + String(frameColor).slice(1)],
-      ['Hardware', String(hardware).charAt(0).toUpperCase() + String(hardware).slice(1)],
-      ['Lock Position', String(lockPosition).charAt(0).toUpperCase() + String(lockPosition).slice(1)],
-      ['Opening Type', String(openingType).charAt(0).toUpperCase() + String(openingType).slice(1)],
-      ['Panels', String(panels)],
-      ['Tracks', String(tracks)],
-      ['Grille Style', grilleStyle === 'none' ? 'No Grille' : this.formatGrilleStyle(grilleStyle)],
-      ['Grille Color', grilleEnabled ? String(grillColor).charAt(0).toUpperCase() + String(grillColor).slice(1) : 'N/A'],
-      ['Screen Included', screenIncluded ? 'Yes' : 'No'],
-      ['Motorized', motorized ? 'Yes' : 'No'],
-      ['Security Level', String(security).charAt(0).toUpperCase() + String(security).slice(1)]
+    // Organize specs into logical sections for better readability
+    const specSections = [
+      {
+        title: 'GLASS SPECIFICATIONS',
+        specs: [
+          ['Type', this.formatGlassType(glassType)],
+          ['Tint', String(glassTint).charAt(0).toUpperCase() + String(glassTint).slice(1)],
+          ['Thickness', `${glassThickness}mm`]
+        ]
+      },
+      {
+        title: 'FRAME & HARDWARE',
+        specs: [
+          ['Material', this.formatFrameMaterial(frameMaterial)],
+          ['Color', String(frameColor).charAt(0).toUpperCase() + String(frameColor).slice(1)],
+          ['Hardware', String(hardware).charAt(0).toUpperCase() + String(hardware).slice(1)],
+          ['Lock Position', String(lockPosition).charAt(0).toUpperCase() + String(lockPosition).slice(1)]
+        ]
+      },
+      {
+        title: 'CONFIGURATION',
+        specs: [
+          ['Opening Type', String(openingType).charAt(0).toUpperCase() + String(openingType).slice(1)],
+          ['Panels', String(panels)],
+          ['Tracks', String(tracks)]
+        ]
+      }
     ];
-    
-    // Simple header with light blue/gray background
-    this.pdf.setFillColor(173, 216, 230); // Light blue like screenshot
-    this.pdf.rect(startX, this.currentY, columnWidth, 6, 'F'); // Smaller header
-    this.pdf.setDrawColor(180, 180, 180);
-    this.pdf.setLineWidth(0.3);
-    this.pdf.rect(startX, this.currentY, columnWidth, 6, 'D');
-    this.pdf.setTextColor(0, 0, 0);
-    this.pdf.setFontSize(8);
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Glass :', startX + 2, this.currentY + 4.5);
-    this.currentY += 6;
-    
-    // Clean grid layout - single column for clarity
-    this.pdf.setDrawColor(180, 180, 180);
-    this.pdf.setLineWidth(0.3);
-    
-    const rowHeight = 6; // More compact
-    const labelWidthPercent = 0.50;
-    const valueWidthPercent = 0.50;
-    
-    // Render all specs in single column format like screenshot
-    specs.forEach((spec, index) => {
-      const y = this.currentY + index * rowHeight;
-      const labelW = columnWidth * labelWidthPercent;
-      const valueW = columnWidth * valueWidthPercent;
+
+    // Add optional sections only if they have meaningful data
+    if (grilleEnabled && grilleStyle !== 'none') {
+      specSections.push({
+        title: 'GRILLE DETAILS',
+        specs: [
+          ['Style', this.formatGrilleStyle(grilleStyle)],
+          ['Color', String(grillColor).charAt(0).toUpperCase() + String(grillColor).slice(1)],
+          ['Pattern', String(grillePattern).charAt(0).toUpperCase() + String(grillePattern).slice(1)]
+        ]
+      });
+    }
+
+    if (screenIncluded || motorized || security !== 'standard') {
+      const additionalSpecs = [];
+      if (screenIncluded) additionalSpecs.push(['Screen', 'Included']);
+      if (motorized) additionalSpecs.push(['Motorized', 'Yes']);
+      if (security !== 'standard') additionalSpecs.push(['Security', String(security).charAt(0).toUpperCase() + String(security).slice(1)]);
       
-      // Label cell - clean white
-      this.pdf.setFillColor(255, 255, 255);
-      this.pdf.rect(startX, y, labelW, rowHeight, 'FD');
-      this.pdf.setFontSize(7); // Smaller font
-      this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setTextColor(0, 0, 0);
-      this.pdf.text(spec[0] + ' :', startX + 2, y + 4.5);
+      if (additionalSpecs.length > 0) {
+        specSections.push({
+          title: 'ADDITIONAL FEATURES',
+          specs: additionalSpecs
+        });
+      }
+    }
+    
+    const rowHeight = 6; // Slightly larger for better readability
+    const sectionGap = 3;
+    const headerHeight = 8;
+    
+    // Calculate total height needed for all sections
+    const totalHeight = specSections.reduce((height, section) => {
+      return height + headerHeight + (section.specs.length * rowHeight) + sectionGap;
+    }, 0);
+    
+    // Check if we need a page break
+    this.checkPageBreak(totalHeight + 20);
+    
+    // Render each section with professional black and white styling
+    specSections.forEach((section, sectionIndex) => {
+      // Section header with clean black border
+      this.pdf.setFillColor(245, 245, 245); // Light gray background
+      this.pdf.setDrawColor(0, 0, 0);
+      this.pdf.setLineWidth(0.5);
+      this.pdf.rect(startX, this.currentY, columnWidth, headerHeight, 'FD');
       
-      // Value cell - clean white
-      this.pdf.setFillColor(255, 255, 255);
-      this.pdf.rect(startX + labelW, y, valueW, rowHeight, 'FD');
-      this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setTextColor(0, 0, 0);
-      this.pdf.setFontSize(7); // Smaller font
-      // Truncate if too long
-      const maxValueLength = 30;
-      const displayValue = spec[1].length > maxValueLength ? 
-        spec[1].substring(0, maxValueLength - 3) + '...' : 
-        spec[1];
-      this.pdf.text(displayValue, startX + labelW + 2, y + 4.5);
+      this.pdf.setTextColor(0, 0, 0); // Black text
+      this.pdf.setFontSize(8);
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text(section.title, startX + 3, this.currentY + 5.5);
+      this.currentY += headerHeight;
+      
+      // Section content with visible borders
+      this.pdf.setDrawColor(0, 0, 0);
+      this.pdf.setLineWidth(0.3);
+      
+      const labelWidth = columnWidth * 0.45;
+      const valueWidth = columnWidth * 0.55;
+      
+      section.specs.forEach((spec, index) => {
+        const y = this.currentY + index * rowHeight;
+        
+        // White background for all rows
+        this.pdf.setFillColor(255, 255, 255);
+        
+        // Label cell with border
+        this.pdf.rect(startX, y, labelWidth, rowHeight, 'FD');
+        this.pdf.setFontSize(7);
+        this.pdf.setFont('helvetica', 'normal');
+        this.pdf.setTextColor(60, 60, 60);
+        this.pdf.text(String(spec[0] || ''), startX + 2, y + 4);
+        
+        // Value cell with border and emphasis
+        this.pdf.rect(startX + labelWidth, y, valueWidth, rowHeight, 'FD');
+        this.pdf.setFont('helvetica', 'bold');
+        this.pdf.setTextColor(0, 0, 0);
+        this.pdf.setFontSize(7);
+        
+        // Smart text truncation with proper wrapping
+        const maxLength = 20;
+        let displayValue = String(spec[1] || 'N/A');
+        if (displayValue.length > maxLength) {
+          displayValue = displayValue.substring(0, maxLength - 2) + '..';
+        }
+        this.pdf.text(displayValue, startX + labelWidth + 2, y + 4);
+      });
+      
+      this.currentY += section.specs.length * rowHeight + sectionGap;
     });
     
-    this.currentY += specs.length * rowHeight + 3; // Reduced spacing
+    // Add final spacing
+    this.currentY += 5;
   }
 
   /**
@@ -1090,22 +1371,10 @@ class QuotationPDFGenerator {
   }
 
   /**
-   * Add computed values (clean professional design matching screenshot)
+   * Add computed values (clean black and white design with proper text fitting)
    */
   addComputedValuesEnhanced(spec, startX, columnWidth, startY) {
     let localY = startY;
-    
-    // Simple header with light blue background like screenshot
-    this.pdf.setFillColor(173, 216, 230); // Light blue
-    this.pdf.rect(startX, localY, columnWidth, 6, 'F'); // Smaller header
-    this.pdf.setDrawColor(180, 180, 180);
-    this.pdf.setLineWidth(0.3);
-    this.pdf.rect(startX, localY, columnWidth, 6, 'D');
-    this.pdf.setTextColor(0, 0, 0);
-    this.pdf.setFontSize(8);
-    this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Computed Values', startX + 2, localY + 4.5);
-    localY += 6;
     
     // Extract data safely from both old and new structures
     const width = spec.dimensions?.width || spec.width || 0;
@@ -1113,67 +1382,140 @@ class QuotationPDFGenerator {
     const area = (width * height) / 92903; // mm² to sq.ft.
     const sqFtPrice = spec.pricing?.sqFtPrice || spec.sqFtPrice || 450;
     const quantity = spec.pricing?.quantity || spec.quantity || 1;
-    const totalPrice = spec.computedValues?.totalPrice || spec.totalPrice || (area * sqFtPrice * quantity);
-    const weight = spec.computedValues?.weight || spec.weight || 0;
+    const unitPrice = area * sqFtPrice;
+    const totalPrice = unitPrice * quantity;
+    const weight = spec.computedValues?.weight || spec.weight || (area * 15); // Estimated weight
     
-    const values = [
-      ['Sq.Ft. per window', `${this.formatNumber(area)} Sq.Ft.`],
-      ['Value per Sq.Ft.', `${this.formatCurrency(sqFtPrice)} INR`],
-      ['Unit Price', `${this.formatCurrency(totalPrice)} INR`],
-      ['Quantity', `${quantity} Pcs`],
-      ['Value', `${this.formatCurrency(totalPrice * quantity)} INR`],
-      ['Weight', `${this.formatNumber(weight)} KG`]
+    // Clean card design - PRICING BREAKDOWN (White with black border)
+    const cardHeight = 22;
+    const cardSpacing = 4;
+    
+    // PRICING BREAKDOWN Card
+    this.pdf.setFillColor(255, 255, 255); // White background
+    this.pdf.setDrawColor(0, 0, 0); // Black border
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(startX, localY, columnWidth, cardHeight, 2, 2, 'FD');
+    
+    // Card header with black text only (no blue background)
+    this.pdf.setTextColor(0, 0, 0); // Black text
+    this.pdf.setFontSize(7);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('PRICING BREAKDOWN', startX + 2, localY + 4);
+    
+    // Card content with proper sizing
+    const pricingItems = [
+      ['Rate per Sq.Ft.', this.formatCurrency(sqFtPrice)],
+      ['Unit Price', this.formatCurrency(unitPrice)],
+      ['Quantity', `${quantity} Pc`]
     ];
     
-    this.pdf.setDrawColor(180, 180, 180);
-    this.pdf.setLineWidth(0.3);
-    
-    const rowHeight = 6; // More compact
-    const labelWidth = columnWidth * 0.50;
-    const valueWidth = columnWidth * 0.50;
-    
-    values.forEach((row, index) => {
-      const y = localY + index * rowHeight;
-      
-      // Label cell - clean white
-      this.pdf.setFillColor(255, 255, 255);
-      this.pdf.rect(startX, y, labelWidth, rowHeight, 'FD');
-      this.pdf.setFontSize(7); // Smaller font
+    let itemY = localY + 8;
+    pricingItems.forEach((item, index) => {
+      // Label (left side)
+      this.pdf.setTextColor(60, 60, 60);
+      this.pdf.setFontSize(6);
       this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setTextColor(0, 0, 0);
-      this.pdf.text(row[0], startX + 2, y + 4.5);
+      this.pdf.text(item[0], startX + 2, itemY + 2);
       
-      // Value cell - clean white, right aligned
-      this.pdf.setFillColor(255, 255, 255);
-      this.pdf.rect(startX + labelWidth, y, valueWidth, rowHeight, 'FD');
-      this.pdf.setFont('helvetica', 'normal');
+      // Value (right side, properly fitted)
       this.pdf.setTextColor(0, 0, 0);
-      this.pdf.setFontSize(7); // Smaller font
-      this.pdf.text(row[1], startX + columnWidth - 2, y + 4.5, { align: 'right' });
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(6);
+      
+      // Truncate text if too long to fit
+      const maxWidth = columnWidth - 6;
+      const textWidth = this.pdf.getTextWidth(item[1]);
+      let displayText = item[1];
+      
+      if (textWidth > maxWidth * 0.45) { // If text takes more than 45% of width
+        // Truncate and add ellipsis
+        displayText = item[1].substring(0, 8) + '...';
+      }
+      
+      this.pdf.text(displayText, startX + columnWidth - 2, itemY + 2, { align: 'right' });
+      
+      itemY += 4;
     });
+    
+    localY += cardHeight + cardSpacing;
+    
+    // TOTAL CALCULATION Card
+    this.pdf.setFillColor(255, 255, 255); // White background
+    this.pdf.setDrawColor(0, 0, 0); // Black border
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(startX, localY, columnWidth, cardHeight, 2, 2, 'FD');
+    
+    // Card header with black text only (no blue background)
+    this.pdf.setTextColor(0, 0, 0); // Black text
+    this.pdf.setFontSize(7);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('TOTAL CALCULATION', startX + 2, localY + 4);
+    
+    // Card content
+    const totalItems = [
+      ['Total Value', this.formatCurrency(totalPrice)],
+      ['Est. Weight', `${this.formatNumber(weight)} KG`]
+    ];
+    
+    itemY = localY + 8;
+    totalItems.forEach((item, index) => {
+      // Label
+      this.pdf.setTextColor(60, 60, 60);
+      this.pdf.setFontSize(6);
+      this.pdf.setFont('helvetica', 'normal');
+      this.pdf.text(item[0], startX + 2, itemY + 2);
+      
+      // Value (properly fitted)
+      this.pdf.setTextColor(0, 0, 0);
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setFontSize(6);
+      
+      // Truncate text if too long to fit
+      const maxWidth = columnWidth - 6;
+      const textWidth = this.pdf.getTextWidth(item[1]);
+      let displayText = item[1];
+      
+      if (textWidth > maxWidth * 0.45) {
+        displayText = item[1].substring(0, 8) + '...';
+      }
+      
+      this.pdf.text(displayText, startX + columnWidth - 2, itemY + 2, { align: 'right' });
+      
+      itemY += 4;
+    });
+    
+    localY += cardHeight + cardSpacing;
+    
+    // Update the class currentY to match localY for proper flow
+    this.currentY = localY + 2;
   }
 
   /**
-   * Add quotation totals
+   * Add quotation totals with clean black and white design
    */
   addQuoteTotals(quotationData) {
     const startY = this.currentY;
     const tableWidth = this.pageWidth - 2 * this.margin;
     
-    // Title section with gold accent
-    this.pdf.setFillColor(...this.colors.primary);
-    this.pdf.rect(this.margin, this.currentY, tableWidth, 12, 'F');
+    // Check if we have enough space for the entire quotation summary section
+    const estimatedHeight = 80; // Approximate height for title + cards + totals
+    this.checkPageBreak(estimatedHeight);
     
-    this.pdf.setTextColor(255, 255, 255);
-    this.pdf.setFontSize(14);
+    // Title section with black border only
+    this.pdf.setFillColor(255, 255, 255); // White background
+    this.pdf.setDrawColor(0, 0, 0); // Black border
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(this.margin, this.currentY, tableWidth, 12, 3, 3, 'FD');
+    
+    this.pdf.setTextColor(0, 0, 0); // Black text
+    this.pdf.setFontSize(12);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('QUOTATION SUMMARY', this.margin + 10, this.currentY + 8);
+    this.pdf.text('QUOTATION SUMMARY', this.margin + 8, this.currentY + 8);
     
-    this.currentY += 15;
+    this.currentY += 18;
     
     // Calculate totals safely
     const totalArea = quotationData.windowSpecs.reduce((sum, spec) => {
-      // Try multiple paths for dimensions
       const width = spec.dimensions?.width || spec.width || 0;
       const height = spec.dimensions?.height || spec.height || 0;
       const area = (width * height) / 92903; // mm² to sq.ft.
@@ -1186,162 +1528,305 @@ class QuotationPDFGenerator {
     }, 0);
     
     const basicValue = quotationData.windowSpecs.reduce((sum, spec) => {
-      // Try multiple paths for totalPrice
-      const price = spec.computedValues?.totalPrice || spec.pricing?.totalPrice || spec.totalPrice || 0;
-      return sum + price;
+      const width = spec.dimensions?.width || spec.width || 0;
+      const height = spec.dimensions?.height || spec.height || 0;
+      const area = (width * height) / 92903;
+      const sqFtPrice = spec.pricing?.sqFtPrice || spec.sqFtPrice || 450;
+      const quantity = spec.pricing?.quantity || spec.quantity || 1;
+      return sum + (area * sqFtPrice * quantity);
     }, 0);
     
-    const transportCost = quotationData.transportCost || 1000;
-    const loadingCost = quotationData.loadingCost || 1000;
-    const subtotal = basicValue + transportCost + loadingCost;
+    const transportCost = quotationData.transportCost || 2000;
+    const subtotal = basicValue + transportCost;
     const gstRate = quotationData.gstRate || 0.18;
     const gst = subtotal * gstRate;
     const grandTotal = subtotal + gst;
     
-    // Table header
-    const colWidths = [35, 25, 30, 30, 30, 30, 35]; // Component, Area, Basic, Transport, Subtotal, GST, Total
-    const headerLabels = ['Component', 'Area\n(Sq.Ft.)', 'Basic Value\n(Rs.)', 'Transport\n(Rs.)', 'Subtotal\n(Rs.)', `GST\n(${gstRate * 100}%)`, 'Grand Total\n(Rs.)'];
+    // Clean black and white card layout
+    const cardWidth = (tableWidth - 16) / 3; // 3 cards with spacing
+    const cardHeight = 32;
+    const cardSpacing = 8;
     
-    this.pdf.setFillColor(...this.colors.secondary);
-    this.pdf.setDrawColor(200, 200, 200);
-    this.pdf.setLineWidth(0.2);
+    // PROJECT SCOPE Card (White with black border only)
+    this.pdf.setFillColor(255, 255, 255); // White background
+    this.pdf.setDrawColor(0, 0, 0); // Black border
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(this.margin, this.currentY, cardWidth, cardHeight, 3, 3, 'FD');
     
-    let xPos = this.margin;
-    headerLabels.forEach((label, i) => {
-      this.pdf.rect(xPos, this.currentY, colWidths[i], 12, 'FD');
-      this.pdf.setTextColor(...this.colors.white);
-      this.pdf.setFontSize(8);
-      this.pdf.setFont('helvetica', 'bold');
-      const lines = label.split('\n');
-      const yOffset = lines.length === 1 ? 8 : 6;
-      lines.forEach((line, idx) => {
-        this.pdf.text(line, xPos + colWidths[i] / 2, this.currentY + yOffset + (idx * 4), { align: 'center' });
-      });
-      xPos += colWidths[i];
-    });
+    // Black header text only (no blue background)
+    this.pdf.setTextColor(0, 0, 0); // Black text
+    this.pdf.setFontSize(8);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('PROJECT SCOPE', this.margin + 3, this.currentY + 5);
     
-    this.currentY += 14;
+    // Content with proper sizing
+    this.pdf.setTextColor(60, 60, 60);
+    this.pdf.setFontSize(6);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text('Total Components', this.margin + 3, this.currentY + 12);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text(`${totalComponents} Pieces`, this.margin + cardWidth - 3, this.currentY + 12, { align: 'right' });
     
-    // Summary row
-    const summaryData = [
-      `${totalComponents} Pcs`,
-      this.formatNumber(totalArea),
-      this.formatCurrency(basicValue),
-      this.formatCurrency(transportCost),
-      this.formatCurrency(subtotal),
-      this.formatCurrency(gst),
-      this.formatCurrency(grandTotal)
-    ];
+    this.pdf.setTextColor(60, 60, 60);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text('Total Coverage', this.margin + 3, this.currentY + 19);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFont('helvetica', 'bold');
+    const areaText = `${this.formatNumber(totalArea)} Sq.Ft.`;
+    this.pdf.text(areaText, this.margin + cardWidth - 3, this.currentY + 19, { align: 'right' });
     
-    this.pdf.setFillColor(250, 250, 250);
-    xPos = this.margin;
-    summaryData.forEach((value, i) => {
-      this.pdf.rect(xPos, this.currentY, colWidths[i], 10, 'FD');
-      this.pdf.setTextColor(40, 40, 40);
-      this.pdf.setFontSize(9);
-      this.pdf.setFont('helvetica', i === summaryData.length - 1 ? 'bold' : 'normal');
-      this.pdf.text(String(value), xPos + colWidths[i] / 2, this.currentY + 7, { align: 'center' });
-      xPos += colWidths[i];
-    });
+    // COST BREAKDOWN Card
+    const card2X = this.margin + cardWidth + cardSpacing;
+    this.pdf.setFillColor(255, 255, 255);
+    this.pdf.setDrawColor(0, 0, 0);
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(card2X, this.currentY, cardWidth, cardHeight, 3, 3, 'FD');
     
-    this.currentY += 12;
+    // Black header text only (no blue background)
+    this.pdf.setTextColor(0, 0, 0); // Black text
+    this.pdf.setFontSize(8);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('COST BREAKDOWN', card2X + 3, this.currentY + 5);
     
-    // Grand total highlight box
-    const gtBoxWidth = 80;
-    const gtBoxX = this.pageWidth - this.margin - gtBoxWidth;
+    // Content
+    this.pdf.setTextColor(60, 60, 60);
+    this.pdf.setFontSize(6);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text('Material Cost', card2X + 3, this.currentY + 12);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFont('helvetica', 'bold');
+    const materialText = this.formatCurrency(basicValue);
+    this.pdf.text(materialText, card2X + cardWidth - 3, this.currentY + 12, { align: 'right' });
     
-    this.pdf.setFillColor(...this.colors.gold);
-    this.pdf.roundedRect(gtBoxX, this.currentY, gtBoxWidth, 14, 2, 2, 'F');
+    this.pdf.setTextColor(60, 60, 60);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text('Transport & Loading', card2X + 3, this.currentY + 18);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFont('helvetica', 'bold');
+    const transportText = this.formatCurrency(transportCost);
+    this.pdf.text(transportText, card2X + cardWidth - 3, this.currentY + 18, { align: 'right' });
     
-    this.pdf.setTextColor(...this.colors.white);
+    this.pdf.setTextColor(60, 60, 60);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text('Subtotal', card2X + 3, this.currentY + 24);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFont('helvetica', 'bold');
+    const subtotalText = this.formatCurrency(subtotal);
+    this.pdf.text(subtotalText, card2X + cardWidth - 3, this.currentY + 24, { align: 'right' });
+    
+    // TAX & FINAL TOTAL Card
+    const card3X = card2X + cardWidth + cardSpacing;
+    this.pdf.setFillColor(255, 255, 255);
+    this.pdf.setDrawColor(0, 0, 0);
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(card3X, this.currentY, cardWidth, cardHeight, 3, 3, 'FD');
+    
+    // Black header text only (no blue background)
+    this.pdf.setTextColor(0, 0, 0); // Black text
+    this.pdf.setFontSize(8);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.text('TAX & FINAL TOTAL', card3X + 3, this.currentY + 5);
+    
+    // Content
+    this.pdf.setTextColor(60, 60, 60);
+    this.pdf.setFontSize(6);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text(`GST (${Math.round(gstRate * 100)}%)`, card3X + 3, this.currentY + 12);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFont('helvetica', 'bold');
+    const gstText = this.formatCurrency(gst);
+    this.pdf.text(gstText, card3X + cardWidth - 3, this.currentY + 12, { align: 'right' });
+    
+    this.pdf.setTextColor(60, 60, 60);
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.text('GRAND TOTAL', card3X + 3, this.currentY + 19);
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setFontSize(7); // Slightly larger for grand total
+    const grandTotalText = this.formatCurrency(grandTotal);
+    this.pdf.text(grandTotalText, card3X + cardWidth - 3, this.currentY + 19, { align: 'right' });
+    
+    this.currentY += cardHeight + 10;
+    
+    // Final Grand Total Banner (Blue with white text)
+    const bannerHeight = 14;
+    this.pdf.setFillColor(255, 255, 255); // White background
+    this.pdf.setDrawColor(0, 0, 0); // Black border
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(this.margin, this.currentY, tableWidth, bannerHeight, 3, 3, 'FD');
+    
+    this.pdf.setTextColor(0, 0, 0); // Black text
     this.pdf.setFontSize(11);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('GRAND TOTAL:', gtBoxX + 4, this.currentY + 6);
-    this.pdf.setFontSize(13);
-    this.pdf.text(this.formatCurrency(grandTotal), gtBoxX + gtBoxWidth - 4, this.currentY + 10, { align: 'right' });
+    this.pdf.text('TOTAL QUOTATION VALUE:', this.margin + 6, this.currentY + 5);
     
-    this.currentY += 20;
+    this.pdf.setFontSize(14);
+    const finalTotalText = this.formatCurrency(grandTotal);
+    this.pdf.text(finalTotalText, this.margin + tableWidth - 6, this.currentY + 9, { align: 'right' });
+    
+    this.currentY += bannerHeight + 15;
   }
 
   /**
-   * Add terms and conditions (enhanced with better formatting)
+   * Add terms and conditions with clean black and white design
    */
   addTermsAndConditions() {
     this.currentY += 10;
     
-    // Section header with gold accent
-    this.pdf.setFillColor(...this.colors.secondary);
-    this.pdf.rect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 9, 'F');
+    // Clean section header with black border only
+    this.pdf.setFillColor(255, 255, 255); // White background
+    this.pdf.setDrawColor(0, 0, 0); // Black border
+    this.pdf.setLineWidth(0.5);
+    this.pdf.roundedRect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, 10, 3, 3, 'FD');
     
-    this.pdf.setFillColor(...this.colors.gold);
-    this.pdf.rect(this.margin, this.currentY, 4, 9, 'F');
-    
-    this.pdf.setTextColor(...this.colors.white);
-    this.pdf.setFontSize(11);
+    this.pdf.setTextColor(0, 0, 0); // Black text
+    this.pdf.setFontSize(12);
     this.pdf.setFont('helvetica', 'bold');
-    this.pdf.text('Terms & Conditions', this.margin + 8, this.currentY + 6.5);
+    this.pdf.text('TERMS & CONDITIONS', this.margin + 8, this.currentY + 7);
     
-    this.currentY += 14;
+    this.currentY += 15;
     
-    const terms = [
-      'Payment: 50% advance, 50% on delivery',
-      'Delivery: 15-20 working days from order confirmation',
-      'Installation charges are separate and will be quoted upon request',
-      'Warranty: 1 year on manufacturing defects',
-      'Prices are subject to change without prior notice',
-      'This quotation is valid for 30 days from the date of issue'
+    // Clean black and white card-based layout
+    const termCategories = [
+      {
+        title: 'PAYMENT TERMS',
+        terms: [
+          'Advance Payment: 50% of total amount upon order confirmation',
+          'Balance Payment: 50% upon delivery of goods',
+          'All payments to be made by cheque/NEFT in favor of ADS SYSTEMS'
+        ]
+      },
+      {
+        title: 'DELIVERY & INSTALLATION',
+        terms: [
+          'Delivery Timeline: 15-20 working days from order confirmation',
+          'Installation charges are separate and will be quoted upon request',
+          'Site conditions must be ready for installation as per our requirements'
+        ]
+      },
+      {
+        title: 'WARRANTY & QUALITY',
+        terms: [
+          'Manufacturing Warranty: 1 year on manufacturing defects',
+          'Hardware Warranty: As per manufacturer\'s warranty terms',
+          'Glass breakage and mishandling damages are not covered'
+        ]
+      },
+      {
+        title: 'GENERAL TERMS',
+        terms: [
+          'Quotation Validity: 30 days from the date of issue',
+          'Prices are subject to change without prior notice',
+          'All disputes subject to local jurisdiction only'
+        ]
+      }
     ];
     
-    this.pdf.setFontSize(10); // Increased to 10pt
-    this.pdf.setTextColor(60, 60, 60);
-    this.pdf.setFont('helvetica', 'normal');
+    // Calculate total height needed
+    const totalHeight = termCategories.reduce((height, category) => {
+      return height + 18 + (category.terms.length * 5) + 8; // card height + spacing
+    }, 0);
     
-    terms.forEach((term, index) => {
-      // Draw a filled circle as bullet point
-      this.pdf.setFillColor(60, 60, 60);
-      this.pdf.circle(this.margin + 3.5, this.currentY - 1.5, 1, 'F');
+    // Check if we need a page break
+    this.checkPageBreak(totalHeight + 20);
+    
+    // Render each category with clean styling
+    termCategories.forEach((category, categoryIndex) => {
+      const cardHeight = 18 + (category.terms.length * 5); // Dynamic height
       
-      // Term text with justified alignment
-      this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setFontSize(10);
-      const maxWidth = this.pageWidth - 2 * this.margin - 12;
-      const lines = this.pdf.splitTextToSize(term, maxWidth);
+      // Check if this individual card needs a page break
+      this.checkPageBreak(cardHeight + 10);
       
-      lines.forEach((line, idx) => {
-        this.pdf.text(line, this.margin + 10, this.currentY + (idx * 6));
+      // White card with black border
+      this.pdf.setFillColor(255, 255, 255);
+      this.pdf.setDrawColor(0, 0, 0);
+      this.pdf.setLineWidth(0.5);
+      this.pdf.roundedRect(this.margin, this.currentY, this.pageWidth - 2 * this.margin, cardHeight, 3, 3, 'FD');
+      
+      // Category title (black text, no blue background)
+      this.pdf.setTextColor(0, 0, 0); // Black text
+      this.pdf.setFontSize(9);
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.text(category.title, this.margin + 4, this.currentY + 8);
+      
+      // Category terms with consistent sizing
+      let termY = this.currentY + 12;
+      category.terms.forEach((term, termIndex) => {
+        // Black bullet points
+        this.pdf.setFillColor(0, 0, 0);
+        this.pdf.circle(this.margin + 8, termY - 1, 1, 'F');
+        
+        // Term text with proper sizing and fitting
+        this.pdf.setTextColor(40, 40, 40);
+        this.pdf.setFont('helvetica', 'normal');
+        this.pdf.setFontSize(8);
+        
+        const maxWidth = this.pageWidth - 2 * this.margin - 20;
+        const lines = this.pdf.splitTextToSize(term, maxWidth);
+        
+        lines.forEach((line, lineIndex) => {
+          this.pdf.text(line, this.margin + 15, termY + (lineIndex * 4));
+        });
+        
+        termY += Math.max(lines.length * 4, 5);
       });
       
-      // Better spacing with 1.3x line height
-      this.currentY += Math.max(lines.length * 6, 8);
+      this.currentY += cardHeight + 5; // Spacing between cards
     });
     
-    this.currentY += 10;
+    this.currentY += 8;
     
-    // Signature section with improved layout
+    // Clean signature section
+    const sigSectionWidth = this.pageWidth - 2 * this.margin;
     const sigBoxWidth = 70;
     const sigBoxX = this.pageWidth - this.margin - sigBoxWidth;
     
-    this.pdf.setDrawColor(...this.colors.secondary);
+    // Company details box (clean white with black border)
+    const companyBoxWidth = sigSectionWidth - sigBoxWidth - 10;
+    this.pdf.setFillColor(255, 255, 255);
+    this.pdf.setDrawColor(0, 0, 0);
     this.pdf.setLineWidth(0.5);
-    this.pdf.setFillColor(250, 250, 250);
-    this.pdf.roundedRect(sigBoxX, this.currentY, sigBoxWidth, 25, 2, 2, 'FD');
+    this.pdf.roundedRect(this.margin, this.currentY, companyBoxWidth, 28, 3, 3, 'FD');
     
     this.pdf.setFontSize(9);
-    this.pdf.setFont('helvetica', 'italic');
-    this.pdf.setTextColor(80, 80, 80);
-    this.pdf.text('For ADS SYSTEMS', sigBoxX + 4, this.currentY + 6);
-    
-    this.pdf.setDrawColor(150, 150, 150);
-    this.pdf.setLineWidth(0.3);
-    this.pdf.line(sigBoxX + 4, this.currentY + 18, sigBoxX + sigBoxWidth - 4, this.currentY + 18);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(0, 0, 0);
+    this.pdf.text('ADS SYSTEMS', this.margin + 6, this.currentY + 8);
     
     this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setFontSize(7);
+    this.pdf.setTextColor(60, 60, 60);
+    this.pdf.text('Email: support@adssystem.co.in', this.margin + 6, this.currentY + 14);
+    this.pdf.text('Phone: +91 9574544012', this.margin + 6, this.currentY + 19);
+    this.pdf.text('Website: www.adssystem.co.in', this.margin + 6, this.currentY + 24);
+    
+    // Signature box (clean white with blue accent)
+    this.pdf.setFillColor(255, 255, 255);
+    this.pdf.setDrawColor(41, 128, 185);
+    this.pdf.setLineWidth(0.8);
+    this.pdf.roundedRect(sigBoxX, this.currentY, sigBoxWidth, 28, 3, 3, 'FD');
+    
     this.pdf.setFontSize(8);
-    this.pdf.text('Authorized Signatory', sigBoxX + 4, this.currentY + 22);
+    this.pdf.setFont('helvetica', 'bold');
+    this.pdf.setTextColor(41, 128, 185);
+    this.pdf.text('For ADS SYSTEMS', sigBoxX + 6, this.currentY + 9);
+    
+    // Blue signature line
+    this.pdf.setDrawColor(41, 128, 185);
+    this.pdf.setLineWidth(0.8);
+    this.pdf.line(sigBoxX + 6, this.currentY + 18, sigBoxX + sigBoxWidth - 6, this.currentY + 18);
+    
+    this.pdf.setFont('helvetica', 'normal');
+    this.pdf.setFontSize(7);
+    this.pdf.setTextColor(80, 80, 80);
+    this.pdf.text('Authorized Signatory', sigBoxX + 6, this.currentY + 24);
+    
+    this.currentY += 35;
   }
 
   /**
-   * Add page numbers and footer to all pages (enhanced with tagline)
+   * Add enhanced professional footer to all pages
    */
   addPageNumbers() {
     const pageCount = this.pdf.internal.getNumberOfPages();
@@ -1349,30 +1834,40 @@ class QuotationPDFGenerator {
     for (let i = 1; i <= pageCount; i++) {
       this.pdf.setPage(i);
       
-      // Footer separator line with gold accent
-      this.pdf.setDrawColor(200, 200, 200);
+      // Footer background
+      this.pdf.setFillColor(250, 250, 250); // Very light gray
+      this.pdf.setDrawColor(0, 0, 0);
       this.pdf.setLineWidth(0.3);
-      this.pdf.line(this.margin, this.pageHeight - 15, this.pageWidth - this.margin, this.pageHeight - 15);
+      this.pdf.rect(this.margin, this.pageHeight - 18, this.pageWidth - 2 * this.margin, 13, 'FD');
       
-      this.pdf.setDrawColor(...this.colors.gold);
-      this.pdf.setLineWidth(0.8);
-      this.pdf.line(this.margin, this.pageHeight - 14.5, this.margin + 30, this.pageHeight - 14.5);
+      // Top border line
+      this.pdf.setDrawColor(0, 0, 0);
+      this.pdf.setLineWidth(0.5);
+      this.pdf.line(this.margin, this.pageHeight - 18, this.pageWidth - this.margin, this.pageHeight - 18);
       
       // Company tagline (left)
       this.pdf.setFontSize(8);
       this.pdf.setFont('helvetica', 'italic');
-      this.pdf.setTextColor(100, 100, 100);
-      this.pdf.text('ADS Systems – Crafted for Perfection', this.margin, this.pageHeight - 8);
+      this.pdf.setTextColor(80, 80, 80);
+      this.pdf.text('ADS Systems – Crafted for Perfection', this.margin + 3, this.pageHeight - 11);
       
       // Page number (center)
-      this.pdf.setFont('helvetica', 'normal');
-      this.pdf.setTextColor(120, 120, 120);
+      this.pdf.setFont('helvetica', 'bold');
+      this.pdf.setTextColor(60, 60, 60);
       const pageText = `Page ${i} of ${pageCount}`;
-      this.pdf.text(pageText, this.pageWidth / 2, this.pageHeight - 8, { align: 'center' });
+      this.pdf.text(pageText, this.pageWidth / 2, this.pageHeight - 11, { align: 'center' });
       
       // Date (right)
+      this.pdf.setFont('helvetica', 'normal');
       const today = new Date().toLocaleDateString('en-IN');
-      this.pdf.text(today, this.pageWidth - this.margin, this.pageHeight - 8, { align: 'right' });
+      this.pdf.text(today, this.pageWidth - this.margin - 3, this.pageHeight - 11, { align: 'right' });
+      
+      // Additional professional touch - small line under page number
+      const pageTextWidth = this.pdf.getTextWidth(pageText);
+      this.pdf.setDrawColor(100, 100, 100);
+      this.pdf.setLineWidth(0.3);
+      this.pdf.line((this.pageWidth / 2) - (pageTextWidth / 2), this.pageHeight - 8, 
+                    (this.pageWidth / 2) + (pageTextWidth / 2), this.pageHeight - 8);
     }
   }
 

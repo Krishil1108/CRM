@@ -25,6 +25,7 @@ const clientRoutes = require('./routes/clients');
 const inventoryRoutes = require('./routes/inventory');
 const meetingRoutes = require('./routes/meetings');
 const noteRoutes = require('./routes/notes');
+const quoteRoutes = require('./routes/quotes');
 
 const activityRoutes = require('./routes/activities');
 
@@ -32,6 +33,7 @@ app.use('/api/clients', clientRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/notes', noteRoutes);
+app.use('/api/quotes', quoteRoutes);
 app.use('/api/activities', activityRoutes);
 
 // Basic route
