@@ -124,7 +124,13 @@ const quoteSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  pdfPath: String
+  pdfPath: String,
+  // RAW CONFIGURATION DATA FOR PERFECT EDIT RESTORATION
+  // Stores the complete frontend form state to enable 1:1 restoration
+  rawConfigurationData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  }
 }, {
   timestamps: true
 });

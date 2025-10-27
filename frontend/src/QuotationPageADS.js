@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import './QuotationPageADS.css';
 import ClientService from './services/ClientService';
 import InventoryService from './services/InventoryService';
@@ -7,8 +8,11 @@ import { useCompany } from './CompanyContext';
 import { useAppMode } from './contexts/AppModeContext';
 import ModeSelector from './components/ModeSelector';
 import { generateQuotationPDF } from './utils/pdfGenerator';
+import ConfirmDialog from './components/ConfirmDialog';
+import { validateQuotationForm, hasValidationErrors, scrollToFirstError } from './utils/validation';
 
 const QuotationPage = () => {
+  const location = useLocation();
   const { companyInfo, getNextQuotationNumber } = useCompany();
   const {
     currentMode,
@@ -25,6 +29,26 @@ const QuotationPage = () => {
   const [activeTab, setActiveTab] = useState('configuration');
   const [inventoryItems, setInventoryItems] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Validation and Confirmation Dialog States
+  const [validationErrors, setValidationErrors] = useState({});
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'warning',
+    confirmText: 'OK',
+    cancelText: 'Cancel'
+  });
+
+  // Notification/Toast State
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'success' // 'success', 'error', 'info', 'warning'
+  });
+
 
   // Load quotation data from localStorage or use default
   const loadQuotationData = () => {
@@ -139,6 +163,303 @@ const QuotationPage = () => {
   };
 
   const [quotationData, setQuotationData] = useState(loadQuotationData);
+
+  // Handle edit mode when component mounts
+  useEffect(() => {
+    const { editMode, quoteData, quoteId } = location.state || {};
+    if (editMode && quoteData) {
+      console.log('Edit mode activated with quote data:', quoteData);
+      
+      // Find the corresponding window type from WINDOW_TYPES
+      let selectedWindowType = null;
+      if (quoteData.selectedWindowType) {
+        // Handle both string and object cases
+        const windowTypeId = typeof quoteData.selectedWindowType === 'string' 
+          ? quoteData.selectedWindowType.toLowerCase()
+          : quoteData.selectedWindowType.id || quoteData.selectedWindowType.name?.toLowerCase();
+        
+        console.log('Looking for window type:', windowTypeId, 'in WINDOW_TYPES');
+        selectedWindowType = WINDOW_TYPES.find(type => 
+          type.id === windowTypeId || 
+          type.name.toLowerCase().includes(windowTypeId) ||
+          windowTypeId.includes(type.id)
+        ) || WINDOW_TYPES.find(type => type.id === 'sliding'); // fallback
+        
+        console.log('Found window type:', selectedWindowType);
+      }
+
+      // Check if we have raw configuration data for perfect restoration
+      const rawConfig = quoteData.rawConfigurationData;
+      
+      // If no raw config, try to reconstruct from available data structures
+      const reconstructedConfig = !rawConfig ? {
+        windowSpecs: {
+          // Dimensions & Basic Info
+          width: quoteData.windowSpecs?.[0]?.dimensions?.width || '',
+          height: quoteData.windowSpecs?.[0]?.dimensions?.height || '',
+          quantity: quoteData.windowSpecs?.[0]?.pricing?.quantity || 1,
+          
+          // Installation Details
+          location: quoteData.windowSpecs?.[0]?.specifications?.location || 'ground-floor',
+          wallType: quoteData.windowSpecs?.[0]?.specifications?.wallType || 'brick',
+          replacement: quoteData.windowSpecs?.[0]?.specifications?.replacement || 'new-opening',
+          installationMethod: quoteData.windowSpecs?.[0]?.specifications?.installationMethod || 'standard',
+          finishingWork: quoteData.windowSpecs?.[0]?.specifications?.finishingWork || 'basic',
+          cleanup: quoteData.windowSpecs?.[0]?.specifications?.cleanup ?? true,
+          
+          // Frame Material & Color
+          frame: quoteData.windowSpecs?.[0]?.specifications?.frameMaterial || 'aluminum',
+          frameColor: quoteData.windowSpecs?.[0]?.specifications?.frameColor || 'white',
+          color: quoteData.windowSpecs?.[0]?.specifications?.frameColor || 'white',
+          
+          // Glass Specifications
+          glass: quoteData.windowSpecs?.[0]?.specifications?.glass || 'single',
+          glassTint: quoteData.windowSpecs?.[0]?.specifications?.glassTint || 'clear',
+          glassPattern: quoteData.windowSpecs?.[0]?.specifications?.glassPattern || 'clear',
+          
+          // Hardware & Operation
+          hardware: quoteData.windowSpecs?.[0]?.specifications?.hardware || 'standard',
+          opening: quoteData.windowSpecs?.[0]?.specifications?.openingType || 'fixed',
+          lockPosition: quoteData.windowSpecs?.[0]?.specifications?.lockPosition || 'right',
+          
+          // Grille & Aesthetic Features
+          grilles: quoteData.windowSpecs?.[0]?.specifications?.grille?.style || 'none',
+          grillePattern: quoteData.windowSpecs?.[0]?.specifications?.grille?.pattern || 'grid',
+          grillColor: quoteData.windowSpecs?.[0]?.specifications?.grillColor || 'white',
+          grilleEnabled: quoteData.windowSpecs?.[0]?.specifications?.grille?.enabled || false,
+          
+          // Weather & Energy Features
+          weatherStripping: quoteData.windowSpecs?.[0]?.specifications?.weatherStripping || quoteData.windowSpecs?.[0]?.specifications?.weatherSealing || 'standard',
+          weatherSealing: quoteData.windowSpecs?.[0]?.specifications?.weatherSealing || quoteData.windowSpecs?.[0]?.specifications?.weatherStripping || 'standard',
+          insulation: quoteData.windowSpecs?.[0]?.specifications?.insulation || 'standard',
+          energyRating: quoteData.windowSpecs?.[0]?.specifications?.energyRating || 'standard',
+          drainage: quoteData.windowSpecs?.[0]?.specifications?.drainage || 'standard',
+          
+          // Comfort & Additional Options
+          screenIncluded: quoteData.windowSpecs?.[0]?.specifications?.screenIncluded || false,
+          motorized: quoteData.windowSpecs?.[0]?.specifications?.motorized || false,
+          security: quoteData.windowSpecs?.[0]?.specifications?.security || 'standard',
+          childSafety: quoteData.windowSpecs?.[0]?.specifications?.childSafety || false,
+          tiltAndTurn: quoteData.windowSpecs?.[0]?.specifications?.tiltAndTurn || false,
+          smartHome: quoteData.windowSpecs?.[0]?.specifications?.smartHome || false,
+          
+          // Accessories & Add-ons
+          blindsIntegrated: quoteData.windowSpecs?.[0]?.specifications?.blindsIntegrated || false,
+          blindsIncluded: quoteData.windowSpecs?.[0]?.specifications?.blindsIncluded || false,
+          curtainRail: quoteData.windowSpecs?.[0]?.specifications?.curtainRail || false,
+          ventilation: quoteData.windowSpecs?.[0]?.specifications?.ventilation || false,
+          trimStyle: quoteData.windowSpecs?.[0]?.specifications?.trimStyle || 'standard'
+        },
+        slidingConfig: quoteData.slidingConfig || quoteData.windowSpecs?.[0]?.specifications?.slidingDetails || {},
+        casementConfig: quoteData.casementConfig || quoteData.windowSpecs?.[0]?.specifications?.casementDetails || {},
+        bayConfig: quoteData.bayConfig || quoteData.windowSpecs?.[0]?.specifications?.bayDetails || {},
+        awningConfig: quoteData.awningConfig || quoteData.windowSpecs?.[0]?.specifications?.awningDetails || {},
+        doubleHungConfig: quoteData.doubleHungConfig || quoteData.windowSpecs?.[0]?.specifications?.doubleHungDetails || {},
+        singleHungConfig: quoteData.singleHungConfig || quoteData.windowSpecs?.[0]?.specifications?.singleHungDetails || {},
+        pricing: quoteData.pricing || {}
+      } : null;
+      
+      // Use either raw config or reconstructed config as fallback
+      const effectiveConfig = rawConfig || reconstructedConfig;
+      
+      console.log('Effective configuration for restoration:', effectiveConfig);
+      
+      // Set the quotation data with the edit data
+      const editQuotationData = {
+        quotationNumber: quoteData.quotationNumber || '',
+        date: quoteData.createdAt ? new Date(quoteData.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        validUntil: quoteData.validUntil ? new Date(quoteData.validUntil).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        clientInfo: {
+          name: quoteData.clientInfo?.name || '',
+          address: quoteData.clientInfo?.address || '',
+          city: quoteData.clientInfo?.city || '',
+          phone: quoteData.clientInfo?.phone || '',
+          email: quoteData.clientInfo?.email || ''
+        },
+        selectedWindowType: selectedWindowType || effectiveConfig?.selectedWindowType,
+        windowSpecs: {
+          // COMPREHENSIVE RESTORATION: Dimensions & Basic Info
+          width: effectiveConfig?.windowSpecs?.width || quoteData.windowSpecs?.[0]?.dimensions?.width || quoteData.windowSpecs?.width || '',
+          height: effectiveConfig?.windowSpecs?.height || quoteData.windowSpecs?.[0]?.dimensions?.height || quoteData.windowSpecs?.height || '',
+          quantity: effectiveConfig?.windowSpecs?.quantity || quoteData.windowSpecs?.[0]?.pricing?.quantity || quoteData.windowSpecs?.quantity || 1,
+          
+          // Installation Details (COMPLETE RESTORATION)
+          location: effectiveConfig?.windowSpecs?.location || quoteData.windowSpecs?.[0]?.specifications?.location || 'ground-floor',
+          wallType: effectiveConfig?.windowSpecs?.wallType || quoteData.windowSpecs?.[0]?.specifications?.wallType || 'brick',
+          replacement: effectiveConfig?.windowSpecs?.replacement || quoteData.windowSpecs?.[0]?.specifications?.replacement || 'new-opening',
+          installationMethod: effectiveConfig?.windowSpecs?.installationMethod || quoteData.windowSpecs?.[0]?.specifications?.installationMethod || 'standard',
+          finishingWork: effectiveConfig?.windowSpecs?.finishingWork || quoteData.windowSpecs?.[0]?.specifications?.finishingWork || 'basic',
+          cleanup: effectiveConfig?.windowSpecs?.cleanup ?? quoteData.windowSpecs?.[0]?.specifications?.cleanup ?? true,
+          
+          // Frame Material & Color (COMPLETE RESTORATION)
+          frame: effectiveConfig?.windowSpecs?.frame || quoteData.windowSpecs?.[0]?.specifications?.frameMaterial || quoteData.windowSpecs?.frame || 'aluminum',
+          frameColor: effectiveConfig?.windowSpecs?.frameColor || quoteData.windowSpecs?.[0]?.specifications?.frameColor || quoteData.windowSpecs?.color || 'white',
+          color: effectiveConfig?.windowSpecs?.color || quoteData.windowSpecs?.[0]?.specifications?.frameColor || quoteData.windowSpecs?.color || 'white', // Legacy support
+          
+          // Glass Specifications (COMPLETE RESTORATION)
+          glass: effectiveConfig?.windowSpecs?.glass || quoteData.windowSpecs?.[0]?.specifications?.glass || quoteData.windowSpecs?.glass || 'single',
+          glassTint: effectiveConfig?.windowSpecs?.glassTint || quoteData.windowSpecs?.[0]?.specifications?.glassTint || 'clear',
+          glassPattern: effectiveConfig?.windowSpecs?.glassPattern || quoteData.windowSpecs?.[0]?.specifications?.glassPattern || 'clear',
+          
+          // Hardware & Operation (COMPLETE RESTORATION)
+          hardware: effectiveConfig?.windowSpecs?.hardware || quoteData.windowSpecs?.[0]?.specifications?.hardware || quoteData.windowSpecs?.hardware || 'standard',
+          opening: effectiveConfig?.windowSpecs?.opening || quoteData.windowSpecs?.[0]?.specifications?.openingType || quoteData.windowSpecs?.opening || 'fixed',
+          lockPosition: effectiveConfig?.windowSpecs?.lockPosition || quoteData.windowSpecs?.[0]?.specifications?.lockPosition || 'right',
+          
+          // Grille & Aesthetic Features (COMPLETE RESTORATION)
+          grilles: effectiveConfig?.windowSpecs?.grilles || quoteData.windowSpecs?.[0]?.specifications?.grille?.style || quoteData.windowSpecs?.grilles || 'none',
+          grillePattern: effectiveConfig?.windowSpecs?.grillePattern || quoteData.windowSpecs?.[0]?.specifications?.grille?.pattern || 'grid',
+          grillColor: effectiveConfig?.windowSpecs?.grillColor || quoteData.windowSpecs?.[0]?.specifications?.grillColor || 'white',
+          grilleEnabled: effectiveConfig?.windowSpecs?.grilleEnabled || quoteData.windowSpecs?.[0]?.specifications?.grille?.enabled || false,
+          
+          // Weather & Energy Features (COMPLETE RESTORATION)
+          // Support both legacy and current naming
+          weatherStripping: effectiveConfig?.windowSpecs?.weatherStripping || effectiveConfig?.windowSpecs?.weatherSealing || quoteData.windowSpecs?.[0]?.specifications?.weatherStripping || quoteData.windowSpecs?.[0]?.specifications?.weatherSealing || 'standard',
+          weatherSealing: effectiveConfig?.windowSpecs?.weatherSealing || quoteData.windowSpecs?.[0]?.specifications?.weatherSealing || effectiveConfig?.windowSpecs?.weatherStripping || 'standard',
+          insulation: effectiveConfig?.windowSpecs?.insulation || quoteData.windowSpecs?.[0]?.specifications?.insulation || 'standard',
+          energyRating: effectiveConfig?.windowSpecs?.energyRating || quoteData.windowSpecs?.[0]?.specifications?.energyRating || 'standard',
+          drainage: effectiveConfig?.windowSpecs?.drainage || quoteData.windowSpecs?.[0]?.specifications?.drainage || 'standard',
+          
+          // Comfort & Additional Options (COMPLETE RESTORATION)
+          screenIncluded: effectiveConfig?.windowSpecs?.screenIncluded ?? quoteData.windowSpecs?.[0]?.specifications?.screenIncluded ?? false,
+          motorized: effectiveConfig?.windowSpecs?.motorized ?? quoteData.windowSpecs?.[0]?.specifications?.motorized ?? false,
+          security: effectiveConfig?.windowSpecs?.security || quoteData.windowSpecs?.[0]?.specifications?.security || 'standard',
+          childSafety: effectiveConfig?.windowSpecs?.childSafety ?? quoteData.windowSpecs?.[0]?.specifications?.childSafety ?? false,
+          tiltAndTurn: effectiveConfig?.windowSpecs?.tiltAndTurn ?? quoteData.windowSpecs?.[0]?.specifications?.tiltAndTurn ?? false,
+          smartHome: effectiveConfig?.windowSpecs?.smartHome ?? quoteData.windowSpecs?.[0]?.specifications?.smartHome ?? false,
+          
+          // Accessories & Add-ons (COMPLETE RESTORATION)
+          blindsIntegrated: effectiveConfig?.windowSpecs?.blindsIntegrated ?? quoteData.windowSpecs?.[0]?.specifications?.blindsIntegrated ?? false,
+          blindsIncluded: effectiveConfig?.windowSpecs?.blindsIncluded ?? quoteData.windowSpecs?.[0]?.specifications?.blindsIncluded ?? false, // legacy/alt naming
+          curtainRail: effectiveConfig?.windowSpecs?.curtainRail ?? quoteData.windowSpecs?.[0]?.specifications?.curtainRail ?? false,
+          ventilation: effectiveConfig?.windowSpecs?.ventilation ?? quoteData.windowSpecs?.[0]?.specifications?.ventilation ?? false,
+          trimStyle: effectiveConfig?.windowSpecs?.trimStyle || quoteData.windowSpecs?.[0]?.specifications?.trimStyle || 'standard',
+          
+          // Calculated values restoration
+          calculatedArea: effectiveConfig?.calculatedArea || 0
+        },
+        slidingConfig: {
+          panels: effectiveConfig?.slidingConfig?.panels || quoteData.slidingConfig?.panels || quoteData.windowSpecs?.[0]?.specifications?.panels || quoteData.windowSpecs?.[0]?.specifications?.slidingDetails?.panels || 2,
+          tracks: effectiveConfig?.slidingConfig?.tracks || quoteData.slidingConfig?.tracks || quoteData.windowSpecs?.[0]?.specifications?.tracks || quoteData.windowSpecs?.[0]?.specifications?.slidingDetails?.tracks || 2,
+          openingType: effectiveConfig?.slidingConfig?.openingType || quoteData.slidingConfig?.openingType || quoteData.windowSpecs?.[0]?.specifications?.slidingDetails?.openingType || 'left-to-right',
+          combination: effectiveConfig?.slidingConfig?.combination || quoteData.slidingConfig?.combination || quoteData.windowSpecs?.[0]?.specifications?.slidingDetails?.combination || null
+        },
+        casementConfig: {
+          panels: effectiveConfig?.casementConfig?.panels || quoteData.casementConfig?.panels || quoteData.windowSpecs?.[0]?.specifications?.panels || quoteData.windowSpecs?.[0]?.specifications?.casementDetails?.panels || 2,
+          direction: effectiveConfig?.casementConfig?.direction || quoteData.casementConfig?.direction || quoteData.casementConfig?.openingType || quoteData.windowSpecs?.[0]?.specifications?.openingType || quoteData.windowSpecs?.[0]?.specifications?.casementDetails?.direction || 'outward',
+          hinge: effectiveConfig?.casementConfig?.hinge || quoteData.casementConfig?.hinge || quoteData.casementConfig?.handlePosition || quoteData.windowSpecs?.[0]?.specifications?.casementDetails?.hinge || 'left'
+        },
+        bayConfig: {
+          angle: effectiveConfig?.bayConfig?.angle || quoteData.bayConfig?.angle || quoteData.windowSpecs?.[0]?.specifications?.bayDetails?.angle || 135,
+          sideWindows: effectiveConfig?.bayConfig?.sideWindows || quoteData.bayConfig?.sideWindows || quoteData.bayConfig?.windows || quoteData.windowSpecs?.[0]?.specifications?.bayDetails?.sideWindows || 2,
+          centerPanels: effectiveConfig?.bayConfig?.centerPanels || quoteData.bayConfig?.centerPanels || quoteData.windowSpecs?.[0]?.specifications?.bayDetails?.centerPanels || 1,
+          combination: effectiveConfig?.bayConfig?.combination || quoteData.bayConfig?.combination || quoteData.windowSpecs?.[0]?.specifications?.bayDetails?.combination || null
+        },
+        awningConfig: {
+          panels: effectiveConfig?.awningConfig?.panels || quoteData.awningConfig?.panels || quoteData.windowSpecs?.[0]?.specifications?.awningDetails?.panels || 1,
+          openingAngle: effectiveConfig?.awningConfig?.openingAngle || quoteData.awningConfig?.openingAngle || quoteData.windowSpecs?.[0]?.specifications?.awningDetails?.openingAngle || 45,
+          operationType: effectiveConfig?.awningConfig?.operationType || quoteData.awningConfig?.operationType || quoteData.windowSpecs?.[0]?.specifications?.awningDetails?.operationType || 'crank',
+          size: effectiveConfig?.awningConfig?.size || quoteData.awningConfig?.size || quoteData.windowSpecs?.[0]?.specifications?.awningDetails?.size || 'standard',
+          orientation: effectiveConfig?.awningConfig?.orientation || quoteData.awningConfig?.orientation || quoteData.windowSpecs?.[0]?.specifications?.awningDetails?.orientation || 'horizontal'
+        },
+        doubleHungConfig: {
+          combination: effectiveConfig?.doubleHungConfig?.combination || quoteData.doubleHungConfig?.combination || quoteData.windowSpecs?.[0]?.specifications?.doubleHungDetails?.combination || null
+        },
+        singleHungConfig: {
+          combination: effectiveConfig?.singleHungConfig?.combination || quoteData.singleHungConfig?.combination || quoteData.windowSpecs?.[0]?.specifications?.singleHungDetails?.combination || 'sh-standard'
+        },
+        pricing: {
+          basePrice: effectiveConfig?.pricing?.basePrice || quoteData.pricing?.basePrice || 0,
+          unitPrice: effectiveConfig?.pricing?.unitPrice || quoteData.pricing?.unitPrice || quoteData.windowSpecs?.[0]?.pricing?.unitPrice || 0,
+          totalPrice: effectiveConfig?.pricing?.totalPrice || quoteData.pricing?.totalPrice || quoteData.pricing?.total || quoteData.windowSpecs?.[0]?.pricing?.totalPrice || 0,
+          tax: effectiveConfig?.pricing?.tax || quoteData.pricing?.tax || 0,
+          finalTotal: effectiveConfig?.pricing?.finalTotal || quoteData.pricing?.finalTotal || quoteData.pricing?.grandTotal || 0,
+          modifications: effectiveConfig?.pricing?.modifications || quoteData.pricing?.modifications || [],
+          total: effectiveConfig?.pricing?.total || quoteData.pricing?.total || 0
+        },
+        notes: quoteData.notes || '',
+        projectName: quoteData.projectName || '',
+        location: quoteData.location || quoteData.windowSpecs?.[0]?.location || '',
+        _id: quoteId // Store the original quote ID for updating
+      };
+
+      console.log('=== EDIT MODE DEBUG START ===');
+      console.log('Raw quote data received:', quoteData);
+      console.log('Raw configuration data:', rawConfig);
+      console.log('Effective config computed:', effectiveConfig);
+      console.log('Quote data structure analysis:', {
+        hasWindowSpecs: !!quoteData.windowSpecs,
+        windowSpecsType: Array.isArray(quoteData.windowSpecs) ? 'array' : typeof quoteData.windowSpecs,
+        windowSpecsLength: Array.isArray(quoteData.windowSpecs) ? quoteData.windowSpecs.length : 'not array',
+        firstWindowSpec: quoteData.windowSpecs?.[0],
+        directWindowSpecs: quoteData.windowSpecs,
+        hasRawConfig: !!rawConfig,
+        quotePricingStructure: quoteData.pricing,
+        quoteConfigStructures: {
+          sliding: quoteData.slidingConfig,
+          casement: quoteData.casementConfig,
+          bay: quoteData.bayConfig,
+          awning: quoteData.awningConfig,
+          doubleHung: quoteData.doubleHungConfig,
+          singleHung: quoteData.singleHungConfig
+        }
+      });
+      console.log('Extracted measurements:', {
+        width: rawConfig?.windowSpecs?.width || quoteData.windowSpecs?.[0]?.dimensions?.width,
+        height: rawConfig?.windowSpecs?.height || quoteData.windowSpecs?.[0]?.dimensions?.height,
+        windowSpecsArray: quoteData.windowSpecs,
+        rawConfigSpecs: rawConfig?.windowSpecs
+      });
+      console.log('wallType extraction:', {
+        fromEffectiveConfig: effectiveConfig?.windowSpecs?.wallType,
+        fromWindowSpecsArray: quoteData.windowSpecs?.[0]?.specifications?.wallType,
+        finalValue: effectiveConfig?.windowSpecs?.wallType || quoteData.windowSpecs?.[0]?.specifications?.wallType || 'brick'
+      });
+      console.log('Setting edit quotation data:', editQuotationData);
+      console.log('editQuotationData.windowSpecs.wallType:', editQuotationData.windowSpecs.wallType);
+      console.log('=== EDIT MODE DEBUG END ===');
+      setQuotationData(editQuotationData);
+      saveQuotationData(editQuotationData);
+      
+      // Show a notification that we're editing a draft
+      if (quoteData.status === 'draft') {
+        console.log('Editing draft quotation - all data restored');
+      }
+      
+      // Restore UI State from raw configuration data
+      if (effectiveConfig?.selectedClient) {
+        setSelectedClient(effectiveConfig.selectedClient);
+      } else if (quoteData.clientInfo && quoteData.clientInfo.name) {
+        setSelectedClient(quoteData.clientInfo);
+      }
+
+      // Restore active tab from saved state or determine based on window type
+      if (effectiveConfig?.activeTab) {
+        setActiveTab(effectiveConfig.activeTab);
+      } else if (selectedWindowType) {
+        setActiveTab('configuration');
+      }
+      
+      // Restore any additional UI state
+      console.log('Restored UI state:', {
+        activeTab: effectiveConfig?.activeTab || 'configuration',
+        selectedClient: effectiveConfig?.selectedClient || quoteData.clientInfo,
+        calculatedArea: effectiveConfig?.calculatedArea,
+        savedTimestamp: effectiveConfig?.savedTimestamp,
+        version: effectiveConfig?.version
+      });
+    }
+  }, [location.state]);
+
+  // Debug: Log quotationData state changes to track wallType and other fields
+  useEffect(() => {
+    console.log('=== QUOTATION DATA STATE CHANGED ===');
+    console.log('quotationData.windowSpecs.wallType:', quotationData.windowSpecs?.wallType);
+    console.log('quotationData.windowSpecs.location:', quotationData.windowSpecs?.location);
+    console.log('quotationData.windowSpecs.replacement:', quotationData.windowSpecs?.replacement);
+    console.log('Full windowSpecs:', quotationData.windowSpecs);
+    console.log('=== END STATE CHANGE ===');
+  }, [quotationData.windowSpecs?.wallType, quotationData.windowSpecs?.location, quotationData.windowSpecs?.replacement]);
 
   // Save quotation data to localStorage whenever it changes
   const saveQuotationData = (data) => {
@@ -401,55 +722,150 @@ const QuotationPage = () => {
     });
   };
 
-  const handleSaveQuotation = async () => {
+  // Helper function to show confirmation dialog
+  const showConfirmation = (title, message, onConfirm, type = 'warning', confirmText = 'OK', cancelText = 'Cancel') => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        onConfirm();
+      },
+      type,
+      confirmText,
+      cancelText
+    });
+  };
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+  };
+
+  // Helper function to show notification toast
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    // Auto-hide after 4 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 4000);
+  };
+
+  // Universal save function that can save as draft or final
+  const handleSaveQuotation = async (status) => {
     try {
-      // Validate required fields
-      if (!quotationData.clientInfo.name) {
-        alert('Please fill in client name before saving quotation');
-        return;
+      // Guard against React passing the click event as the first argument
+      let saveStatus = status;
+      if (saveStatus && typeof saveStatus === 'object' && (saveStatus.nativeEvent || saveStatus.target)) {
+        saveStatus = undefined;
+      }
+      // Normalize to allowed statuses (draft, submitted, approved, rejected, archived)
+      const allowedStatuses = ['draft', 'submitted', 'approved', 'rejected', 'archived'];
+      if (!saveStatus || !allowedStatuses.includes(saveStatus)) {
+        // If editing, preserve existing valid status, otherwise default to 'draft'
+        const current = quotationData?.status;
+        saveStatus = allowedStatuses.includes(current) ? current : 'draft';
+      }
+      
+      // Validate form for non-draft saves
+      if (saveStatus !== 'draft') {
+        const errors = validateQuotationForm(quotationData);
+        if (hasValidationErrors(errors)) {
+          setValidationErrors(errors);
+          scrollToFirstError();
+          showNotification('Please fix the validation errors before saving the quotation.', 'error');
+          return;
+        }
+        setValidationErrors({});
+      }
+      
+      // Minimal validation for drafts, full validation for final saves
+      if (saveStatus !== 'draft') {
+        if (!quotationData.clientInfo.name) {
+          showNotification('Please fill in client name before saving quotation', 'error');
+          return;
+        }
+
+        if (!quotationData.windowSpecs.width || !quotationData.windowSpecs.height) {
+          showNotification('Please fill in window specifications (width and height) before saving', 'error');
+          return;
+        }
       }
 
-      if (!quotationData.windowSpecs.width || !quotationData.windowSpecs.height) {
-        alert('Please fill in window specifications (width and height) before saving');
-        return;
+      // Only consume stock for final saves, not drafts
+      if (saveStatus !== 'draft') {
+        await consumeStockForQuotation();
       }
-
-      // Consume stock for materials used in the quotation
-      await consumeStockForQuotation();
       
       // Save quotation to localStorage (keeping existing functionality)
       const quotations = JSON.parse(localStorage.getItem('quotations') || '[]');
-      const newQuotation = {
-        ...quotationData,
-        id: quotationData.quotationNumber,
-        createdAt: new Date().toISOString()
-      };
-      quotations.push(newQuotation);
+  const isEditMode = quotationData._id;
+      
+      if (isEditMode) {
+        // Update existing quotation in localStorage
+        const index = quotations.findIndex(q => q.id === quotationData.quotationNumber);
+        if (index >= 0) {
+          quotations[index] = {
+            ...quotationData,
+            id: quotationData.quotationNumber,
+            updatedAt: new Date().toISOString(),
+            status: saveStatus
+          };
+        }
+      } else {
+        // Add new quotation to localStorage
+        const newQuotation = {
+          ...quotationData,
+          id: quotationData.quotationNumber,
+          createdAt: new Date().toISOString(),
+          status: saveStatus
+        };
+        quotations.push(newQuotation);
+      }
       localStorage.setItem('quotations', JSON.stringify(quotations));
 
       // Transform data for Quote History database
       const quoteData = transformQuotationToQuoteFormat(quotationData);
+      quoteData.status = saveStatus; // Set the appropriate status
       
       // Save to Quote History database
       try {
-        const savedQuote = await QuoteService.saveQuotation(quoteData);
+        let savedQuote;
+        if (isEditMode) {
+          console.log('Updating existing quote as', status, ':', quotationData._id);
+          savedQuote = await QuoteService.updateQuote(quotationData._id, quoteData);
+        } else {
+          console.log('Saving new quote as', status);
+          savedQuote = await QuoteService.saveQuotation(quoteData);
+        }
         console.log('Quote saved:', savedQuote);
         
         // Check if backend was available
         const backendAvailable = await QuoteService.isBackendAvailable();
+        const statusText = saveStatus === 'draft' ? 'draft' : saveStatus;
         if (backendAvailable) {
-          alert('Quotation saved successfully to both local storage and Quote History database!');
+          showNotification(`${statusText.charAt(0).toUpperCase() + statusText.slice(1)} saved successfully to both local storage and Quote History database!`, 'success');
         } else {
-          alert('Quotation saved to local storage. Backend server is not available - please start the server for database functionality.');
+          showNotification(`${statusText.charAt(0).toUpperCase() + statusText.slice(1)} saved to local storage. Backend server is not available.`, 'warning');
         }
       } catch (dbError) {
         console.error('Database save error:', dbError);
-        alert('Quotation saved to local storage, but failed to save to Quote History database. Please check if the backend server is running.');
+        showNotification('Quotation saved to local storage, but failed to save to Quote History database. Please check if the backend server is running.', 'error');
       }
 
     } catch (error) {
       console.error('Error saving quotation:', error);
-      alert(`Error saving quotation: ${error.message}`);
+      showNotification(`Error saving quotation: ${error.message}`, 'error');
+    }
+  };
+
+  // Save as Draft function
+  const handleSaveDraft = async () => {
+    try {
+      await handleSaveQuotation('draft');
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      showNotification('Failed to save draft. Please try again.', 'error');
     }
   };
 
@@ -509,10 +925,14 @@ const QuotationPage = () => {
         },
         
         specifications: {
+          // COMPREHENSIVE Glass specifications
           glass: quotationData.windowSpecs?.glass || 'single',
+          glassType: quotationData.windowSpecs?.glass || 'single',
           glassTint: quotationData.windowSpecs?.glassTint || 'clear',
+          glassPattern: quotationData.windowSpecs?.glassPattern || 'clear',
           glassThickness: quotationData.windowSpecs?.glass === 'double' ? 10 : 5,
           
+          // COMPREHENSIVE Frame specifications
           frame: {
             material: quotationData.windowSpecs?.frame || 'aluminum',
             color: quotationData.windowSpecs?.frameColor || quotationData.windowSpecs?.color || 'white'
@@ -520,21 +940,60 @@ const QuotationPage = () => {
           frameMaterial: quotationData.windowSpecs?.frame || 'aluminum',
           frameColor: quotationData.windowSpecs?.frameColor || quotationData.windowSpecs?.color || 'white',
           
-          lockPosition: 'right',
+          // Installation Details
+          location: quotationData.windowSpecs?.location || 'ground-floor',
+          wallType: quotationData.windowSpecs?.wallType || 'brick',
+          replacement: quotationData.windowSpecs?.replacement || 'new-opening',
+          installationMethod: quotationData.windowSpecs?.installationMethod || 'standard',
+          finishingWork: quotationData.windowSpecs?.finishingWork || 'basic',
+          cleanup: quotationData.windowSpecs?.cleanup || true,
+          
+          // Hardware and operation
+          lockPosition: quotationData.windowSpecs?.lockPosition || 'right',
           openingType: quotationData.windowSpecs?.opening || 'fixed',
           hardware: quotationData.windowSpecs?.hardware || 'standard',
-          panels: quotationData.slidingConfig?.panels || 2,
-          tracks: 1,
+          
+          // Configuration details
+          panels: quotationData.slidingConfig?.panels || quotationData.casementConfig?.panels || quotationData.awningConfig?.panels || 2,
+          tracks: quotationData.slidingConfig?.tracks || 2,
+          
+          // Weather & Energy Features
+          weatherSealing: quotationData.windowSpecs?.weatherSealing || quotationData.windowSpecs?.weatherStripping || 'standard',
+          weatherStripping: quotationData.windowSpecs?.weatherStripping || quotationData.windowSpecs?.weatherSealing || 'standard',
+          insulation: quotationData.windowSpecs?.insulation || 'standard',
+          energyRating: quotationData.windowSpecs?.energyRating || 'standard',
+          drainage: quotationData.windowSpecs?.drainage || 'standard',
+          
+          // Comfort & Safety Features
           screenIncluded: quotationData.windowSpecs?.screenIncluded || false,
           motorized: quotationData.windowSpecs?.motorized || false,
           security: quotationData.windowSpecs?.security || 'standard',
+          childSafety: quotationData.windowSpecs?.childSafety || false,
+          tiltAndTurn: quotationData.windowSpecs?.tiltAndTurn || false,
+          smartHome: quotationData.windowSpecs?.smartHome || false,
           
+          // Accessories & Add-ons
+          blindsIntegrated: quotationData.windowSpecs?.blindsIntegrated || false,
+          blindsIncluded: quotationData.windowSpecs?.blindsIncluded || false,
+          curtainRail: quotationData.windowSpecs?.curtainRail || false,
+          ventilation: quotationData.windowSpecs?.ventilation || false,
+          trimStyle: quotationData.windowSpecs?.trimStyle || 'standard',
+          
+          // COMPREHENSIVE Grille specifications
           grille: {
             enabled: quotationData.windowSpecs?.grilles !== 'none',
             style: quotationData.windowSpecs?.grilles || 'none',
-            pattern: 'grid'
+            pattern: quotationData.windowSpecs?.grillePattern || 'grid'
           },
-          grillColor: quotationData.windowSpecs?.grillColor || 'white'
+          grillColor: quotationData.windowSpecs?.grillColor || 'white',
+          
+          // Window type specific configurations (COMPLETE)
+          slidingDetails: quotationData.slidingConfig || {},
+          casementDetails: quotationData.casementConfig || {},
+          bayDetails: quotationData.bayConfig || {},
+          awningDetails: quotationData.awningConfig || {},
+          doubleHungDetails: quotationData.doubleHungConfig || {},
+          singleHungDetails: quotationData.singleHungConfig || {}
         },
         
         pricing: {
@@ -547,25 +1006,49 @@ const QuotationPage = () => {
       
       selectedWindowType: windowTypeString,
       
+      // Complete Sliding Configuration
       slidingConfig: {
         panels: quotationData.slidingConfig?.panels || 2,
+        tracks: quotationData.slidingConfig?.tracks || 2,
+        openingType: quotationData.slidingConfig?.openingType || 'left-to-right',
         combination: quotationData.slidingConfig?.combination || null
       },
       
+      // Complete Bay Configuration  
       bayConfig: {
-        windows: quotationData.bayConfig?.windows || 3,
-        angle: quotationData.bayConfig?.angle || 30,
-        fixedSides: quotationData.bayConfig?.fixedSides || false
+        windows: quotationData.bayConfig?.windows || quotationData.bayConfig?.sideWindows || 3,
+        angle: quotationData.bayConfig?.angle || 135,
+        sideWindows: quotationData.bayConfig?.sideWindows || 2,
+        centerPanels: quotationData.bayConfig?.centerPanels || 1,
+        fixedSides: quotationData.bayConfig?.fixedSides || false,
+        combination: quotationData.bayConfig?.combination || null
       },
       
+      // Complete Casement Configuration
       casementConfig: {
-        openingType: quotationData.casementConfig?.direction || 'outward',
-        panels: quotationData.casementConfig?.panels || 1
+        panels: quotationData.casementConfig?.panels || 2,
+        direction: quotationData.casementConfig?.direction || 'outward',
+        openingType: quotationData.casementConfig?.direction || quotationData.casementConfig?.openingType || 'outward',
+        hinge: quotationData.casementConfig?.hinge || quotationData.casementConfig?.handlePosition || 'left'
       },
       
+      // Complete Awning Configuration
       awningConfig: {
+        panels: quotationData.awningConfig?.panels || 1,
+        openingAngle: quotationData.awningConfig?.openingAngle || 45,
+        operationType: quotationData.awningConfig?.operationType || 'crank',
         size: quotationData.awningConfig?.size || 'standard',
         orientation: quotationData.awningConfig?.orientation || 'horizontal'
+      },
+      
+      // Complete Double Hung Configuration
+      doubleHungConfig: {
+        combination: quotationData.doubleHungConfig?.combination || null
+      },
+      
+      // Complete Single Hung Configuration  
+      singleHungConfig: {
+        combination: quotationData.singleHungConfig?.combination || 'sh-standard'
       },
       
       pricing: {
@@ -576,13 +1059,115 @@ const QuotationPage = () => {
         currency: 'INR'
       },
       
+      // Project Information
+      projectName: quotationData.projectName || 'Window Project',
+      location: quotationData.location || quotationData.windowSpecs?.location || 'Custom Location',
       notes: quotationData.notes || `Project: ${quotationData.projectName || 'Window Project'}`,
+      
+      // System Information  
       createdBy: 'System User',
-      lastModifiedBy: 'System User'
+      lastModifiedBy: 'System User',
+      
+      // Complete Raw Configuration Backup (for perfect restoration)
+      rawConfigurationData: {
+        // Core Configuration Data
+        selectedWindowType: quotationData.selectedWindowType,
+        slidingConfig: quotationData.slidingConfig,
+        casementConfig: quotationData.casementConfig,
+        bayConfig: quotationData.bayConfig,
+        awningConfig: quotationData.awningConfig,
+        doubleHungConfig: quotationData.doubleHungConfig,
+        singleHungConfig: quotationData.singleHungConfig,
+        
+        // COMPREHENSIVE Window Specifications (ALL FIELDS)
+        windowSpecs: {
+          // Dimensions & Basic Info
+          width: quotationData.windowSpecs?.width || '',
+          height: quotationData.windowSpecs?.height || '',
+          quantity: quotationData.windowSpecs?.quantity || 1,
+          
+          // Installation Details
+          location: quotationData.windowSpecs?.location || 'ground-floor',
+          wallType: quotationData.windowSpecs?.wallType || 'brick',
+          replacement: quotationData.windowSpecs?.replacement || 'new-opening',
+          
+          // Frame Material & Color
+          frame: quotationData.windowSpecs?.frame || 'aluminum',
+          frameColor: quotationData.windowSpecs?.frameColor || 'white',
+          color: quotationData.windowSpecs?.color || 'white', // Legacy support
+          
+          // Glass Specifications
+          glass: quotationData.windowSpecs?.glass || 'single',
+          glassTint: quotationData.windowSpecs?.glassTint || 'clear',
+          glassPattern: quotationData.windowSpecs?.glassPattern || 'clear',
+          
+          // Hardware & Operation
+          hardware: quotationData.windowSpecs?.hardware || 'standard',
+          opening: quotationData.windowSpecs?.opening || 'fixed',
+          lockPosition: quotationData.windowSpecs?.lockPosition || 'right',
+          
+          // Grille & Aesthetic Features
+          grilles: quotationData.windowSpecs?.grilles || 'none',
+          grillePattern: quotationData.windowSpecs?.grillePattern || 'grid',
+          grillColor: quotationData.windowSpecs?.grillColor || 'white',
+          
+          // Weather & Energy Features
+          weatherSealing: quotationData.windowSpecs?.weatherSealing || quotationData.windowSpecs?.weatherStripping || 'standard',
+          weatherStripping: quotationData.windowSpecs?.weatherStripping || quotationData.windowSpecs?.weatherSealing || 'standard',
+          insulation: quotationData.windowSpecs?.insulation || 'standard',
+          energyRating: quotationData.windowSpecs?.energyRating || 'standard',
+          drainage: quotationData.windowSpecs?.drainage || 'standard',
+          
+          // Comfort & Additional Options
+          screenIncluded: quotationData.windowSpecs?.screenIncluded || false,
+          motorized: quotationData.windowSpecs?.motorized || false,
+          security: quotationData.windowSpecs?.security || 'standard',
+          childSafety: quotationData.windowSpecs?.childSafety || false,
+          tiltAndTurn: quotationData.windowSpecs?.tiltAndTurn || false,
+          smartHome: quotationData.windowSpecs?.smartHome || false,
+          
+          // Accessories & Add-ons
+          blindsIntegrated: quotationData.windowSpecs?.blindsIntegrated || false,
+          blindsIncluded: quotationData.windowSpecs?.blindsIncluded || false,
+          curtainRail: quotationData.windowSpecs?.curtainRail || false,
+          ventilation: quotationData.windowSpecs?.ventilation || false,
+          trimStyle: quotationData.windowSpecs?.trimStyle || 'standard',
+          
+          // Installation Preferences
+          installationMethod: quotationData.windowSpecs?.installationMethod || 'standard',
+          finishingWork: quotationData.windowSpecs?.finishingWork || 'basic',
+          cleanup: quotationData.windowSpecs?.cleanup || true
+        },
+        
+        // Pricing Information
+        pricing: quotationData.pricing,
+        
+        // Complete Form State Backup
+        quotationNumber: quotationData.quotationNumber,
+        date: quotationData.date,
+        validUntil: quotationData.validUntil,
+        clientInfo: quotationData.clientInfo,
+        notes: quotationData.notes,
+        projectName: quotationData.projectName,
+        location: quotationData.location,
+        
+        // UI State for Perfect Restoration
+        activeTab: activeTab,
+        selectedClient: selectedClient,
+        
+        // Calculated Values and Dynamic Fields
+        calculatedArea: quotationData.windowSpecs?.width && quotationData.windowSpecs?.height ? 
+          (parseFloat(quotationData.windowSpecs.width) * parseFloat(quotationData.windowSpecs.height)) : 0,
+        
+        // Timestamp for version tracking
+        savedTimestamp: new Date().toISOString(),
+        version: '3.0' // Enhanced version for comprehensive capture
+      }
     };
 
     // Debug: Log the final transformed data
     console.log('Transformed data for backend:', transformedData);
+    console.log('Raw configuration data being stored:', transformedData.rawConfigurationData);
     
     return transformedData;
   };
@@ -600,59 +1185,97 @@ const QuotationPage = () => {
       
       // First validate and save
       if (!quotationData.clientInfo.name) {
-        alert('Please fill in client name before submitting quotation');
+        showNotification('Please fill in client name before submitting quotation', 'error');
         return;
       }
 
       if (!quotationData.windowSpecs.width || !quotationData.windowSpecs.height) {
-        alert('Please fill in window specifications (width and height) before submitting');
+        showNotification('Please fill in window specifications (width and height) before submitting', 'error');
         return;
       }
 
-      // Consume stock for materials used in the quotation
-      await consumeStockForQuotation();
+      // Check if we're in edit mode
+      const isEditMode = quotationData._id;
+      
+      if (!isEditMode) {
+        // Consume stock for materials used in the quotation (only for new quotes)
+        await consumeStockForQuotation();
+      }
       
       // Save quotation to localStorage (keeping existing functionality)
       const quotations = JSON.parse(localStorage.getItem('quotations') || '[]');
-      const newQuotation = {
-        ...quotationData,
-        id: quotationData.quotationNumber,
-        createdAt: new Date().toISOString(),
-        status: 'submitted'
-      };
-      quotations.push(newQuotation);
+      
+      if (isEditMode) {
+        // Update existing quotation in localStorage
+        const index = quotations.findIndex(q => q.id === quotationData.quotationNumber);
+        if (index >= 0) {
+          quotations[index] = {
+            ...quotationData,
+            id: quotationData.quotationNumber,
+            updatedAt: new Date().toISOString(),
+            status: 'submitted' // Change status to submitted when submitting
+          };
+        }
+      } else {
+        // Add new quotation to localStorage
+        const newQuotation = {
+          ...quotationData,
+          id: quotationData.quotationNumber,
+          createdAt: new Date().toISOString(),
+          status: 'submitted'
+        };
+        quotations.push(newQuotation);
+      }
+      
       localStorage.setItem('quotations', JSON.stringify(quotations));
 
       // Transform data for Quote History database
       const quoteData = transformQuotationToQuoteFormat(quotationData);
+      quoteData.status = 'submitted'; // Ensure submit sets status to submitted
       
-      // Submit to Quote History database (save + submit)
+      // Submit to Quote History database (create or update)
       try {
-        const submittedQuote = await QuoteService.submitQuotation(quoteData, 'System User');
-        console.log('Quote submitted:', submittedQuote);
+        let submittedQuote;
+        if (isEditMode) {
+          console.log('Updating existing quote to submitted status:', quotationData._id);
+          submittedQuote = await QuoteService.updateQuote(quotationData._id, quoteData);
+          console.log('Quote updated to submitted:', submittedQuote);
+        } else {
+          console.log('Creating new submitted quote');
+          submittedQuote = await QuoteService.submitQuotation(quoteData, 'System User');
+          console.log('Quote submitted:', submittedQuote);
+        }
         
         // Check if backend was available
         const backendAvailable = await QuoteService.isBackendAvailable();
         if (backendAvailable) {
-          alert('Quotation saved and submitted successfully! The quotation is now available in Quote History database.');
+          const action = isEditMode ? 'updated' : 'created and submitted';
+          showNotification(`Quotation ${action} successfully! The quotation is now available in Quote History database.`, 'success');
         } else {
-          alert('Quotation saved and submitted to local storage. Backend server is not available - please start the server for database functionality.');
+          const action = isEditMode ? 'updated' : 'saved and submitted';
+          showNotification(`Quotation ${action} to local storage. Backend server is not available.`, 'warning');
         }
         
         // Optionally generate PDF after submission
-        const shouldGeneratePDF = window.confirm('Would you like to generate a PDF for the submitted quotation?');
-        if (shouldGeneratePDF) {
-          await generatePDF();
-        }
+        showConfirmation(
+          'Generate PDF?',
+          'Would you like to generate a PDF for this quotation?',
+          async () => {
+            await generatePDF();
+          },
+          'info',
+          'Yes, Generate PDF',
+          'No, Skip'
+        );
         
       } catch (dbError) {
         console.error('Database submit error:', dbError);
-        alert('Quotation saved locally, but failed to submit to Quote History database. Please check if the backend server is running.');
+        showNotification('Quotation saved locally, but failed to submit to Quote History database. Please check if the backend server is running.', 'error');
       }
 
     } catch (error) {
       console.error('Error submitting quotation:', error);
-      alert(`Error submitting quotation: ${error.message}`);
+      showNotification(`Error submitting quotation: ${error.message}`, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -745,67 +1368,86 @@ const QuotationPage = () => {
   };
 
   const handleNewQuotation = () => {
-    // Reset all form data and generate new quotation number
-    setSelectedClient(null);
-    const newData = {
-      quotationNumber: getNextQuotationNumber(),
-      date: new Date().toISOString().split('T')[0],
-      validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      clientInfo: {
-        name: '',
-        address: '',
-        city: '',
-        phone: '',
-        email: ''
+    showConfirmation(
+      'Start New Quotation',
+      'Are you sure you want to start a new quotation? Any unsaved changes in the current form will be lost.',
+      () => {
+        // Reset all form data and generate new quotation number
+        setSelectedClient(null);
+        const newData = {
+          quotationNumber: getNextQuotationNumber(),
+          date: new Date().toISOString().split('T')[0],
+          validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          clientInfo: {
+            name: '',
+            address: '',
+            city: '',
+            phone: '',
+            email: ''
+          },
+          selectedWindowType: null,
+          slidingConfig: {
+            panels: 2,
+            combination: null
+          },
+          bayConfig: {
+            combination: null,
+            angle: 30,
+            style: 'traditional'
+          },
+          doubleHungConfig: {
+            combination: null
+          },
+          casementConfig: {
+            direction: 'outward',
+            hinge: 'left'
+          },
+          windowSpecs: {
+            width: '',
+            height: '',
+            quantity: 1,
+            frame: 'aluminum',
+            glass: 'single',
+            color: 'white',
+            hardware: 'standard',
+            opening: 'fixed',
+            grilles: 'none'
+          },
+          pricing: {
+            unitPrice: 0,
+            totalPrice: 0,
+            tax: 0,
+            finalTotal: 0
+          }
+        };
+        updateQuotationData(newData);
+        // Clear localStorage for the new quotation
+        localStorage.removeItem('quotationData');
+        setValidationErrors({});
       },
-      selectedWindowType: null,
-      slidingConfig: {
-        panels: 2,
-        combination: null
-      },
-      bayConfig: {
-        combination: null,
-        angle: 30,
-        style: 'traditional'
-      },
-      doubleHungConfig: {
-        combination: null
-      },
-      casementConfig: {
-        direction: 'outward',
-        hinge: 'left'
-      },
-      windowSpecs: {
-        width: '',
-        height: '',
-        quantity: 1,
-        frame: 'aluminum',
-        glass: 'single',
-        color: 'white',
-        hardware: 'standard',
-        opening: 'fixed',
-        grilles: 'none'
-      },
-      pricing: {
-        unitPrice: 0,
-        totalPrice: 0,
-        tax: 0,
-        finalTotal: 0
-      }
-    };
-    updateQuotationData(newData);
-    // Clear localStorage for the new quotation
-    localStorage.removeItem('quotationData');
+      'warning',
+      'Yes, Start New',
+      'Cancel'
+    );
   };
 
   // Clear auto-saved data function
   const handleClearAutoSavedData = () => {
-    if (window.confirm('Are you sure you want to clear all auto-saved data? This cannot be undone.')) {
-      localStorage.removeItem('quotationData');
-      alert('Auto-saved data has been cleared successfully!');
-      // Optionally refresh the page to show clean state
-      window.location.reload();
-    }
+    showConfirmation(
+      'Clear Auto-saved Data',
+      'Are you sure you want to clear all auto-saved data? This action cannot be undone and will remove all locally stored quotation information.',
+      () => {
+        localStorage.removeItem('quotationData');
+        showNotification('Auto-saved data has been cleared successfully!', 'success');
+        // Optionally refresh the page to show clean state
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      },
+      'danger',
+      'Yes, Clear Data',
+      'Cancel'
+    );
   };
 
   const generatePDF = async () => {
@@ -814,12 +1456,12 @@ const QuotationPage = () => {
     if (!quotationData.windowSpecs || 
         !quotationData.windowSpecs.width || 
         !quotationData.windowSpecs.height) {
-      alert('Please fill in window specifications (width and height) to generate PDF');
+      showNotification('Please fill in window specifications (width and height) to generate PDF', 'error');
       return;
     }
 
     if (!quotationData.clientInfo || !quotationData.clientInfo.name) {
-      alert('Please fill in client information before generating PDF');
+      showNotification('Please fill in client information before generating PDF', 'error');
       return;
     }
 
@@ -954,13 +1596,13 @@ const QuotationPage = () => {
       const result = await generateQuotationPDF(pdfData);
       
       if (result.success) {
-        alert(`PDF generated successfully: ${result.fileName}`);
+        showNotification(`PDF generated successfully: ${result.fileName}`, 'success');
       } else {
-        alert(`Error generating PDF: ${result.error}`);
+        showNotification(`Error generating PDF: ${result.error}`, 'error');
       }
     } catch (error) {
       console.error('PDF generation error:', error);
-      alert('An error occurred while generating the PDF. Please try again.');
+      showNotification('An error occurred while generating the PDF. Please try again.', 'error');
     }
   };
 
@@ -2582,39 +3224,65 @@ const QuotationPage = () => {
 
         <div className="form-row">
           <div className="form-group">
-            <label>Client Name</label>
-            <input type="text" value={quotationData.clientInfo.name}
-                   onChange={(e) => setQuotationData(prev => ({
-                     ...prev, 
-                     clientInfo: {...prev.clientInfo, name: e.target.value}
-                   }))} />
+            <label>Client Name <span style={{color: 'red'}}>*</span></label>
+            <input 
+              type="text" 
+              value={quotationData.clientInfo.name}
+              onChange={(e) => setQuotationData(prev => ({
+                ...prev, 
+                clientInfo: {...prev.clientInfo, name: e.target.value}
+              }))}
+              className={validationErrors.clientName ? 'error' : ''}
+            />
+            {validationErrors.clientName && (
+              <div className="error-message">{validationErrors.clientName}</div>
+            )}
           </div>
           <div className="form-group">
-            <label>Phone</label>
-            <input type="text" value={quotationData.clientInfo.phone}
-                   onChange={(e) => setQuotationData(prev => ({
-                     ...prev, 
-                     clientInfo: {...prev.clientInfo, phone: e.target.value}
-                   }))} />
+            <label>Phone <span style={{color: 'red'}}>*</span></label>
+            <input 
+              type="text" 
+              value={quotationData.clientInfo.phone}
+              onChange={(e) => setQuotationData(prev => ({
+                ...prev, 
+                clientInfo: {...prev.clientInfo, phone: e.target.value}
+              }))}
+              className={validationErrors.clientPhone ? 'error' : ''}
+              placeholder="e.g., +1234567890"
+            />
+            {validationErrors.clientPhone && (
+              <div className="error-message">{validationErrors.clientPhone}</div>
+            )}
           </div>
         </div>
 
         <div className="form-row">
           <div className="form-group">
             <label>Address</label>
-            <input type="text" value={quotationData.clientInfo.address}
-                   onChange={(e) => setQuotationData(prev => ({
-                     ...prev, 
-                     clientInfo: {...prev.clientInfo, address: e.target.value}
-                   }))} />
+            <input 
+              type="text" 
+              value={quotationData.clientInfo.address}
+              onChange={(e) => setQuotationData(prev => ({
+                ...prev, 
+                clientInfo: {...prev.clientInfo, address: e.target.value}
+              }))}
+            />
           </div>
           <div className="form-group">
             <label>Email</label>
-            <input type="email" value={quotationData.clientInfo.email}
-                   onChange={(e) => setQuotationData(prev => ({
-                     ...prev, 
-                     clientInfo: {...prev.clientInfo, email: e.target.value}
-                   }))} />
+            <input 
+              type="email" 
+              value={quotationData.clientInfo.email}
+              onChange={(e) => setQuotationData(prev => ({
+                ...prev, 
+                clientInfo: {...prev.clientInfo, email: e.target.value}
+              }))}
+              className={validationErrors.clientEmail ? 'error' : ''}
+              placeholder="e.g., client@example.com"
+            />
+            {validationErrors.clientEmail && (
+              <div className="error-message">{validationErrors.clientEmail}</div>
+            )}
           </div>
         </div>
       </div>
@@ -2953,7 +3621,7 @@ const QuotationPage = () => {
                       </h4>
                       <div className="form-grid">
                         <div className="form-field">
-                          <label className="field-label">Width (mm)</label>
+                          <label className="field-label">Width (mm) <span style={{color: 'red'}}>*</span></label>
                           <div className="input-with-unit">
                             <input 
                               type="number" 
@@ -2962,15 +3630,19 @@ const QuotationPage = () => {
                               placeholder="1200"
                               min="300"
                               max="3000"
-                              className="field-input"
+                              className={`field-input ${validationErrors.width ? 'error' : ''}`}
                             />
                             <span className="input-unit">mm</span>
                           </div>
-                          <small className="field-hint">Range: 300mm - 3000mm</small>
+                          {validationErrors.width ? (
+                            <div className="error-message">{validationErrors.width}</div>
+                          ) : (
+                            <small className="field-hint">Range: 300mm - 3000mm</small>
+                          )}
                         </div>
                         
                         <div className="form-field">
-                          <label className="field-label">Height (mm)</label>
+                          <label className="field-label">Height (mm) <span style={{color: 'red'}}>*</span></label>
                           <div className="input-with-unit">
                             <input 
                               type="number" 
@@ -2979,19 +3651,23 @@ const QuotationPage = () => {
                               placeholder="1500"
                               min="300"
                               max="2500"
-                              className="field-input"
+                              className={`field-input ${validationErrors.height ? 'error' : ''}`}
                             />
                             <span className="input-unit">mm</span>
                           </div>
-                          <small className="field-hint">Range: 300mm - 2500mm</small>
+                          {validationErrors.height ? (
+                            <div className="error-message">{validationErrors.height}</div>
+                          ) : (
+                            <small className="field-hint">Range: 300mm - 2500mm</small>
+                          )}
                         </div>
                       </div>
                       
-                      {quotationData.windowSpecs.width && quotationData.windowSpecs.height && (
+                      {quotationData.windowSpecs?.width && quotationData.windowSpecs?.height && (
                         <div className="dimension-preview">
                           <div className="preview-label">Window Area:</div>
                           <div className="preview-value">
-                            {((quotationData.windowSpecs.width * quotationData.windowSpecs.height) / 1000000).toFixed(2)} m²
+                            {(((quotationData.windowSpecs?.width || 0) * (quotationData.windowSpecs?.height || 0)) / 1000000).toFixed(2)} m²
                           </div>
                         </div>
                       )}
@@ -3523,16 +4199,16 @@ const QuotationPage = () => {
               <tr>
                 <td>{quotationData.selectedWindowType.name}</td>
                 <td>{quotationData.windowSpecs.quantity}</td>
-                <td>${quotationData.pricing.unitPrice.toFixed(2)}</td>
-                <td>${quotationData.pricing.totalPrice.toFixed(2)}</td>
+                <td>${(quotationData.pricing?.unitPrice || 0).toFixed(2)}</td>
+                <td>${(quotationData.pricing?.totalPrice || 0).toFixed(2)}</td>
               </tr>
               <tr>
                 <td colSpan="3">Tax (10%)</td>
-                <td>${quotationData.pricing.tax.toFixed(2)}</td>
+                <td>${(quotationData.pricing?.tax || 0).toFixed(2)}</td>
               </tr>
               <tr className="total-row">
                 <td colSpan="3"><strong>Total Amount</strong></td>
-                <td><strong>${quotationData.pricing.finalTotal.toFixed(2)}</strong></td>
+                <td><strong>${(quotationData.pricing?.finalTotal || 0).toFixed(2)}</strong></td>
               </tr>
             </tbody>
           </table>
@@ -3570,6 +4246,9 @@ const QuotationPage = () => {
         </button>
         <button className="btn-primary" onClick={handleSaveQuotation}>
           Save Quotation
+        </button>
+        <button className="btn-draft" onClick={handleSaveDraft}>
+          Save as Draft
         </button>
         <button 
           className="btn-info" 
@@ -3615,6 +4294,39 @@ const QuotationPage = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={closeConfirmDialog}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        type={confirmDialog.type}
+      />
+
+      {/* Notification Toast */}
+      {notification.show && (
+        <div className={`notification-toast notification-${notification.type}`}>
+          <div className="notification-content">
+            <span className="notification-icon">
+              {notification.type === 'success' && '✓'}
+              {notification.type === 'error' && '✕'}
+              {notification.type === 'warning' && '⚠'}
+              {notification.type === 'info' && 'ℹ'}
+            </span>
+            <span className="notification-message">{notification.message}</span>
+          </div>
+          <button 
+            className="notification-close" 
+            onClick={() => setNotification(prev => ({ ...prev, show: false }))}
+          >
+            ×
+          </button>
         </div>
       )}
     </div>

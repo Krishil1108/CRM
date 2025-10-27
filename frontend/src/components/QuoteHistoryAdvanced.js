@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import QuoteService from '../services/QuoteService';
 import './QuoteHistoryAdvanced.css';
+import ConfirmDialog from './ConfirmDialog';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,6 +16,8 @@ import {
   Legend,
 } from 'chart.js';
 import { Doughnut, Line, Bar } from 'react-chartjs-2';
+import { AiOutlineEye, AiOutlineForm } from "react-icons/ai";
+import { FiTrash2 } from "react-icons/fi";
 
 ChartJS.register(
   CategoryScale,
@@ -28,6 +32,8 @@ ChartJS.register(
 );
 
 const QuoteHistory = () => {
+  const navigate = useNavigate();
+  
   // State management
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +44,17 @@ const QuoteHistory = () => {
   const [modalType, setModalType] = useState('view'); // 'view', 'edit', 'delete', 'compare'
   const [compareQuotes, setCompareQuotes] = useState([]);
   const [showNotification, setShowNotification] = useState({ show: false, message: '', type: '' });
+
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {},
+    type: 'warning',
+    confirmText: 'OK',
+    cancelText: 'Cancel'
+  });
 
   // Advanced filter and search state
   const [filters, setFilters] = useState({
@@ -304,6 +321,26 @@ const QuoteHistory = () => {
     setTimeout(() => setShowNotification({ show: false, message: '', type: '' }), 5000);
   };
 
+  // Helper function to show confirmation dialog
+  const showConfirmation = (title, message, onConfirm, type = 'warning', confirmText = 'OK', cancelText = 'Cancel') => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        onConfirm();
+      },
+      type,
+      confirmText,
+      cancelText
+    });
+  };
+
+  const closeConfirmDialog = () => {
+    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+  };
+
   // Handle filter changes
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
@@ -322,59 +359,105 @@ const QuoteHistory = () => {
   const handleBulkDelete = async () => {
     if (selectedQuotes.size === 0) return;
     
-    if (!window.confirm(`Are you sure you want to delete ${selectedQuotes.size} quote(s)?`)) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const deletePromises = Array.from(selectedQuotes).map(id => 
-        QuoteService.deleteQuote(id)
-      );
-      
-      await Promise.all(deletePromises);
-      setSelectedQuotes(new Set());
-      await loadQuotes();
-      showNotificationMessage(`Successfully deleted ${selectedQuotes.size} quote(s)`, 'success');
-    } catch (error) {
-      console.error('Error deleting quotes:', error);
-      showNotificationMessage('Failed to delete some quotes', 'error');
-    } finally {
-      setLoading(false);
-    }
+    showConfirmation(
+      'Delete Multiple Quotes',
+      `Are you sure you want to delete ${selectedQuotes.size} quote(s)? This action cannot be undone.`,
+      async () => {
+        try {
+          setLoading(true);
+          const deletePromises = Array.from(selectedQuotes).map(id => 
+            QuoteService.deleteQuote(id)
+          );
+          
+          await Promise.all(deletePromises);
+          setSelectedQuotes(new Set());
+          await loadQuotes();
+          showNotificationMessage(`Successfully deleted ${selectedQuotes.size} quote(s)`, 'success');
+        } catch (error) {
+          console.error('Error deleting quotes:', error);
+          showNotificationMessage('Failed to delete some quotes', 'error');
+        } finally {
+          setLoading(false);
+        }
+      },
+      'danger',
+      'Yes, Delete All',
+      'Cancel'
+    );
   };
 
   const handleBulkStatusChange = async (newStatus) => {
     if (selectedQuotes.size === 0) return;
 
-    try {
-      setLoading(true);
-      const updatePromises = Array.from(selectedQuotes).map(id => 
-        QuoteService.updateQuoteStatus(id, newStatus)
-      );
-      
-      await Promise.all(updatePromises);
-      setSelectedQuotes(new Set());
-      await loadQuotes();
-      showNotificationMessage(`Successfully updated ${selectedQuotes.size} quote(s) to ${newStatus}`, 'success');
-    } catch (error) {
-      console.error('Error updating quote status:', error);
-      showNotificationMessage('Failed to update some quotes', 'error');
-    } finally {
-      setLoading(false);
-    }
+    showConfirmation(
+      'Update Quote Status',
+      `Are you sure you want to update ${selectedQuotes.size} quote(s) to status "${newStatus}"?`,
+      async () => {
+        try {
+          setLoading(true);
+          const updatePromises = Array.from(selectedQuotes).map(id => 
+            QuoteService.updateQuoteStatus(id, newStatus)
+          );
+          
+          await Promise.all(updatePromises);
+          setSelectedQuotes(new Set());
+          await loadQuotes();
+          showNotificationMessage(`Successfully updated ${selectedQuotes.size} quote(s) to ${newStatus}`, 'success');
+        } catch (error) {
+          console.error('Error updating quote status:', error);
+          showNotificationMessage('Failed to update some quotes', 'error');
+        } finally {
+          setLoading(false);
+        }
+      },
+      'warning',
+      'Yes, Update All',
+      'Cancel'
+    );
   };
 
   // Individual quote operations
   const handleDeleteQuote = async (quoteId) => {
+    showConfirmation(
+      'Delete Quote',
+      'Are you sure you want to delete this quote? This action cannot be undone.',
+      async () => {
+        try {
+          setLoading(true);
+          await QuoteService.deleteQuote(quoteId);
+          await loadQuotes();
+          showNotificationMessage('Quote deleted successfully', 'success');
+        } catch (error) {
+          console.error('Error deleting quote:', error);
+          showNotificationMessage('Failed to delete quote', 'error');
+        } finally {
+          setLoading(false);
+        }
+      },
+      'danger',
+      'Yes, Delete',
+      'Cancel'
+    );
+  };
+
+  const handleEdit = async (quote) => {
     try {
       setLoading(true);
-      await QuoteService.deleteQuote(quoteId);
-      await loadQuotes();
-      showNotificationMessage('Quote deleted successfully', 'success');
+      // Fetch complete quote data by ID
+      const completeQuoteData = await QuoteService.getQuoteById(quote._id);
+      console.log('Fetched complete quote data:', completeQuoteData);
+      
+      // Navigate to quotation page with complete data
+      navigate('/quotation-ads', { 
+        state: { 
+          editMode: true, 
+          quoteData: completeQuoteData,
+          quoteId: quote._id 
+        } 
+      });
     } catch (error) {
-      console.error('Error deleting quote:', error);
-      showNotificationMessage('Failed to delete quote', 'error');
+      console.error('Error fetching quote for edit:', error);
+      showNotificationMessage('Failed to fetch quote data for editing', 'error');
     } finally {
       setLoading(false);
     }
@@ -1230,34 +1313,24 @@ const QuoteHistory = () => {
                         onChange={() => handleSelectQuote(quote._id)}
                       />
                     </td>
-                    <td className="quote-number">
-                      <strong>{quote.quotationNumber}</strong>
+                    <td>
+                      {quote.quotationNumber}
                     </td>
                     <td>
-                      <div className="client-info">
-                        <div className="client-name">{quote.clientInfo?.name || 'N/A'}</div>
-                        {quote.clientInfo?.company && (
-                          <div className="client-company">{quote.clientInfo.company}</div>
-                        )}
-                      </div>
+                      {quote.clientInfo?.name || 'N/A'}{quote.clientInfo?.company && ` (${quote.clientInfo.company})`}
                     </td>
                     <td>
-                      <span 
-                        className={`status-badge status-${quote.status}`}
-                        style={{ backgroundColor: getStatusColor(quote.status) }}
-                      >
-                        {quote.status?.charAt(0).toUpperCase() + quote.status?.slice(1).toLowerCase() || 'Draft'}
-                      </span>
+                      {quote.status?.charAt(0).toUpperCase() + quote.status?.slice(1).toLowerCase() || 'Draft'}
                     </td>
                     <td>{quote.selectedWindowType || 'N/A'}</td>
-                    <td className="amount">
+                    <td>
                       {formatCurrency(quote.pricing?.total || quote.pricing?.grandTotal || 0)}
                     </td>
                     <td>{new Date(quote.createdAt).toLocaleDateString()}</td>
                     <td>
                       <div className="action-buttons">
-                        <button
-                          className="btn btn-sm btn-outline action-view"
+                        <button 
+                          className="action-btn" 
                           onClick={() => {
                             setSelectedQuote(quote);
                             setModalType('view');
@@ -1265,44 +1338,21 @@ const QuoteHistory = () => {
                           }}
                           title="View Quote Details"
                         >
-                          <span className="action-icon">👁️</span>
+                          <AiOutlineEye size={40} />
                         </button>
-                        <button
-                          className="btn btn-sm btn-outline action-edit"
-                          onClick={() => {
-                            setSelectedQuote(quote);
-                            setModalType('edit');
-                            setShowModal(true);
-                          }}
+                        <button 
+                          className="action-btn" 
+                          onClick={() => handleEdit(quote)}
                           title="Edit Quote"
                         >
-                          <span className="action-icon">✏️</span>
+                          <AiOutlineForm size={40} />
                         </button>
-                        <button
-                          className="btn btn-sm btn-outline action-duplicate"
-                          onClick={async () => {
-                            try {
-                              const duplicated = await QuoteService.duplicateQuote(quote._id);
-                              await loadQuotes();
-                              showNotificationMessage('Quote duplicated successfully', 'success');
-                            } catch (error) {
-                              showNotificationMessage('Failed to duplicate quote', 'error');
-                            }
-                          }}
-                          title="Duplicate Quote"
-                        >
-                          <span className="action-icon">📋</span>
-                        </button>
-                        <button
-                          className="btn btn-sm btn-danger action-delete"
-                          onClick={() => {
-                            if (window.confirm('Are you sure you want to delete this quote?')) {
-                              handleDeleteQuote(quote._id);
-                            }
-                          }}
+                        <button 
+                          className="action-btn text-red-600" 
+                          onClick={() => handleDeleteQuote(quote._id)}
                           title="Delete Quote"
                         >
-                          <span className="action-icon">🗑️</span>
+                          <FiTrash2 size={40} />
                         </button>
                       </div>
                     </td>
@@ -1496,66 +1546,7 @@ const QuoteHistory = () => {
           </div>
         )}
 
-        {/* Pagination */}
-        {quotes.length > 0 && (
-          <div className="pagination-container">
-            <div className="pagination-info">
-              Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} quotes
-            </div>
-            
-            <div className="pagination-controls">
-              <button
-                className="btn btn-outline"
-                onClick={() => setPagination(prev => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
-                disabled={pagination.page === 1}
-              >
-                Previous
-              </button>
-              
-              <div className="page-numbers">
-                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                  const pageNum = Math.max(1, pagination.page - 2) + i;
-                  if (pageNum <= pagination.totalPages) {
-                    return (
-                      <button
-                        key={pageNum}
-                        className={`btn ${pageNum === pagination.page ? 'btn-primary' : 'btn-outline'}`}
-                        onClick={() => setPagination(prev => ({ ...prev, page: pageNum }))}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-              
-              <button
-                className="btn btn-outline"
-                onClick={() => setPagination(prev => ({ ...prev, page: Math.min(prev.totalPages, prev.page + 1) }))}
-                disabled={pagination.page === pagination.totalPages}
-              >
-                Next
-              </button>
-            </div>
 
-            <div className="pagination-size">
-              <select
-                value={pagination.limit}
-                onChange={(e) => setPagination(prev => ({ 
-                  ...prev, 
-                  limit: parseInt(e.target.value),
-                  page: 1 
-                }))}
-              >
-                <option value={10}>10 per page</option>
-                <option value={20}>20 per page</option>
-                <option value={50}>50 per page</option>
-                <option value={100}>100 per page</option>
-              </select>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Enhanced Modal */}
@@ -1851,6 +1842,18 @@ const QuoteHistory = () => {
           </div>
         </div>
       )}
+
+      {/* Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={closeConfirmDialog}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        cancelText={confirmDialog.cancelText}
+        type={confirmDialog.type}
+      />
     </div>
   );
 };
