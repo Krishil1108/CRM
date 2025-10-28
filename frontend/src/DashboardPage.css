@@ -599,13 +599,16 @@
 
 /* Chart Container */
 .chart-container {
-  margin-bottom: 20px;
+  margin-bottom: 30px;
   background: white;
   border-radius: 12px;
-  padding: 20px;
+  padding: 25px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid #e9ecef;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: visible;
+  min-height: 450px;
 }
 
 .chart-container:hover {
@@ -690,6 +693,8 @@
   margin-top: 30px;
   padding-top: 20px;
   border-top: 1px solid #ecf0f1;
+  position: relative;
+  clear: both;
 }
 
 .insight-card {
@@ -697,6 +702,8 @@
   border-radius: 10px;
   padding: 20px;
   border-left: 4px solid #27ae60;
+  position: static;
+  z-index: 1;
 }
 
 .insight-card h4 {
@@ -726,6 +733,70 @@
 .insight-card strong {
   color: #27ae60;
   font-weight: 700;
+}
+
+/* Inactive metrics styling */
+.metric-inactive {
+  opacity: 0.5;
+  color: #95a5a6 !important;
+}
+
+.metric-inactive strong {
+  color: #95a5a6 !important;
+}
+
+.no-data-notice {
+  margin-top: 15px;
+  padding: 12px;
+  background: rgba(149, 165, 166, 0.1);
+  border-radius: 6px;
+  border-left: 3px solid #95a5a6;
+}
+
+.no-data-notice p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+/* Client Reports Specific Layout */
+.client-reports {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.client-reports .chart-container {
+  width: 100%;
+  display: block;
+  position: relative;
+}
+
+.client-reports .chart-insights {
+  width: 100%;
+  position: relative;
+  margin-top: 30px;
+}
+
+/* Inventory Reports Specific Layout */
+.inventory-reports {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.inventory-reports .chart-container {
+  width: 100%;
+  display: block;
+  position: relative;
+}
+
+.inventory-reports .chart-insights {
+  width: 100%;
+  position: relative;
+  margin-top: 30px;
 }
 
 /* Reports Summary */

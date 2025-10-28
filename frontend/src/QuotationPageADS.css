@@ -2500,3 +2500,219 @@ body.modal-open {
   background: #e2e8f0;
 }
 
+/* Window Management Styles */
+.window-management-section {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  /* Enhanced positioning for better layout flow */
+  position: relative;
+  z-index: 1;
+}
+
+.window-management-section .section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  /* Improved typography for compact design */
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.add-window-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.add-window-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.windows-tab-container {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.windows-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.window-tab {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  min-width: 180px;
+  flex: 0 0 auto;
+}
+
+.window-tab.active {
+  border-color: #6366f1;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+.window-tab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.window-tab-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  width: calc(100% - 70px);
+  cursor: pointer;
+  text-align: left;
+}
+
+.window-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.window-name-input {
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  outline: none;
+  width: 100%;
+  cursor: pointer;
+}
+
+.window-name-input:focus {
+  cursor: text;
+  background: #f1f5f9;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.window-actions {
+  display: flex;
+  flex-direction: column;
+  width: 70px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.action-btn {
+  padding: 6px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.duplicate-btn:hover {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.remove-btn:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.window-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.window-count {
+  font-weight: 600;
+  color: #334155;
+}
+
+.current-window-indicator {
+  font-style: italic;
+  color: #6366f1;
+  font-weight: 500;
+}
+
+/* Responsive design for window management */
+@media (max-width: 768px) {
+  .window-management-section {
+    padding: 12px 15px;
+    margin-bottom: 15px;
+  }
+  
+  .window-management-section .section-heading {
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  
+  .add-window-btn {
+    align-self: stretch;
+    text-align: center;
+  }
+  
+  .windows-tabs {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .window-tab {
+    min-width: unset;
+  }
+  
+  .window-tab-button {
+    width: calc(100% - 60px);
+  }
+  
+  .window-actions {
+    width: 60px;
+  }
+  
+  .window-summary {
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 10px;
+  }
+}
+
+@media (min-width: 769px) {
+  .windows-tabs {
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  
+  .window-tab {
+    max-width: 220px;
+  }
+}
+

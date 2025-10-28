@@ -9,7 +9,6 @@ import HomePage from './HomePage';
 import ClientsPage from './ClientsPage';
 import InventoryPage from './InventoryPage';
 import DashboardPage from './DashboardPage';
-import ReportsPage from './ReportsPage';
 import SettingsPage from './SettingsPage';
 import QuotationPage from './QuotationPageADS';
 import QuoteHistoryPage from './QuoteHistoryPage';
@@ -39,7 +38,6 @@ function App() {
                 <Route path="/clients" element={<ClientsPage />} />
                 <Route path="/inventory" element={<InventoryPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/quotation-ads" element={<QuotationPage />} />
                 <Route path="/quote-history" element={<QuoteHistoryPage />} />
                 <Route path="/settings" element={<SettingsPage />} />

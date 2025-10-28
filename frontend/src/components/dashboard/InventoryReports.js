@@ -93,7 +93,7 @@ const InventoryReports = ({ data, graphType, dateRange }) => {
     return (
       <div className="chart-container">
         <h3>Inventory Status Distribution</h3>
-        <ResponsiveContainer width="100%" height={320}>
+        <ResponsiveContainer width="100%" height={400}>
           <PieChart>
             <Pie
               data={pieData}
@@ -101,7 +101,7 @@ const InventoryReports = ({ data, graphType, dateRange }) => {
               cy="50%"
               labelLine={false}
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              outerRadius={120}
+              outerRadius={140}
               fill="#8884d8"
               dataKey="count"
             >
@@ -109,7 +109,15 @@ const InventoryReports = ({ data, graphType, dateRange }) => {
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip formatter={(value) => [value, 'Items']} />
+            <Tooltip 
+              formatter={(value) => [value, 'Items']}
+              contentStyle={{
+                backgroundColor: '#fff',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+            />
             <Legend />
           </PieChart>
         </ResponsiveContainer>
@@ -123,19 +131,31 @@ const InventoryReports = ({ data, graphType, dateRange }) => {
     return (
       <div className="chart-container">
         <h3>Inventory by Category</h3>
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={barData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={barData} margin={{ top: 20, right: 30, left: 40, bottom: 60 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis 
               dataKey="category" 
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: '#666' }}
+              axisLine={{ stroke: '#ccc' }}
+              tickLine={{ stroke: '#ccc' }}
               angle={-45}
               textAnchor="end"
               height={80}
             />
-            <YAxis tick={{ fontSize: 12 }} />
+            <YAxis 
+              tick={{ fontSize: 12, fill: '#666' }}
+              axisLine={{ stroke: '#ccc' }}
+              tickLine={{ stroke: '#ccc' }}
+            />
             <Tooltip 
               formatter={(value, name) => [value, name === 'count' ? 'Items' : name === 'totalValue' ? 'Value (₹)' : name]}
+              contentStyle={{
+                backgroundColor: '#fff',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
             />
             <Legend />
             <Bar dataKey="count" fill="#0088FE" name="Item Count" />
@@ -149,20 +169,41 @@ const InventoryReports = ({ data, graphType, dateRange }) => {
   const renderLineChart = () => {
     const lineData = prepareTimelineData();
     
+    // Ensure we have meaningful data for the chart
+    const hasData = lineData && lineData.length > 0;
+    const maxItems = hasData ? Math.max(...lineData.map(d => d.totalItems)) : 0;
+    const minItems = hasData ? Math.min(...lineData.map(d => d.totalItems)) : 0;
+    const maxValue = hasData ? Math.max(...lineData.map(d => d.totalValue)) : 0;
+    
     return (
       <div className="chart-container">
-        <h3>Stock Timeline (Last 10 Years)</h3>
-        <ResponsiveContainer width="100%" height={320}>
-          <LineChart data={lineData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
+        <h3>Inventory Growth Trend (Last 10 Years)</h3>
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart 
+            data={lineData} 
+            margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis 
               dataKey="year"
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 12, fill: '#666' }}
+              axisLine={{ stroke: '#ccc' }}
+              tickLine={{ stroke: '#ccc' }}
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={80}
             />
-            <YAxis tick={{ fontSize: 12 }} />
+            <YAxis 
+              tick={{ fontSize: 12, fill: '#666' }}
+              axisLine={{ stroke: '#ccc' }}
+              tickLine={{ stroke: '#ccc' }}
+              domain={hasData ? [Math.max(0, minItems - 1), maxItems + 1] : [0, 10]}
+              allowDecimals={false}
+            />
             <Tooltip 
               formatter={(value, name) => [
-                name === 'totalValue' ? `₹${value.toLocaleString('en-IN')}` : value,
+                name === 'totalValue' ? `₹${value.toLocaleString('en-IN')}` : `${value} items`,
                 name === 'totalValue' ? 'Total Value' : 
                 name === 'totalItems' ? 'Total Items' :
                 name === 'inStock' ? 'In Stock' :
@@ -170,6 +211,12 @@ const InventoryReports = ({ data, graphType, dateRange }) => {
                 name === 'lowStock' ? 'Low Stock' : name
               ]}
               labelFormatter={(label) => `Year: ${label}`}
+              contentStyle={{
+                backgroundColor: '#fff',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
             />
             <Legend />
             <Line 
@@ -177,28 +224,37 @@ const InventoryReports = ({ data, graphType, dateRange }) => {
               dataKey="totalItems" 
               stroke="#0088FE" 
               strokeWidth={3}
+              dot={{ fill: '#0088FE', strokeWidth: 2, r: 6 }}
+              activeDot={{ r: 8, stroke: '#0088FE', strokeWidth: 2 }}
               name="Total Items"
+              connectNulls={false}
             />
             <Line 
               type="monotone" 
               dataKey="inStock" 
               stroke="#00C49F" 
               strokeWidth={2}
+              dot={{ fill: '#00C49F', strokeWidth: 1, r: 4 }}
               name="In Stock"
+              connectNulls={false}
             />
             <Line 
               type="monotone" 
               dataKey="outOfStock" 
               stroke="#FF8042" 
               strokeWidth={2}
+              dot={{ fill: '#FF8042', strokeWidth: 1, r: 4 }}
               name="Out of Stock"
+              connectNulls={false}
             />
             <Line 
               type="monotone" 
               dataKey="lowStock" 
               stroke="#FFBB28" 
               strokeWidth={2}
+              dot={{ fill: '#FFBB28', strokeWidth: 1, r: 4 }}
               name="Low Stock"
+              connectNulls={false}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -304,6 +360,20 @@ const InventoryReports = ({ data, graphType, dateRange }) => {
     );
   }
 
+  // Helper function to format metrics with conditional display
+  const formatMetric = (value, fallback = 'No data', isNumeric = true, isCurrency = false) => {
+    if (value === null || value === undefined || (value === 0 && !isNumeric)) {
+      return fallback;
+    }
+    if (isCurrency) {
+      return `₹${value.toLocaleString('en-IN')}`;
+    }
+    return isNumeric ? value.toLocaleString() : value;
+  };
+
+  // Check if we have meaningful data
+  const hasData = data && Object.keys(data).length > 0 && data.totalItems > 0;
+
   return (
     <div className="inventory-reports">
       <div className="reports-header">
@@ -315,18 +385,35 @@ const InventoryReports = ({ data, graphType, dateRange }) => {
       
       {renderChart()}
       
-      {/* Additional insights */}
+      {/* Enhanced Key Insights */}
       <div className="chart-insights">
         <div className="insight-card">
           <h4>Key Insights</h4>
           <ul>
-            <li>Total inventory items: <strong>{data.totalItems || 0}</strong></li>
-            <li>Total inventory value: <strong>₹{(data.totalValue || 0).toLocaleString('en-IN')}</strong></li>
-            <li>Items in stock: <strong>{data.inStockItems || 0}</strong></li>
-            <li>Items out of stock: <strong>{data.outOfStockItems || 0}</strong></li>
-            <li>Low stock items: <strong>{data.lowStockItems || 0}</strong></li>
-            <li>Top category: <strong>{data.topCategory || 'N/A'}</strong></li>
+            <li className={!hasData ? 'metric-inactive' : ''}>
+              Total inventory items: <strong>{formatMetric(data.totalItems, '0')}</strong>
+            </li>
+            <li className={!hasData || !data.totalValue ? 'metric-inactive' : ''}>
+              Total inventory value: <strong>{formatMetric(data.totalValue, 'No value data', true, true)}</strong>
+            </li>
+            <li className={!hasData || !data.inStockItems ? 'metric-inactive' : ''}>
+              Items in stock: <strong>{formatMetric(data.inStockItems, 'No stock data')}</strong>
+            </li>
+            <li className={!hasData || (!data.outOfStockItems && data.outOfStockItems !== 0) ? 'metric-inactive' : ''}>
+              Items out of stock: <strong>{formatMetric(data.outOfStockItems, 'No stock data')}</strong>
+            </li>
+            <li className={!hasData || (!data.lowStockItems && data.lowStockItems !== 0) ? 'metric-inactive' : ''}>
+              Low stock items: <strong>{formatMetric(data.lowStockItems, 'No stock data')}</strong>
+            </li>
+            <li className={!hasData || !data.topCategory || data.topCategory === 'No data' ? 'metric-inactive' : ''}>
+              Top category: <strong>{data.topCategory || 'No category data'}</strong>
+            </li>
           </ul>
+          {!hasData && (
+            <div className="no-data-notice">
+              <p><em>Add some inventory items to see detailed analytics and insights.</em></p>
+            </div>
+          )}
         </div>
       </div>
     </div>

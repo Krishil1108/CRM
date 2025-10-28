@@ -49,6 +49,10 @@ const QuotationPage = () => {
     type: 'success' // 'success', 'error', 'info', 'warning'
   });
 
+  // Multi-window management state
+  const [windows, setWindows] = useState([]);
+  const [currentWindowIndex, setCurrentWindowIndex] = useState(0);
+
 
   // Load quotation data from localStorage or use default
   const loadQuotationData = () => {
@@ -709,14 +713,14 @@ const QuotationPage = () => {
   };
 
   const handleWindowTypeSelect = (windowType) => {
-    updateQuotationData(prev => ({
+    updateCurrentWindow(prev => ({
       ...prev,
       selectedWindowType: windowType
     }));
   };
 
   const handleSpecChange = (field, value) => {
-    updateQuotationData(prev => {
+    updateCurrentWindow(prev => {
       const newSpecs = { ...prev.windowSpecs, [field]: value };
       return { ...prev, windowSpecs: newSpecs };
     });
@@ -745,11 +749,151 @@ const QuotationPage = () => {
   // Helper function to show notification toast
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
-    // Auto-hide after 4 seconds
     setTimeout(() => {
       setNotification(prev => ({ ...prev, show: false }));
-    }, 4000);
+    }, 3000);
   };
+
+  // Window Management Functions
+  const createDefaultWindow = () => {
+    return {
+      id: Date.now() + Math.random(), // Unique ID
+      name: `Window ${windows.length + 1}`,
+      selectedWindowType: null,
+      windowSpecs: {
+        width: '',
+        height: '',
+        quantity: 1,
+        frame: 'aluminum',
+        glass: 'single',
+        color: 'white',
+        hardware: 'standard',
+        opening: 'fixed',
+        grilles: 'none'
+      },
+      slidingConfig: {
+        panels: 2,
+        combination: null
+      },
+      bayConfig: {
+        combination: null,
+        angle: 30
+      },
+      doubleHungConfig: {
+        combination: null
+      },
+      singleHungConfig: {
+        combination: 'sh-standard'
+      },
+      casementConfig: {
+        direction: 'outward',
+        hinge: 'left'
+      },
+      pricing: {
+        unitPrice: 0,
+        totalPrice: 0,
+        tax: 0,
+        finalTotal: 0
+      }
+    };
+  };
+
+  const addNewWindow = () => {
+    const newWindow = createDefaultWindow();
+    setWindows(prev => [...prev, newWindow]);
+    setCurrentWindowIndex(windows.length); // Switch to the new window
+    showNotification('New window added successfully', 'success');
+  };
+
+  const removeWindow = (windowIndex) => {
+    if (windows.length <= 1) {
+      showNotification('Cannot remove the last window', 'warning');
+      return;
+    }
+    
+    showConfirmation(
+      'Remove Window',
+      `Are you sure you want to remove "${windows[windowIndex]?.name || `Window ${windowIndex + 1}`}"?`,
+      () => {
+        setWindows(prev => prev.filter((_, index) => index !== windowIndex));
+        // Adjust current window index if needed
+        if (currentWindowIndex >= windowIndex && currentWindowIndex > 0) {
+          setCurrentWindowIndex(prev => prev - 1);
+        }
+        showNotification('Window removed successfully', 'success');
+      },
+      'warning',
+      'Remove',
+      'Cancel'
+    );
+  };
+
+  const duplicateWindow = (windowIndex) => {
+    const windowToDuplicate = windows[windowIndex];
+    const duplicatedWindow = {
+      ...windowToDuplicate,
+      id: Date.now() + Math.random(),
+      name: `${windowToDuplicate.name} (Copy)`
+    };
+    setWindows(prev => [...prev, duplicatedWindow]);
+    setCurrentWindowIndex(windows.length); // Switch to the duplicated window
+    showNotification('Window duplicated successfully', 'success');
+  };
+
+  const updateWindowName = (windowIndex, newName) => {
+    setWindows(prev => 
+      prev.map((window, index) => 
+        index === windowIndex ? { ...window, name: newName } : window
+      )
+    );
+  };
+
+  const getCurrentWindow = () => {
+    return windows[currentWindowIndex] || createDefaultWindow();
+  };
+
+  const updateCurrentWindow = (updater) => {
+    setWindows(prev => 
+      prev.map((window, index) => 
+        index === currentWindowIndex ? updater(window) : window
+      )
+    );
+  };
+
+  // Initialize windows if empty
+  useEffect(() => {
+    if (windows.length === 0) {
+      const defaultWindow = createDefaultWindow();
+      // If there's existing quotation data, apply it to the first window
+      if (quotationData.selectedWindowType) {
+        defaultWindow.selectedWindowType = quotationData.selectedWindowType;
+        defaultWindow.windowSpecs = { ...defaultWindow.windowSpecs, ...quotationData.windowSpecs };
+        defaultWindow.slidingConfig = { ...defaultWindow.slidingConfig, ...quotationData.slidingConfig };
+        defaultWindow.bayConfig = { ...defaultWindow.bayConfig, ...quotationData.bayConfig };
+        defaultWindow.doubleHungConfig = { ...defaultWindow.doubleHungConfig, ...quotationData.doubleHungConfig };
+        defaultWindow.singleHungConfig = { ...defaultWindow.singleHungConfig, ...quotationData.singleHungConfig };
+        defaultWindow.casementConfig = { ...defaultWindow.casementConfig, ...quotationData.casementConfig };
+      }
+      setWindows([defaultWindow]);
+    }
+  }, []);
+
+  // Sync current window data with quotationData for backwards compatibility
+  useEffect(() => {
+    const currentWindow = getCurrentWindow();
+    if (currentWindow && Object.keys(currentWindow).length > 1) {
+      setQuotationData(prev => ({
+        ...prev,
+        selectedWindowType: currentWindow.selectedWindowType,
+        windowSpecs: currentWindow.windowSpecs,
+        slidingConfig: currentWindow.slidingConfig,
+        bayConfig: currentWindow.bayConfig,
+        doubleHungConfig: currentWindow.doubleHungConfig,
+        singleHungConfig: currentWindow.singleHungConfig,
+        casementConfig: currentWindow.casementConfig
+      }));
+    }
+  }, [currentWindowIndex, windows]);
 
   // Universal save function that can save as draft or final
   const handleSaveQuotation = async (status) => {
@@ -825,7 +969,7 @@ const QuotationPage = () => {
       localStorage.setItem('quotations', JSON.stringify(quotations));
 
       // Transform data for Quote History database
-      const quoteData = transformQuotationToQuoteFormat(quotationData);
+      const quoteData = transformQuotationToQuoteFormat(quotationData, windows);
       quoteData.status = saveStatus; // Set the appropriate status
       
       // Save to Quote History database
@@ -870,88 +1014,64 @@ const QuotationPage = () => {
   };
 
   // Transform QuotationPageADS data to Quote History format
-  const transformQuotationToQuoteFormat = (quotationData) => {
-    // Calculate pricing totals
-    const unitPrice = quotationData.pricing?.unitPrice || 0;
-    const quantity = parseInt(quotationData.windowSpecs?.quantity) || 1;
-    const subtotal = unitPrice * quantity;
-    const taxRate = 0.18; // 18% GST
-    const tax = subtotal * taxRate;
-    const discount = 0; // Can be added later if needed
-    const grandTotal = subtotal + tax - discount;
-
-    // Extract window type as string (handle both object and string formats)
-    const windowTypeString = typeof quotationData.selectedWindowType === 'object' 
-      ? quotationData.selectedWindowType?.id || 'sliding'
-      : quotationData.selectedWindowType || 'sliding';
-
-    // Debug: Log the data being transformed
-    console.log('Transforming quotation data:', {
-      selectedWindowType: quotationData.selectedWindowType,
-      windowTypeString: windowTypeString,
-      clientName: quotationData.clientInfo?.name
-    });
-
-    const transformedData = {
-      quotationNumber: quotationData.quotationNumber || `QT-${Date.now()}`,
-      date: new Date(),
-      validUntil: new Date(quotationData.validUntil || Date.now() + 30 * 24 * 60 * 60 * 1000),
+  const transformQuotationToQuoteFormat = (quotationData, windowsArray = []) => {
+    // Use windows array if available, otherwise fallback to single window from quotationData
+    const activeWindows = windowsArray.length > 0 ? windowsArray : [quotationData];
+    
+    // Calculate pricing totals for all windows
+    let totalUnitPrice = 0;
+    let totalQuantity = 0;
+    
+    const windowSpecs = activeWindows.map((window, index) => {
+      const unitPrice = window.pricing?.unitPrice || 0;
+      const quantity = parseInt(window.windowSpecs?.quantity) || 1;
+      totalUnitPrice += unitPrice;
+      totalQuantity += quantity;
       
-      clientInfo: {
-        name: quotationData.clientInfo?.name || '',
-        email: quotationData.clientInfo?.email || '',
-        phone: quotationData.clientInfo?.phone || '',
-        address: `${quotationData.clientInfo?.address || ''}, ${quotationData.clientInfo?.city || ''}`.trim().replace(/^,\s*/, ''),
-        city: quotationData.clientInfo?.city || ''
-      },
-      
-      companyDetails: {
-        name: companyInfo?.name || 'ADS SYSTEMS',
-        phone: companyInfo?.phone || '9574544012',
-        email: companyInfo?.email || 'support@adssystem.co.in',
-        website: companyInfo?.website || 'adssystem.co.in',
-        gstin: companyInfo?.gstin || '24APJPP8011N1ZK'
-      },
-      
-      windowSpecs: [{
-        id: 'W1',
-        name: `${typeof quotationData.selectedWindowType === 'object' ? quotationData.selectedWindowType?.name : windowTypeString} - ${quotationData.windowSpecs?.location || 'Custom'}`,
-        location: quotationData.windowSpecs?.location || 'Not specified',
+      // Extract window type as string (handle both object and string formats)
+      const windowTypeString = typeof window.selectedWindowType === 'object' 
+        ? window.selectedWindowType?.id || 'sliding'
+        : window.selectedWindowType || 'sliding';
+
+      return {
+        id: `W${index + 1}`,
+        name: window.name || `Window ${index + 1}`,
+        location: window.windowSpecs?.location || 'Not specified',
         type: windowTypeString,
         
         dimensions: {
-          width: parseInt(quotationData.windowSpecs?.width) || 0,
-          height: parseInt(quotationData.windowSpecs?.height) || 0
+          width: parseInt(window.windowSpecs?.width) || 0,
+          height: parseInt(window.windowSpecs?.height) || 0
         },
         
         specifications: {
           // COMPREHENSIVE Glass specifications
-          glass: quotationData.windowSpecs?.glass || 'single',
-          glassType: quotationData.windowSpecs?.glass || 'single',
-          glassTint: quotationData.windowSpecs?.glassTint || 'clear',
-          glassPattern: quotationData.windowSpecs?.glassPattern || 'clear',
-          glassThickness: quotationData.windowSpecs?.glass === 'double' ? 10 : 5,
+          glass: window.windowSpecs?.glass || 'single',
+          glassType: window.windowSpecs?.glass || 'single',
+          glassTint: window.windowSpecs?.glassTint || 'clear',
+          glassPattern: window.windowSpecs?.glassPattern || 'clear',
+          glassThickness: window.windowSpecs?.glass === 'double' ? 10 : 5,
           
           // COMPREHENSIVE Frame specifications
           frame: {
-            material: quotationData.windowSpecs?.frame || 'aluminum',
-            color: quotationData.windowSpecs?.frameColor || quotationData.windowSpecs?.color || 'white'
+            material: window.windowSpecs?.frame || 'aluminum',
+            color: window.windowSpecs?.frameColor || window.windowSpecs?.color || 'white'
           },
-          frameMaterial: quotationData.windowSpecs?.frame || 'aluminum',
-          frameColor: quotationData.windowSpecs?.frameColor || quotationData.windowSpecs?.color || 'white',
+          frameMaterial: window.windowSpecs?.frame || 'aluminum',
+          frameColor: window.windowSpecs?.frameColor || window.windowSpecs?.color || 'white',
           
           // Installation Details
-          location: quotationData.windowSpecs?.location || 'ground-floor',
-          wallType: quotationData.windowSpecs?.wallType || 'brick',
-          replacement: quotationData.windowSpecs?.replacement || 'new-opening',
-          installationMethod: quotationData.windowSpecs?.installationMethod || 'standard',
-          finishingWork: quotationData.windowSpecs?.finishingWork || 'basic',
-          cleanup: quotationData.windowSpecs?.cleanup || true,
+          location: window.windowSpecs?.location || 'ground-floor',
+          wallType: window.windowSpecs?.wallType || 'brick',
+          replacement: window.windowSpecs?.replacement || 'new-opening',
+          installationMethod: window.windowSpecs?.installationMethod || 'standard',
+          finishingWork: window.windowSpecs?.finishingWork || 'basic',
+          cleanup: window.windowSpecs?.cleanup || true,
           
           // Hardware and operation
-          lockPosition: quotationData.windowSpecs?.lockPosition || 'right',
-          openingType: quotationData.windowSpecs?.opening || 'fixed',
-          hardware: quotationData.windowSpecs?.hardware || 'standard',
+          lockPosition: window.windowSpecs?.lockPosition || 'right',
+          openingType: window.windowSpecs?.opening || 'fixed',
+          hardware: window.windowSpecs?.hardware || 'standard',
           
           // Configuration details
           panels: quotationData.slidingConfig?.panels || quotationData.casementConfig?.panels || quotationData.awningConfig?.panels || 2,
@@ -987,24 +1107,55 @@ const QuotationPage = () => {
           },
           grillColor: quotationData.windowSpecs?.grillColor || 'white',
           
-          // Window type specific configurations (COMPLETE)
-          slidingDetails: quotationData.slidingConfig || {},
-          casementDetails: quotationData.casementConfig || {},
-          bayDetails: quotationData.bayConfig || {},
-          awningDetails: quotationData.awningConfig || {},
-          doubleHungDetails: quotationData.doubleHungConfig || {},
-          singleHungDetails: quotationData.singleHungConfig || {}
+          // Configuration details
+          slidingDetails: window.slidingConfig || {},
+          casementDetails: window.casementConfig || {},
+          bayDetails: window.bayConfig || {},
+          awningDetails: window.awningConfig || {},
+          doubleHungDetails: window.doubleHungConfig || {},
+          singleHungDetails: window.singleHungConfig || {}
         },
         
         pricing: {
           sqFtPrice: 450,
-          quantity: parseInt(quotationData.windowSpecs?.quantity) || 1,
+          quantity: quantity,
           unitPrice: unitPrice,
           totalPrice: unitPrice * quantity
         }
-      }],
+      };
+    });
+    
+    // Calculate totals for all windows
+    const subtotal = totalUnitPrice;
+    const taxRate = 0.18; // 18% GST
+    const tax = subtotal * taxRate;
+    const discount = 0; // Can be added later if needed
+    const grandTotal = subtotal + tax - discount;
+
+    const transformedData = {
+      quotationNumber: quotationData.quotationNumber || `QT-${Date.now()}`,
+      date: new Date(),
+      validUntil: new Date(quotationData.validUntil || Date.now() + 30 * 24 * 60 * 60 * 1000),
       
-      selectedWindowType: windowTypeString,
+      clientInfo: {
+        name: quotationData.clientInfo?.name || '',
+        email: quotationData.clientInfo?.email || '',
+        phone: quotationData.clientInfo?.phone || '',
+        address: `${quotationData.clientInfo?.address || ''}, ${quotationData.clientInfo?.city || ''}`.trim().replace(/^,\s*/, ''),
+        city: quotationData.clientInfo?.city || ''
+      },
+      
+      companyDetails: {
+        name: companyInfo?.name || 'ADS SYSTEMS',
+        phone: companyInfo?.phone || '9574544012',
+        email: companyInfo?.email || 'support@adssystem.co.in',
+        website: companyInfo?.website || 'adssystem.co.in',
+        gstin: companyInfo?.gstin || '24APJPP8011N1ZK'
+      },
+      
+      windowSpecs: windowSpecs,
+      
+      selectedWindowType: activeWindows[0]?.selectedWindowType?.id || 'sliding',
       
       // Complete Sliding Configuration
       slidingConfig: {
@@ -3294,6 +3445,81 @@ const QuotationPage = () => {
           <h2>Window Builder</h2>
         </div>
 
+        {/* Window Management Section - Moved above tabs for better layout */}
+        <div className="form-section window-management-section">
+          <h4 className="section-heading">
+            <span className="section-icon">🏢</span>
+            Window Management
+            <button 
+              className="add-window-btn"
+              onClick={addNewWindow}
+              title="Add New Window"
+            >
+              ➕ Add Window
+            </button>
+          </h4>
+          
+          {/* Window Tabs */}
+          <div className="windows-tab-container">
+            <div className="windows-tabs">
+              {windows.map((window, index) => (
+                <div 
+                  key={window.id}
+                  className={`window-tab ${index === currentWindowIndex ? 'active' : ''}`}
+                >
+                  <button 
+                    className="window-tab-button"
+                    onClick={() => setCurrentWindowIndex(index)}
+                  >
+                    <span className="window-icon">🪟</span>
+                    <input
+                      type="text"
+                      value={window.name}
+                      onChange={(e) => updateWindowName(index, e.target.value)}
+                      onBlur={(e) => {
+                        if (!e.target.value.trim()) {
+                          updateWindowName(index, `Window ${index + 1}`);
+                        }
+                      }}
+                      className="window-name-input"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </button>
+                  
+                  <div className="window-actions">
+                    <button 
+                      className="action-btn duplicate-btn"
+                      onClick={() => duplicateWindow(index)}
+                      title="Duplicate Window"
+                    >
+                      📋
+                    </button>
+                    {windows.length > 1 && (
+                      <button 
+                        className="action-btn remove-btn"
+                        onClick={() => removeWindow(index)}
+                        title="Remove Window"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Window Summary */}
+            <div className="window-summary">
+              <span className="window-count">
+                {windows.length} Window{windows.length !== 1 ? 's' : ''} Total
+              </span>
+              <span className="current-window-indicator">
+                Configuring: {getCurrentWindow().name}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <div className="builder-layout">
           {/* Left Panel - Window Selection */}
           <div className="builder-left-panel">
@@ -3339,7 +3565,7 @@ const QuotationPage = () => {
                       <div className="form-field">
                         <label className="field-label">Select Window Type</label>
                         <select 
-                          value={quotationData.selectedWindowType?.id || ''} 
+                          value={getCurrentWindow().selectedWindowType?.id || ''} 
                           onChange={(e) => {
                             const windowType = WINDOW_TYPES.find(type => type.id === e.target.value);
                             if (windowType) handleWindowTypeSelect(windowType);
@@ -3353,16 +3579,16 @@ const QuotationPage = () => {
                             </option>
                           ))}
                         </select>
-                        {quotationData.selectedWindowType && (
+                        {getCurrentWindow().selectedWindowType && (
                           <div className="field-description">
-                            {quotationData.selectedWindowType.description}
+                            {getCurrentWindow().selectedWindowType.description}
                           </div>
                         )}
                       </div>
                     </div>
 
                     {/* Dynamic Window Configurations */}
-                    {quotationData.selectedWindowType?.name === 'Sliding Windows' && (
+                    {getCurrentWindow().selectedWindowType?.name === 'Sliding Windows' && (
                       <div className="form-section">
                         <h4 className="section-heading">
                           <span className="section-icon">⬌</span>
@@ -3372,10 +3598,10 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Number of Panels</label>
                             <select
-                              value={quotationData.slidingConfig?.panels || 2}
+                              value={getCurrentWindow().slidingConfig?.panels || 2}
                               onChange={(e) => {
                                 const panels = parseInt(e.target.value);
-                                setQuotationData(prev => ({
+                                updateCurrentWindow(prev => ({
                                   ...prev,
                                   slidingConfig: {
                                     ...prev.slidingConfig,
@@ -3398,9 +3624,9 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Panel Operation</label>
                             <select
-                              value={quotationData.slidingConfig?.combination || ''}
+                              value={getCurrentWindow().slidingConfig?.combination || ''}
                               onChange={(e) => {
-                                setQuotationData(prev => ({
+                                updateCurrentWindow(prev => ({
                                   ...prev,
                                   slidingConfig: {
                                     ...prev.slidingConfig,
@@ -3411,22 +3637,22 @@ const QuotationPage = () => {
                               className="field-select"
                             >
                               <option value="">Select configuration...</option>
-                              {SLIDING_COMBINATIONS[quotationData.slidingConfig.panels]?.map(combo => (
+                              {SLIDING_COMBINATIONS[getCurrentWindow().slidingConfig?.panels || 2]?.map(combo => (
                                 <option key={combo.id} value={combo.id}>
                                   {combo.name}
                                 </option>
                               ))}
                             </select>
                             <small className="field-hint">
-                              {quotationData.slidingConfig.combination && 
-                               SLIDING_COMBINATIONS[quotationData.slidingConfig.panels]?.find(c => c.id === quotationData.slidingConfig.combination)?.description}
+                              {getCurrentWindow().slidingConfig?.combination && 
+                               SLIDING_COMBINATIONS[getCurrentWindow().slidingConfig?.panels || 2]?.find(c => c.id === getCurrentWindow().slidingConfig?.combination)?.description}
                             </small>
                           </div>
                         </div>
                       </div>
                     )}
 
-                    {quotationData.selectedWindowType?.name === 'Bay Windows' && (
+                    {getCurrentWindow().selectedWindowType?.name === 'Bay Windows' && (
                       <div className="form-section">
                         <h4 className="section-heading">
                           <span className="section-icon">🏠</span>

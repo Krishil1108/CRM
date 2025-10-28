@@ -233,13 +233,17 @@ class DashboardService {
   }
   
   static getMostCommonClientType(clients) {
+    if (!clients || clients.length === 0) return 'No data';
+    
     const typeCounts = clients.reduce((acc, client) => {
-      const type = client.type || 'unknown';
+      const type = client.type || client.category || 'Individual';
       acc[type] = (acc[type] || 0) + 1;
       return acc;
     }, {});
     
-    return Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b, 'N/A');
+    if (Object.keys(typeCounts).length === 0) return 'No data';
+    
+    return Object.keys(typeCounts).reduce((a, b) => typeCounts[a] > typeCounts[b] ? a : b);
   }
   
   static generateClientTimeline(clients, dateRange) {
@@ -247,16 +251,27 @@ class DashboardService {
     const startYear = dateRange.startDate.getFullYear();
     const endYear = dateRange.endDate.getFullYear();
     
-    for (let year = startYear; year <= endYear; year++) {
+    // Ensure we have at least a 3-year range for meaningful chart display
+    const minStartYear = Math.min(startYear, endYear - 2);
+    const maxEndYear = Math.max(endYear, startYear + 2);
+    
+    // Generate cumulative client count by year
+    let cumulativeCount = 0;
+    
+    for (let year = minStartYear; year <= maxEndYear; year++) {
       const yearClients = clients.filter(client => {
         const clientYear = new Date(client.createdAt || client.dateJoined || new Date()).getFullYear();
         return clientYear === year;
       });
       
+      cumulativeCount += yearClients.length;
+      
       timeline.push({
         date: new Date(year, 0, 1),
-        clients: yearClients.length,
-        count: yearClients.length
+        clients: cumulativeCount, // Show cumulative growth
+        newClients: yearClients.length, // Show new clients for that year
+        count: cumulativeCount,
+        year: year
       });
     }
     
@@ -300,13 +315,17 @@ class DashboardService {
   
   // Helper methods for inventory analytics
   static getTopInventoryCategory(inventory) {
+    if (!inventory || inventory.length === 0) return 'No data';
+    
     const categoryCounts = inventory.reduce((acc, item) => {
-      const category = item.category || 'Unknown';
+      const category = item.category || item.categoryType || 'General';
       acc[category] = (acc[category] || 0) + 1;
       return acc;
     }, {});
     
-    return Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b, 'N/A');
+    if (Object.keys(categoryCounts).length === 0) return 'No data';
+    
+    return Object.keys(categoryCounts).reduce((a, b) => categoryCounts[a] > categoryCounts[b] ? a : b);
   }
   
   static generateInventoryTimeline(inventory, dateRange) {
@@ -314,7 +333,11 @@ class DashboardService {
     const startYear = dateRange.startDate.getFullYear();
     const endYear = dateRange.endDate.getFullYear();
     
-    for (let year = startYear; year <= endYear; year++) {
+    // Ensure we have at least a 3-year range for meaningful chart display
+    const minStartYear = Math.min(startYear, endYear - 2);
+    const maxEndYear = Math.max(endYear, startYear + 2);
+    
+    for (let year = minStartYear; year <= maxEndYear; year++) {
       const yearInventory = inventory.filter(item => {
         const itemYear = new Date(item.createdAt || item.dateAdded || new Date()).getFullYear();
         return itemYear <= year; // Cumulative count
@@ -331,7 +354,8 @@ class DashboardService {
         totalValue: totalValue,
         inStock: inStock,
         outOfStock: outOfStock,
-        lowStock: lowStock
+        lowStock: lowStock,
+        year: year
       });
     }
     
