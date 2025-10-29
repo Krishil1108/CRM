@@ -2524,6 +2524,12 @@ body.modal-open {
   color: #334155;
 }
 
+.window-management-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .add-window-btn {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
@@ -2537,9 +2543,27 @@ body.modal-open {
   box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
 }
 
+.delete-all-windows-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
 .add-window-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+}
+
+.delete-all-windows-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
 }
 
 .windows-tab-container {
@@ -2550,9 +2574,34 @@ body.modal-open {
 
 .windows-tabs {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
   margin-bottom: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Custom scrollbar styling for webkit browsers */
+.windows-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.windows-tabs::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.windows-tabs::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.windows-tabs::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .window-tab {
@@ -2563,6 +2612,10 @@ body.modal-open {
   transition: all 0.3s ease;
   min-width: 180px;
   flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  height: 40px; /* Reduced height */
 }
 
 .window-tab.active {
@@ -2575,27 +2628,33 @@ body.modal-open {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.window-tab-button {
+.window-tab-content {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  background: none;
-  border: none;
-  width: calc(100% - 70px);
-  cursor: pointer;
-  text-align: left;
+  padding: 6px 10px;
+  flex: 1;
+}
+
+.window-tab.active {
+  border-color: #6366f1;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+.window-tab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .window-icon {
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
 }
 
 .window-name-input {
   border: none;
   background: none;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #334155;
   outline: none;
@@ -2612,13 +2671,13 @@ body.modal-open {
 
 .window-actions {
   display: flex;
-  flex-direction: column;
-  width: 70px;
+  flex-direction: row;
+  width: 60px;
   border-left: 1px solid #e2e8f0;
 }
 
 .action-btn {
-  padding: 6px;
+  padding: 4px;
   border: none;
   background: none;
   cursor: pointer;
@@ -2628,6 +2687,11 @@ body.modal-open {
   align-items: center;
   justify-content: center;
   font-size: 14px;
+  position: relative;
+}
+
+.action-btn + .action-btn {
+  border-left: 1px solid #e2e8f0;
 }
 
 .duplicate-btn:hover {
@@ -2676,22 +2740,29 @@ body.modal-open {
     margin-bottom: 12px;
   }
   
-  .add-window-btn {
-    align-self: stretch;
+  .window-management-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .add-window-btn,
+  .delete-all-windows-btn {
+    flex: 1;
     text-align: center;
+    max-width: 120px;
   }
   
   .windows-tabs {
-    flex-direction: column;
     gap: 6px;
+    /* Keep horizontal scrolling on mobile too */
+    flex-wrap: nowrap;
+    overflow-x: auto;
   }
   
   .window-tab {
-    min-width: unset;
-  }
-  
-  .window-tab-button {
-    width: calc(100% - 60px);
+    min-width: 160px; /* Slightly smaller on mobile but still readable */
+    flex-shrink: 0;
+    height: 36px; /* Slightly smaller height on mobile */
   }
   
   .window-actions {
@@ -2706,11 +2777,6 @@ body.modal-open {
 }
 
 @media (min-width: 769px) {
-  .windows-tabs {
-    max-height: 120px;
-    overflow-y: auto;
-  }
-  
   .window-tab {
     max-width: 220px;
   }

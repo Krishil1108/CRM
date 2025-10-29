@@ -23,14 +23,17 @@ router.get('/', async (req, res) => {
     // Build filter object
     const filter = {};
     
+    // Collect all $or conditions
+    const orConditions = [];
+    
     if (search) {
-      filter.$or = [
+      orConditions.push(
         { quotationNumber: new RegExp(search, 'i') },
         { 'clientInfo.name': new RegExp(search, 'i') },
         { 'clientInfo.email': new RegExp(search, 'i') },
         { 'clientInfo.phone': new RegExp(search, 'i') },
         { 'clientInfo.company': new RegExp(search, 'i') }
-      ];
+      );
     }
     
     if (status) {
@@ -42,7 +45,30 @@ router.get('/', async (req, res) => {
     }
 
     if (windowType) {
-      filter.selectedWindowType = windowType;
+      // Enhanced window type filtering - check multiple possible fields
+      const windowTypeConditions = [
+        { selectedWindowType: new RegExp(windowType, 'i') },
+        { windowType: new RegExp(windowType, 'i') },
+        { 'windowSpecs.type': new RegExp(windowType, 'i') },
+        { 'windowSpecs.selectedWindowType': new RegExp(windowType, 'i') },
+        { 'windowSpecs.windowType': new RegExp(windowType, 'i') },
+        { 'windowSpecs.specifications.type': new RegExp(windowType, 'i') },
+        { 'windowSpecs.specifications.windowType': new RegExp(windowType, 'i') }
+      ];
+      
+      if (orConditions.length > 0) {
+        // If we already have search conditions, combine them with windowType using $and
+        filter.$and = [
+          { $or: orConditions },
+          { $or: windowTypeConditions }
+        ];
+      } else {
+        // If no search conditions, just use windowType conditions
+        filter.$or = windowTypeConditions;
+      }
+    } else if (orConditions.length > 0) {
+      // If only search conditions, use them directly
+      filter.$or = orConditions;
     }
     
     if (priceFrom || priceTo) {

@@ -1902,3 +1902,73 @@
     height: 140px;
   }
 }
+
+/* Window Types Display */
+.window-types-cell {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: help;
+}
+
+.window-type-container {
+  max-width: 250px;
+}
+
+.window-type-container .window-type {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: help;
+  margin: 0;
+}
+
+/* Table view window types styling */
+.quotes-table .window-types-cell:hover {
+  overflow: visible;
+  white-space: normal;
+  word-wrap: break-word;
+  background: #f8f9fa;
+  border-radius: 4px;
+  padding: 4px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  position: relative;
+}
+
+/* Grid view window types styling */
+.quote-card .window-type-container {
+  margin: 5px 0;
+}
+
+.quote-card .window-type-container .window-type {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* List view window types styling */
+.quote-list-item .quote-details span:first-child {
+  color: #666;
+  font-size: 14px;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive adjustments for window types */
+@media (max-width: 768px) {
+  .window-types-cell {
+    max-width: 120px;
+  }
+  
+  .window-type-container {
+    max-width: 150px;
+  }
+  
+  .quote-list-item .quote-details span:first-child {
+    max-width: 120px;
+  }
+}

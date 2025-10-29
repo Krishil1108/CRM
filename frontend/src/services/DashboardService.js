@@ -248,12 +248,13 @@ class DashboardService {
   
   static generateClientTimeline(clients, dateRange) {
     const timeline = [];
+    const currentYear = new Date().getFullYear();
     const startYear = dateRange.startDate.getFullYear();
-    const endYear = dateRange.endDate.getFullYear();
+    const endYear = Math.min(dateRange.endDate.getFullYear(), currentYear); // Don't go beyond current year
     
-    // Ensure we have at least a 3-year range for meaningful chart display
+    // Ensure we have at least a 3-year range for meaningful chart display, but not into the future
     const minStartYear = Math.min(startYear, endYear - 2);
-    const maxEndYear = Math.max(endYear, startYear + 2);
+    const maxEndYear = Math.min(Math.max(endYear, startYear + 2), currentYear); // Cap at current year
     
     // Generate cumulative client count by year
     let cumulativeCount = 0;
@@ -330,12 +331,13 @@ class DashboardService {
   
   static generateInventoryTimeline(inventory, dateRange) {
     const timeline = [];
+    const currentYear = new Date().getFullYear();
     const startYear = dateRange.startDate.getFullYear();
-    const endYear = dateRange.endDate.getFullYear();
+    const endYear = Math.min(dateRange.endDate.getFullYear(), currentYear); // Don't go beyond current year
     
-    // Ensure we have at least a 3-year range for meaningful chart display
+    // Ensure we have at least a 3-year range for meaningful chart display, but not into the future
     const minStartYear = Math.min(startYear, endYear - 2);
-    const maxEndYear = Math.max(endYear, startYear + 2);
+    const maxEndYear = Math.min(Math.max(endYear, startYear + 2), currentYear); // Cap at current year
     
     for (let year = minStartYear; year <= maxEndYear; year++) {
       const yearInventory = inventory.filter(item => {

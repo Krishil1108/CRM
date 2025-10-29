@@ -120,9 +120,9 @@ const QuoteHistory = () => {
       
       if (!backendAvailable) {
         const localQuotes = JSON.parse(localStorage.getItem('quotationsHistory') || '[]');
-        const filtered = applyLocalFilters(localQuotes);
-        setQuotes(filtered);
-        updateAnalytics(filtered);
+        // Don't filter here - let processedQuotes handle filtering
+        setQuotes(localQuotes);
+        updateAnalytics(localQuotes);
         setLoading(false);
         return;
       }
@@ -132,7 +132,8 @@ const QuoteHistory = () => {
         limit: pagination.limit,
         sortBy: sorting.sortBy,
         sortOrder: sorting.sortOrder,
-        ...filters
+        // Don't pass filters to backend for now - let frontend handle filtering
+        // ...filters  
       };
 
       const response = await QuoteService.getAllQuotes(params);
@@ -167,6 +168,75 @@ const QuoteHistory = () => {
       const matchesClient = !filters.clientName || 
         quote.clientInfo?.name?.toLowerCase().includes(filters.clientName.toLowerCase());
       
+      // Enhanced window type filtering - check all windows in the quotation
+      const matchesWindowType = !filters.windowType || (() => {
+        const filterTerm = filters.windowType.toLowerCase();
+        
+        // Window type mapping for better matching
+        const windowTypeMapping = {
+          'sliding': ['sliding', 'sliding windows'],
+          'casement': ['casement', 'casement windows'],
+          'bay': ['bay', 'bay windows'],
+          'awning': ['awning', 'awning windows'],
+          'single': ['single', 'single hung', 'single-hung'],
+          'double': ['double', 'double hung', 'double-hung']
+        };
+        
+        // Get all possible terms to match for the selected filter
+        const termsToMatch = windowTypeMapping[filterTerm] || [filterTerm];
+        
+        // Check the primary selectedWindowType
+        if (quote.selectedWindowType) {
+          const primaryType = quote.selectedWindowType.toLowerCase();
+          const primaryMatch = termsToMatch.some(term => primaryType.includes(term) || term.includes(primaryType));
+          if (primaryMatch) {
+            return true;
+          }
+        }
+        
+        // Check all window specs if they exist
+        if (quote.windowSpecs && Array.isArray(quote.windowSpecs)) {
+          const specsMatch = quote.windowSpecs.some(window => {
+            // Check multiple possible fields for window type
+            const possibleTypes = [
+              window.type,
+              window.selectedWindowType,
+              window.windowType,
+              window.specifications?.type,
+              window.specifications?.windowType
+            ];
+            
+            return possibleTypes.some(windowType => {
+              if (typeof windowType === 'string' && windowType.trim()) {
+                const specType = windowType.toLowerCase();
+                const match = termsToMatch.some(term => specType.includes(term) || term.includes(specType));
+                return match;
+              }
+              if (typeof windowType === 'object' && windowType.name) {
+                const specTypeName = windowType.name.toLowerCase();
+                const match = termsToMatch.some(term => specTypeName.includes(term) || term.includes(specTypeName));
+                return match;
+              }
+              return false;
+            });
+          });
+          if (specsMatch) {
+            return true;
+          }
+        }
+        
+        // Also check if the quotation has a direct windowType field
+        if (quote.windowType) {
+          const directType = quote.windowType.toLowerCase();
+          const directMatch = termsToMatch.some(term => directType.includes(term) || term.includes(directType));
+          if (directMatch) {
+            return true;
+          }
+        }
+        
+        return false;
+      })();
+      
       const matchesDateFrom = !filters.dateFrom || 
         new Date(quote.createdAt) >= new Date(filters.dateFrom);
       const matchesDateTo = !filters.dateTo || 
@@ -176,7 +246,7 @@ const QuoteHistory = () => {
       const matchesPriceFrom = !filters.priceFrom || quotePrice >= parseFloat(filters.priceFrom);
       const matchesPriceTo = !filters.priceTo || quotePrice <= parseFloat(filters.priceTo);
 
-      return matchesSearch && matchesStatus && matchesClient && 
+      return matchesSearch && matchesStatus && matchesClient && matchesWindowType &&
              matchesDateFrom && matchesDateTo && matchesPriceFrom && matchesPriceTo;
     }).sort((a, b) => {
       const aVal = a[sorting.sortBy] || '';
@@ -297,6 +367,86 @@ const QuoteHistory = () => {
     return Object.values(clientMap)
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
+  };
+
+  // Helper function to extract all window types from a quotation
+  const getAllWindowTypes = (quote) => {
+    const windowTypes = new Set();
+    
+    // Add primary selectedWindowType if it exists
+    if (quote.selectedWindowType) {
+      windowTypes.add(quote.selectedWindowType);
+    }
+    
+    // Add all window types from windowSpecs if they exist
+    if (quote.windowSpecs && Array.isArray(quote.windowSpecs)) {
+      quote.windowSpecs.forEach((window, index) => {
+        const windowType = window.type || window.selectedWindowType || window.windowType;
+        if (typeof windowType === 'string' && windowType.trim()) {
+          windowTypes.add(windowType);
+        } else if (typeof windowType === 'object' && windowType.name) {
+          windowTypes.add(windowType.name);
+        }
+      });
+    }
+    
+    const result = Array.from(windowTypes).filter(type => type && type.trim());
+    return result;
+  };
+
+  // Helper function to format window types for display
+  const formatWindowTypesDisplay = (quote) => {
+    const windowTypes = getAllWindowTypes(quote);
+    
+    if (windowTypes.length === 0) {
+      return 'N/A';
+    }
+    
+    // Convert short IDs to full names
+    const windowTypeMapping = {
+      'sliding': 'Sliding Windows',
+      'casement': 'Casement Windows', 
+      'bay': 'Bay Windows',
+      'awning': 'Awning Windows',
+      'single': 'Single Hung',
+      'double': 'Double Hung',
+      'single-hung': 'Single Hung',
+      'double-hung': 'Double Hung'
+    };
+    
+    const formattedTypes = windowTypes.map(type => {
+      return windowTypeMapping[type.toLowerCase()] || type;
+    });
+    
+    if (formattedTypes.length === 1) {
+      return formattedTypes[0];
+    }
+    
+    // For multiple types, show first two and indicate if there are more
+    if (formattedTypes.length <= 2) {
+      return formattedTypes.join(', ');
+    }
+    
+    return `${formattedTypes.slice(0, 2).join(', ')} +${formattedTypes.length - 2} more`;
+  };
+
+  // Helper function to get formatted tooltip text
+  const getWindowTypesTooltip = (quote) => {
+    const windowTypes = getAllWindowTypes(quote);
+    const windowTypeMapping = {
+      'sliding': 'Sliding Windows',
+      'casement': 'Casement Windows', 
+      'bay': 'Bay Windows',
+      'awning': 'Awning Windows',
+      'single': 'Single Hung',
+      'double': 'Double Hung',
+      'single-hung': 'Single Hung',
+      'double-hung': 'Double Hung'
+    };
+    
+    return windowTypes.map(type => {
+      return windowTypeMapping[type.toLowerCase()] || type;
+    }).join(', ');
   };
 
   const getTopProducts = (quotes) => {
@@ -666,10 +816,34 @@ const QuoteHistory = () => {
     loadQuotes();
   }, [loadQuotes]);
 
+  // Auto-apply filters when they change (for client-side filtering)
+  useEffect(() => {
+    // Force re-render of processedQuotes when filters change
+    // This is handled by the useMemo dependency, but we can add a small delay for UX
+  }, [filters]);
+
   // Memoized filtered and sorted quotes
   const processedQuotes = useMemo(() => {
-    return quotes;
-  }, [quotes]);
+    // Apply filters if in offline mode or no backend
+    let filteredQuotes = quotes;
+    
+    // Check if we need to apply local filtering
+    // Apply local filters if any filter is set
+    const hasFilters = filters.search || filters.status || filters.clientName || 
+                      filters.windowType || filters.dateFrom || filters.dateTo || 
+                      filters.priceFrom || filters.priceTo;
+    
+    if (hasFilters) {
+      filteredQuotes = applyLocalFilters(quotes);
+    }
+    
+    return filteredQuotes;
+  }, [quotes, filters]);
+
+  // Update analytics when processedQuotes changes
+  useEffect(() => {
+    updateAnalytics(processedQuotes);
+  }, [processedQuotes]);
 
   // Status color mapping
   const getStatusColor = (status) => {
@@ -1110,8 +1284,8 @@ const QuoteHistory = () => {
                 <option value="casement">Casement Windows</option>
                 <option value="bay">Bay Windows</option>
                 <option value="awning">Awning Windows</option>
-                <option value="single-hung">Single Hung</option>
-                <option value="double-hung">Double Hung</option>
+                <option value="single">Single Hung</option>
+                <option value="double">Double Hung</option>
               </select>
             </div>
 
@@ -1322,7 +1496,11 @@ const QuoteHistory = () => {
                     <td>
                       {quote.status?.charAt(0).toUpperCase() + quote.status?.slice(1).toLowerCase() || 'Draft'}
                     </td>
-                    <td>{quote.selectedWindowType || 'N/A'}</td>
+                    <td>
+                      <div className="window-types-cell" title={getWindowTypesTooltip(quote)}>
+                        {formatWindowTypesDisplay(quote)}
+                      </div>
+                    </td>
                     <td>
                       {formatCurrency(quote.pricing?.total || quote.pricing?.grandTotal || 0)}
                     </td>
@@ -1457,7 +1635,9 @@ const QuoteHistory = () => {
                   {quote.clientInfo?.company && (
                     <p className="company">{quote.clientInfo.company}</p>
                   )}
-                  <p className="window-type">{quote.selectedWindowType || 'N/A'}</p>
+                  <div className="window-type-container" title={getWindowTypesTooltip(quote)}>
+                    <p className="window-type">{formatWindowTypesDisplay(quote)}</p>
+                  </div>
                   <p className="amount">{formatCurrency(quote.pricing?.total || 0)}</p>
                   <p className="date">Created: {new Date(quote.createdAt).toLocaleDateString()}</p>
                 </div>
@@ -1523,7 +1703,7 @@ const QuoteHistory = () => {
                       {quote.clientInfo?.company && <span> - {quote.clientInfo.company}</span>}
                     </div>
                     <div className="quote-details">
-                      <span>{quote.selectedWindowType || 'N/A'}</span>
+                      <span title={getWindowTypesTooltip(quote)}>{formatWindowTypesDisplay(quote)}</span>
                       <span className="amount">{formatCurrency(quote.pricing?.total || 0)}</span>
                     </div>
                   </div>
@@ -1766,7 +1946,9 @@ const QuoteHistory = () => {
                         <tr>
                           <td><strong>Window Type</strong></td>
                           {compareQuotes.map((quote, index) => (
-                            <td key={index}>{quote.selectedWindowType || 'N/A'}</td>
+                            <td key={index} title={getWindowTypesTooltip(quote)}>
+                              {formatWindowTypesDisplay(quote)}
+                            </td>
                           ))}
                         </tr>
                         <tr>

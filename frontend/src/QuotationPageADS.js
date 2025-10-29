@@ -166,7 +166,35 @@ const QuotationPage = () => {
     };
   };
 
-  const [quotationData, setQuotationData] = useState(loadQuotationData);
+  // Function to clean up invalid quote IDs from localStorage
+  const cleanupInvalidQuoteIds = async () => {
+    try {
+      const quotations = JSON.parse(localStorage.getItem('quotations') || '[]');
+      const validQuotations = [];
+      
+      for (const quotation of quotations) {
+        if (quotation._id) {
+          try {
+            // Check if quote exists in database
+            await QuoteService.getQuote(quotation._id);
+            validQuotations.push(quotation);
+          } catch (error) {
+            console.warn(`Removing invalid quote ID from localStorage: ${quotation._id}`);
+            // Skip invalid quotes - they won't be added to validQuotations
+          }
+        } else {
+          validQuotations.push(quotation);
+        }
+      }
+      
+      // Update localStorage with only valid quotations
+      localStorage.setItem('quotations', JSON.stringify(validQuotations));
+    } catch (error) {
+      console.error('Error cleaning up invalid quote IDs:', error);
+    }
+  };
+
+  const [quotationData, setQuotationData] = useState(loadQuotationData());
 
   // Handle edit mode when component mounts
   useEffect(() => {
@@ -452,8 +480,173 @@ const QuotationPage = () => {
         savedTimestamp: effectiveConfig?.savedTimestamp,
         version: effectiveConfig?.version
       });
+
+      // *** FIX: Load all windows from the quote data ***
+      if (quoteData.windowSpecs && Array.isArray(quoteData.windowSpecs) && quoteData.windowSpecs.length > 0) {
+        console.log('Loading all windows from quote data:', quoteData.windowSpecs);
+        
+        // Convert quote window specs to the format expected by the windows state
+        const loadedWindows = quoteData.windowSpecs.map((windowSpec, index) => ({
+          id: `window-${index + 1}`,
+          name: windowSpec.name || `Window ${index + 1}`,
+          type: windowSpec.type || quoteData.selectedWindowType || 'sliding',
+          selectedWindowType: WINDOW_TYPES.find(type => 
+            type.id === (windowSpec.type || quoteData.selectedWindowType)
+          ) || WINDOW_TYPES.find(type => type.id === 'sliding'),
+          windowSpecs: {
+            // Dimensions
+            width: windowSpec.dimensions?.width || '',
+            height: windowSpec.dimensions?.height || '',
+            quantity: windowSpec.pricing?.quantity || 1,
+            
+            // Installation details
+            location: windowSpec.specifications?.location || windowSpec.location || 'ground-floor',
+            wallType: windowSpec.specifications?.wallType || 'brick',
+            replacement: windowSpec.specifications?.replacement || 'new-opening',
+            installationMethod: windowSpec.specifications?.installationMethod || 'standard',
+            finishingWork: windowSpec.specifications?.finishingWork || 'basic',
+            cleanup: windowSpec.specifications?.cleanup ?? true,
+            
+            // Frame and appearance
+            frame: windowSpec.specifications?.frameMaterial || windowSpec.specifications?.frame || 'aluminum',
+            frameColor: windowSpec.specifications?.frameColor || 'white',
+            color: windowSpec.specifications?.frameColor || windowSpec.specifications?.color || 'white',
+            
+            // Glass specifications
+            glass: windowSpec.specifications?.glass || 'single',
+            glassTint: windowSpec.specifications?.glassTint || 'clear',
+            glassPattern: windowSpec.specifications?.glassPattern || 'clear',
+            
+            // Hardware and operation
+            hardware: windowSpec.specifications?.hardware || 'standard',
+            opening: windowSpec.specifications?.openingType || windowSpec.specifications?.opening || 'fixed',
+            lockPosition: windowSpec.specifications?.lockPosition || 'right',
+            
+            // Additional features
+            grilles: windowSpec.specifications?.grille?.style || windowSpec.specifications?.grilles || 'none',
+            grillePattern: windowSpec.specifications?.grille?.pattern || windowSpec.specifications?.grillePattern || 'grid',
+            grillColor: windowSpec.specifications?.grillColor || 'white',
+            grilleEnabled: windowSpec.specifications?.grille?.enabled || windowSpec.specifications?.grilleEnabled || false,
+            
+            // Weather and energy
+            weatherStripping: windowSpec.specifications?.weatherStripping || windowSpec.specifications?.weatherSealing || 'standard',
+            weatherSealing: windowSpec.specifications?.weatherSealing || windowSpec.specifications?.weatherStripping || 'standard',
+            insulation: windowSpec.specifications?.insulation || 'standard',
+            energyRating: windowSpec.specifications?.energyRating || 'standard',
+            drainage: windowSpec.specifications?.drainage || 'standard',
+            
+            // Comfort and safety
+            screenIncluded: windowSpec.specifications?.screenIncluded || false,
+            motorized: windowSpec.specifications?.motorized || false,
+            security: windowSpec.specifications?.security || 'standard',
+            childSafety: windowSpec.specifications?.childSafety || false,
+            tiltAndTurn: windowSpec.specifications?.tiltAndTurn || false,
+            smartHome: windowSpec.specifications?.smartHome || false,
+            
+            // Accessories
+            blindsIntegrated: windowSpec.specifications?.blindsIntegrated || false,
+            blindsIncluded: windowSpec.specifications?.blindsIncluded || false,
+            curtainRail: windowSpec.specifications?.curtainRail || false,
+            ventilation: windowSpec.specifications?.ventilation || false,
+            trimStyle: windowSpec.specifications?.trimStyle || 'standard'
+          },
+          // *** ADD WINDOW-TYPE SPECIFIC CONFIGURATIONS ***
+          slidingConfig: {
+            panels: windowSpec.specifications?.slidingDetails?.panels || 
+                   windowSpec.specifications?.panels || 
+                   quoteData.slidingConfig?.panels || 2,
+            tracks: windowSpec.specifications?.slidingDetails?.tracks || 
+                   windowSpec.specifications?.tracks || 
+                   quoteData.slidingConfig?.tracks || 2,
+            combination: windowSpec.specifications?.slidingDetails?.combination || 
+                        quoteData.slidingConfig?.combination || null,
+            // Additional sliding-specific options
+            railType: windowSpec.specifications?.slidingDetails?.railType || 'standard',
+            rollerType: windowSpec.specifications?.slidingDetails?.rollerType || 'standard'
+          },
+          casementConfig: {
+            direction: windowSpec.specifications?.casementDetails?.direction || 
+                      quoteData.casementConfig?.direction || 'outward',
+            hinge: windowSpec.specifications?.casementDetails?.hinge || 
+                   quoteData.casementConfig?.hinge || 'left',
+            combination: windowSpec.specifications?.casementDetails?.combination || 
+                        quoteData.casementConfig?.combination || null,
+            // Additional casement-specific options
+            openingAngle: windowSpec.specifications?.casementDetails?.openingAngle || 90,
+            chainStay: windowSpec.specifications?.casementDetails?.chainStay || false
+          },
+          bayConfig: {
+            angle: windowSpec.specifications?.bayDetails?.angle || 
+                   quoteData.bayConfig?.angle || 30,
+            combination: windowSpec.specifications?.bayDetails?.combination || 
+                        quoteData.bayConfig?.combination || null,
+            // Additional bay-specific options
+            projection: windowSpec.specifications?.bayDetails?.projection || 'standard',
+            sideWindows: windowSpec.specifications?.bayDetails?.sideWindows || 2, // Should be a number
+            sideWindowType: windowSpec.specifications?.bayDetails?.sideWindowType || 'casement' // Window type as string
+          },
+          awningConfig: {
+            combination: windowSpec.specifications?.awningDetails?.combination || 
+                        quoteData.awningConfig?.combination || null,
+            // Additional awning-specific options
+            openingAngle: windowSpec.specifications?.awningDetails?.openingAngle || 45,
+            supportArm: windowSpec.specifications?.awningDetails?.supportArm || 'standard'
+          },
+          doubleHungConfig: {
+            combination: windowSpec.specifications?.doubleHungDetails?.combination || 
+                        quoteData.doubleHungConfig?.combination || null,
+            // Additional double hung-specific options
+            balanceType: windowSpec.specifications?.doubleHungDetails?.balanceType || 'spiral',
+            tiltFeature: windowSpec.specifications?.doubleHungDetails?.tiltFeature || true
+          },
+          singleHungConfig: {
+            combination: windowSpec.specifications?.singleHungDetails?.combination || 
+                        quoteData.singleHungConfig?.combination || 'sh-standard',
+            // Additional single hung-specific options
+            balanceType: windowSpec.specifications?.singleHungDetails?.balanceType || 'spiral',
+            lockType: windowSpec.specifications?.singleHungDetails?.lockType || 'cam'
+          },
+          pricing: {
+            basePrice: windowSpec.pricing?.basePrice || 0,
+            unitPrice: windowSpec.pricing?.unitPrice || 0,
+            totalPrice: windowSpec.pricing?.totalPrice || windowSpec.pricing?.total || 0,
+            tax: windowSpec.pricing?.tax || 0,
+            finalTotal: windowSpec.pricing?.finalTotal || 0
+          }
+        }));
+        
+        setWindows(loadedWindows);
+        console.log('=== LOADED WINDOWS WITH FULL CONFIGS ===');
+        console.log('Number of windows loaded:', loadedWindows.length);
+        loadedWindows.forEach((window, index) => {
+          console.log(`Window ${index + 1}:`, {
+            name: window.name,
+            type: window.type,
+            selectedWindowType: window.selectedWindowType,
+            hasWindowSpecs: !!window.windowSpecs,
+            hasSlidingConfig: !!window.slidingConfig,
+            hasCasementConfig: !!window.casementConfig,
+            hasBayConfig: !!window.bayConfig,
+            windowSpecs: window.windowSpecs,
+            slidingConfig: window.slidingConfig
+          });
+        });
+        console.log('=== END WINDOW LOADING DEBUG ===');
+        
+        // Set the current window to the first one
+        if (loadedWindows.length > 0) {
+          setCurrentWindowIndex(0);
+        }
+      } else {
+        console.log('No windows found in quote data or windowSpecs is not an array');
+      }
     }
   }, [location.state]);
+
+  // Clean up invalid quote IDs on component mount
+  useEffect(() => {
+    cleanupInvalidQuoteIds();
+  }, []);
 
   // Debug: Log quotationData state changes to track wallType and other fields
   useEffect(() => {
@@ -800,9 +993,10 @@ const QuotationPage = () => {
 
   const addNewWindow = () => {
     const newWindow = createDefaultWindow();
+    newWindow.name = `Window ${getNextWindowNumber()}`;
     setWindows(prev => [...prev, newWindow]);
     setCurrentWindowIndex(windows.length); // Switch to the new window
-    showNotification('New window added successfully', 'success');
+    showNotification(`New window added: ${newWindow.name}`, 'success');
   };
 
   const removeWindow = (windowIndex) => {
@@ -848,6 +1042,36 @@ const QuotationPage = () => {
     );
   };
 
+  const getNextWindowNumber = () => {
+    return windows.reduce((max, window) => {
+      const match = window.name.match(/Window (\d+)/);
+      if (match) {
+        const number = parseInt(match[1], 10);
+        return number > max ? number : max;
+      }
+      return max;
+    }, 0) + 1;
+  };
+
+  const deleteAllWindows = () => {
+    showConfirmation(
+      'Delete All Windows',
+      'Are you sure you want to delete all windows? This will create one new blank window.',
+      () => {
+        // Create new window starting from Window 1 (reset numbering)
+        const newBlankWindow = createDefaultWindow();
+        newBlankWindow.name = 'Window 1';
+        
+        setWindows([newBlankWindow]);
+        setCurrentWindowIndex(0);
+        showNotification(`All windows deleted. New blank window created: ${newBlankWindow.name}`, 'success');
+      },
+      'warning',
+      'Delete All',
+      'Cancel'
+    );
+  };
+
   const getCurrentWindow = () => {
     return windows[currentWindowIndex] || createDefaultWindow();
   };
@@ -860,9 +1084,10 @@ const QuotationPage = () => {
     );
   };
 
-  // Initialize windows if empty
+  // Initialize windows if empty (but not in edit mode)
   useEffect(() => {
-    if (windows.length === 0) {
+    const { editMode } = location.state || {};
+    if (windows.length === 0 && !editMode) {
       const defaultWindow = createDefaultWindow();
       // If there's existing quotation data, apply it to the first window
       if (quotationData.selectedWindowType) {
@@ -876,7 +1101,7 @@ const QuotationPage = () => {
       }
       setWindows([defaultWindow]);
     }
-  }, []);
+  }, [location.state]);
 
   // Sync current window data with quotationData for backwards compatibility
   useEffect(() => {
@@ -888,6 +1113,7 @@ const QuotationPage = () => {
         windowSpecs: currentWindow.windowSpecs,
         slidingConfig: currentWindow.slidingConfig,
         bayConfig: currentWindow.bayConfig,
+        awningConfig: currentWindow.awningConfig,
         doubleHungConfig: currentWindow.doubleHungConfig,
         singleHungConfig: currentWindow.singleHungConfig,
         casementConfig: currentWindow.casementConfig
@@ -930,7 +1156,7 @@ const QuotationPage = () => {
           return;
         }
 
-        if (!quotationData.windowSpecs.width || !quotationData.windowSpecs.height) {
+        if (!quotationData.windowSpecs?.width || !quotationData.windowSpecs?.height) {
           showNotification('Please fill in window specifications (width and height) before saving', 'error');
           return;
         }
@@ -976,8 +1202,15 @@ const QuotationPage = () => {
       try {
         let savedQuote;
         if (isEditMode) {
-          console.log('Updating existing quote as', status, ':', quotationData._id);
-          savedQuote = await QuoteService.updateQuote(quotationData._id, quoteData);
+          console.log('Attempting to update existing quote as', status, ':', quotationData._id);
+          try {
+            savedQuote = await QuoteService.updateQuote(quotationData._id, quoteData);
+          } catch (updateError) {
+            console.warn('Quote update failed, creating new quote instead:', updateError.message);
+            // If update fails (quote not found), create a new one
+            savedQuote = await QuoteService.saveQuotation(quoteData);
+            console.log('New quote created after update failure:', savedQuote);
+          }
         } else {
           console.log('Saving new quote as', status);
           savedQuote = await QuoteService.saveQuotation(quoteData);
@@ -1160,34 +1393,24 @@ const QuotationPage = () => {
       // Complete Sliding Configuration
       slidingConfig: {
         panels: quotationData.slidingConfig?.panels || 2,
-        tracks: quotationData.slidingConfig?.tracks || 2,
-        openingType: quotationData.slidingConfig?.openingType || 'left-to-right',
         combination: quotationData.slidingConfig?.combination || null
       },
       
       // Complete Bay Configuration  
       bayConfig: {
-        windows: quotationData.bayConfig?.windows || quotationData.bayConfig?.sideWindows || 3,
+        windows: parseInt(quotationData.bayConfig?.windows || quotationData.bayConfig?.sideWindows || 3),
         angle: quotationData.bayConfig?.angle || 135,
-        sideWindows: quotationData.bayConfig?.sideWindows || 2,
-        centerPanels: quotationData.bayConfig?.centerPanels || 1,
-        fixedSides: quotationData.bayConfig?.fixedSides || false,
-        combination: quotationData.bayConfig?.combination || null
+        fixedSides: quotationData.bayConfig?.fixedSides || false
       },
       
       // Complete Casement Configuration
       casementConfig: {
         panels: quotationData.casementConfig?.panels || 2,
-        direction: quotationData.casementConfig?.direction || 'outward',
-        openingType: quotationData.casementConfig?.direction || quotationData.casementConfig?.openingType || 'outward',
-        hinge: quotationData.casementConfig?.hinge || quotationData.casementConfig?.handlePosition || 'left'
+        openingType: quotationData.casementConfig?.direction || quotationData.casementConfig?.openingType || 'outward'
       },
       
       // Complete Awning Configuration
       awningConfig: {
-        panels: quotationData.awningConfig?.panels || 1,
-        openingAngle: quotationData.awningConfig?.openingAngle || 45,
-        operationType: quotationData.awningConfig?.operationType || 'crank',
         size: quotationData.awningConfig?.size || 'standard',
         orientation: quotationData.awningConfig?.orientation || 'horizontal'
       },
@@ -1227,6 +1450,7 @@ const QuotationPage = () => {
         casementConfig: quotationData.casementConfig,
         bayConfig: quotationData.bayConfig,
         awningConfig: quotationData.awningConfig,
+        // Note: doubleHungConfig and singleHungConfig not supported in backend schema
         doubleHungConfig: quotationData.doubleHungConfig,
         singleHungConfig: quotationData.singleHungConfig,
         
@@ -1308,7 +1532,7 @@ const QuotationPage = () => {
         
         // Calculated Values and Dynamic Fields
         calculatedArea: quotationData.windowSpecs?.width && quotationData.windowSpecs?.height ? 
-          (parseFloat(quotationData.windowSpecs.width) * parseFloat(quotationData.windowSpecs.height)) : 0,
+          (parseFloat(quotationData.windowSpecs?.width) * parseFloat(quotationData.windowSpecs?.height)) : 0,
         
         // Timestamp for version tracking
         savedTimestamp: new Date().toISOString(),
@@ -1340,7 +1564,7 @@ const QuotationPage = () => {
         return;
       }
 
-      if (!quotationData.windowSpecs.width || !quotationData.windowSpecs.height) {
+      if (!quotationData.windowSpecs?.width || !quotationData.windowSpecs?.height) {
         showNotification('Please fill in window specifications (width and height) before submitting', 'error');
         return;
       }
@@ -1381,16 +1605,23 @@ const QuotationPage = () => {
       localStorage.setItem('quotations', JSON.stringify(quotations));
 
       // Transform data for Quote History database
-      const quoteData = transformQuotationToQuoteFormat(quotationData);
+      const quoteData = transformQuotationToQuoteFormat(quotationData, windows);
       quoteData.status = 'submitted'; // Ensure submit sets status to submitted
       
       // Submit to Quote History database (create or update)
       try {
         let submittedQuote;
         if (isEditMode) {
-          console.log('Updating existing quote to submitted status:', quotationData._id);
-          submittedQuote = await QuoteService.updateQuote(quotationData._id, quoteData);
-          console.log('Quote updated to submitted:', submittedQuote);
+          console.log('Attempting to update existing quote:', quotationData._id);
+          try {
+            submittedQuote = await QuoteService.updateQuote(quotationData._id, quoteData);
+            console.log('Quote updated to submitted:', submittedQuote);
+          } catch (updateError) {
+            console.warn('Quote update failed, creating new quote instead:', updateError.message);
+            // If update fails (quote not found), create a new one
+            submittedQuote = await QuoteService.submitQuotation(quoteData, 'System User');
+            console.log('New quote created after update failure:', submittedQuote);
+          }
         } else {
           console.log('Creating new submitted quote');
           submittedQuote = await QuoteService.submitQuotation(quoteData, 'System User');
@@ -1605,8 +1836,8 @@ const QuotationPage = () => {
     // Validate that we have the necessary data
     // Check if we have window specifications filled out
     if (!quotationData.windowSpecs || 
-        !quotationData.windowSpecs.width || 
-        !quotationData.windowSpecs.height) {
+        !quotationData.windowSpecs?.width || 
+        !quotationData.windowSpecs?.height) {
       showNotification('Please fill in window specifications (width and height) to generate PDF', 'error');
       return;
     }
@@ -1667,18 +1898,18 @@ const QuotationPage = () => {
       const windowConfig = {
         id: 'W1',
         type: quotationData.selectedWindowType || 'sliding',
-        name: `${quotationData.selectedWindowType || 'Window'} - ${quotationData.windowSpecs.location || 'Custom'}`,
-        location: quotationData.windowSpecs.location || 'Not specified',
+        name: `${quotationData.selectedWindowType || 'Window'} - ${quotationData.windowSpecs?.location || 'Custom'}`,
+        location: quotationData.windowSpecs?.location || 'Not specified',
         dimensions: {
-          width: parseInt(quotationData.windowSpecs.width) || 1000,
-          height: parseInt(quotationData.windowSpecs.height) || 1000,
+          width: parseInt(quotationData.windowSpecs?.width) || 1000,
+          height: parseInt(quotationData.windowSpecs?.height) || 1000,
           radius: quotationData.bayConfig?.angle || 0
         },
         specifications: {
-          glass: quotationData.windowSpecs.glass || 'single',
-          glassType: quotationData.windowSpecs.glass || 'single',
-          glassTint: quotationData.windowSpecs.glassTint || 'clear',
-          glassThickness: quotationData.windowSpecs.glass === 'double' ? 10 : 5,
+          glass: quotationData.windowSpecs?.glass || 'single',
+          glassType: quotationData.windowSpecs?.glass || 'single',
+          glassTint: quotationData.windowSpecs?.glassTint || 'clear',
+          glassThickness: quotationData.windowSpecs?.glass === 'double' ? 10 : 5,
           lockPosition: 'right',
           openingType: quotationData.windowSpecs.opening || 'fixed',
           fixedPanels: [],
@@ -3450,13 +3681,22 @@ const QuotationPage = () => {
           <h4 className="section-heading">
             <span className="section-icon">🏢</span>
             Window Management
-            <button 
-              className="add-window-btn"
-              onClick={addNewWindow}
-              title="Add New Window"
-            >
-              ➕ Add Window
-            </button>
+            <div className="window-management-actions">
+              <button 
+                className="add-window-btn"
+                onClick={addNewWindow}
+                title="Add New Window"
+              >
+                ➕ Add Window
+              </button>
+              <button 
+                className="delete-all-windows-btn"
+                onClick={deleteAllWindows}
+                title="Delete All Windows"
+              >
+                🗑️ Delete All
+              </button>
+            </div>
           </h4>
           
           {/* Window Tabs */}
@@ -3466,11 +3706,10 @@ const QuotationPage = () => {
                 <div 
                   key={window.id}
                   className={`window-tab ${index === currentWindowIndex ? 'active' : ''}`}
+                  onClick={() => setCurrentWindowIndex(index)}
+                  style={{ cursor: 'pointer' }}
                 >
-                  <button 
-                    className="window-tab-button"
-                    onClick={() => setCurrentWindowIndex(index)}
-                  >
+                  <div className="window-tab-content">
                     <span className="window-icon">🪟</span>
                     <input
                       type="text"
@@ -3484,25 +3723,29 @@ const QuotationPage = () => {
                       className="window-name-input"
                       onClick={(e) => e.stopPropagation()}
                     />
-                  </button>
+                  </div>
                   
                   <div className="window-actions">
                     <button 
                       className="action-btn duplicate-btn"
-                      onClick={() => duplicateWindow(index)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        duplicateWindow(index);
+                      }}
                       title="Duplicate Window"
                     >
                       📋
                     </button>
-                    {windows.length > 1 && (
-                      <button 
-                        className="action-btn remove-btn"
-                        onClick={() => removeWindow(index)}
-                        title="Remove Window"
-                      >
-                        🗑️
-                      </button>
-                    )}
+                    <button 
+                      className="action-btn remove-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeWindow(index);
+                      }}
+                      title="Remove Window"
+                    >
+                      🗑️
+                    </button>
                   </div>
                 </div>
               ))}
@@ -3909,7 +4152,7 @@ const QuotationPage = () => {
                           <label className="field-label">Number of Units</label>
                           <input 
                             type="number" 
-                            value={quotationData.windowSpecs.quantity}
+                            value={quotationData.windowSpecs?.quantity || 1}
                             onChange={(e) => handleSpecChange('quantity', parseInt(e.target.value))}
                             min="1"
                             max="50"
@@ -4423,8 +4666,8 @@ const QuotationPage = () => {
             </thead>
             <tbody>
               <tr>
-                <td>{quotationData.selectedWindowType.name}</td>
-                <td>{quotationData.windowSpecs.quantity}</td>
+                <td>{quotationData.selectedWindowType?.name || 'N/A'}</td>
+                <td>{quotationData.windowSpecs?.quantity || 1}</td>
                 <td>${(quotationData.pricing?.unitPrice || 0).toFixed(2)}</td>
                 <td>${(quotationData.pricing?.totalPrice || 0).toFixed(2)}</td>
               </tr>
