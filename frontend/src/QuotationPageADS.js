@@ -8,6 +8,8 @@ import { useCompany } from './CompanyContext';
 import { useAppMode } from './contexts/AppModeContext';
 import ModeSelector from './components/ModeSelector';
 import { generateQuotationPDF } from './utils/pdfGenerator';
+import { generateExactQuotationPDF } from './utils/pdfGeneratorExact';
+import { generatePerfectQuotationPDF } from './utils/pdfGeneratorPerfect';
 import ConfirmDialog from './components/ConfirmDialog';
 import { validateQuotationForm, hasValidationErrors, scrollToFirstError } from './utils/validation';
 
@@ -2195,11 +2197,15 @@ const QuotationPage = () => {
 
   const generatePDF = async () => {
     // Validate that we have the necessary data
-    // Check if we have window specifications filled out
-    if (!quotationData.windowSpecs || 
-        !quotationData.windowSpecs?.width || 
-        !quotationData.windowSpecs?.height) {
-      showNotification('Please fill in window specifications (width and height) to generate PDF', 'error');
+    // Check if we have windows with specifications filled out
+    if (!windows || windows.length === 0) {
+      showNotification('Please add at least one window to generate PDF', 'error');
+      return;
+    }
+
+    const validWindows = windows.filter(win => win.windowSpecs?.width && win.windowSpecs?.height);
+    if (validWindows.length === 0) {
+      showNotification('Please fill in window specifications (width and height) for at least one window to generate PDF', 'error');
       return;
     }
 
@@ -2209,112 +2215,146 @@ const QuotationPage = () => {
     }
 
     try {
-      // Capture the diagram snapshot before generating PDF
-      let diagramSnapshot = null;
-      const diagramElement = document.querySelector('.window-diagram-container');
+      // Capture diagrams for each window individually by switching to each window
+      const windowDiagrams = {};
       
-      if (diagramElement) {
-        try {
-          // Import html2canvas dynamically if not already loaded
-          const html2canvas = (await import('html2canvas')).default;
-          
-          const canvas = await html2canvas(diagramElement, {
-            backgroundColor: '#ffffff',
-            scale: 4, // Ultra high quality capture
-            logging: false,
-            useCORS: true,
-            allowTaint: false,
-            removeContainer: true,
-            imageTimeout: 0,
-            windowWidth: diagramElement.scrollWidth,
-            windowHeight: diagramElement.scrollHeight,
-            scrollY: -window.scrollY, // Ensure proper positioning
-            scrollX: -window.scrollX,
-            onclone: (clonedDoc) => {
-              // Ensure SVG elements render properly with full borders
-              const svgElements = clonedDoc.querySelectorAll('svg');
-              svgElements.forEach(svg => {
-                svg.style.maxWidth = 'none';
-                svg.style.maxHeight = 'none';
-                svg.style.overflow = 'visible'; // Ensure borders aren't clipped
-              });
-              
-              // Add extra padding to ensure all borders are captured
-              const container = clonedDoc.querySelector('.window-diagram-container');
-              if (container) {
-                container.style.padding = '10px';
-                container.style.overflow = 'visible';
+      // Save current window index
+      const originalIndex = currentWindowIndex;
+      
+      // Capture diagram for each window
+      for (let i = 0; i < windows.length; i++) {
+        // Switch to window i to capture its diagram
+        setCurrentWindowIndex(i);
+        
+        // Wait a bit for the UI to update
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Capture the diagram for this window
+        const diagramElement = document.querySelector('.window-diagram-container');
+        
+        if (diagramElement) {
+          try {
+            // Import html2canvas dynamically
+            const html2canvas = (await import('html2canvas')).default;
+            
+            const canvas = await html2canvas(diagramElement, {
+              backgroundColor: '#ffffff',
+              scale: 4, // Ultra high quality capture
+              logging: false,
+              useCORS: true,
+              allowTaint: false,
+              removeContainer: true,
+              imageTimeout: 0,
+              windowWidth: diagramElement.scrollWidth,
+              windowHeight: diagramElement.scrollHeight,
+              scrollY: -window.scrollY,
+              scrollX: -window.scrollX,
+              onclone: (clonedDoc) => {
+                // Ensure SVG elements render properly
+                const svgElements = clonedDoc.querySelectorAll('svg');
+                svgElements.forEach(svg => {
+                  svg.style.maxWidth = 'none';
+                  svg.style.maxHeight = 'none';
+                  svg.style.overflow = 'visible';
+                });
+                
+                const container = clonedDoc.querySelector('.window-diagram-container');
+                if (container) {
+                  container.style.padding = '10px';
+                  container.style.overflow = 'visible';
+                }
               }
-            }
-          });
-          
-          diagramSnapshot = canvas.toDataURL('image/png');
-          console.log('✓ Diagram snapshot captured successfully');
-        } catch (error) {
-          console.warn('Could not capture diagram snapshot:', error);
+            });
+            
+            windowDiagrams[i] = canvas.toDataURL('image/png');
+            console.log(`✓ Captured diagram for Window ${i + 1}`);
+          } catch (error) {
+            console.warn(`Could not capture diagram for Window ${i + 1}:`, error);
+            windowDiagrams[i] = null;
+          }
         }
       }
       
-      // Create a window configuration from the current windowSpecs
-      const windowConfig = {
-        id: 'W1',
-        type: quotationData.selectedWindowType || 'sliding',
-        name: `${quotationData.selectedWindowType || 'Window'} - ${quotationData.windowSpecs?.location || 'Custom'}`,
-        location: quotationData.windowSpecs?.location || 'Not specified',
-        dimensions: {
-          width: parseInt(quotationData.windowSpecs?.width) || 1000,
-          height: parseInt(quotationData.windowSpecs?.height) || 1000,
-          radius: quotationData.bayConfig?.angle || 0
-        },
-        specifications: {
-          glass: quotationData.windowSpecs?.glass || 'single',
-          glassType: quotationData.windowSpecs?.glass || 'single',
-          glassTint: quotationData.windowSpecs?.glassTint || 'clear',
-          glassThickness: quotationData.windowSpecs?.glass === 'double' ? 10 : 5,
-          lockPosition: 'right',
-          openingType: quotationData.windowSpecs.opening || 'fixed',
-          fixedPanels: [],
-          grille: {
-            enabled: quotationData.windowSpecs.grilles !== 'none',
-            style: quotationData.windowSpecs.grilles || 'none',
-            pattern: 'grid'
+      // Restore original window selection
+      setCurrentWindowIndex(originalIndex);
+      
+      console.log(`✓ Captured diagrams for ${Object.keys(windowDiagrams).length} windows`);
+      
+      // Create window configurations from ALL windows (including current + windows array)
+      const createWindowConfig = (winData, index, diagramSnapshot) => {
+        return {
+          id: `W${index + 1}`,
+          code: `W${index + 1}`,
+          type: winData.selectedWindowType || 'sliding',
+          name: `${winData.selectedWindowType || 'Window'} - ${winData.windowSpecs?.location || 'Custom'}`,
+          location: winData.windowSpecs?.location || `Location ${index + 1}`,
+          dimensions: {
+            width: parseInt(winData.windowSpecs?.width) || 1000,
+            height: parseInt(winData.windowSpecs?.height) || 1000,
+            radius: winData.bayConfig?.angle || 0
           },
-          grilles: quotationData.windowSpecs.grilles || 'none',
-          grillColor: quotationData.windowSpecs.grillColor || 'white',
-          frame: {
-            material: quotationData.windowSpecs.frame || 'aluminum',
-            color: quotationData.windowSpecs.frameColor || quotationData.windowSpecs.color || 'white',
-            customColor: ''
+          specifications: {
+            glass: winData.windowSpecs?.glass || 'single',
+            glassType: winData.windowSpecs?.glass || 'single',
+            glassTint: winData.windowSpecs?.glassTint || 'clear',
+            glassThickness: winData.windowSpecs?.glass === 'double' ? 10 : 5,
+            lockPosition: 'right',
+            openingType: winData.windowSpecs.opening || 'fixed',
+            fixedPanels: [],
+            grille: {
+              enabled: winData.windowSpecs.grilles !== 'none',
+              style: winData.windowSpecs.grilles || 'none',
+              pattern: 'grid'
+            },
+            grilles: winData.windowSpecs.grilles || 'none',
+            grillColor: winData.windowSpecs.grillColor || 'white',
+            frame: {
+              material: winData.windowSpecs.frame || 'aluminum',
+              color: winData.windowSpecs.frameColor || winData.windowSpecs.color || 'white',
+              customColor: ''
+            },
+            frameMaterial: winData.windowSpecs.frame || 'aluminum',
+            frameColor: winData.windowSpecs.frameColor || winData.windowSpecs.color || 'white',
+            hardware: winData.windowSpecs.hardware || 'standard',
+            panels: winData.slidingConfig?.panels || 2,
+            tracks: 1,
+            screenIncluded: winData.windowSpecs.screenIncluded || false,
+            motorized: winData.windowSpecs.motorized || false,
+            security: winData.windowSpecs.security || 'standard'
           },
-          frameMaterial: quotationData.windowSpecs.frame || 'aluminum',
-          frameColor: quotationData.windowSpecs.frameColor || quotationData.windowSpecs.color || 'white',
-          hardware: quotationData.windowSpecs.hardware || 'standard',
-          panels: quotationData.slidingConfig?.panels || 2,
-          tracks: 1,
-          screenIncluded: quotationData.windowSpecs.screenIncluded || false,
-          motorized: quotationData.windowSpecs.motorized || false,
-          security: quotationData.windowSpecs.security || 'standard'
-        },
-        // Store complete configuration for accurate diagram rendering
-        slidingConfig: quotationData.slidingConfig,
-        bayConfig: quotationData.bayConfig,
-        casementConfig: quotationData.casementConfig,
-        doubleHungConfig: quotationData.doubleHungConfig,
-        singleHungConfig: quotationData.singleHungConfig,
-        // Include the captured diagram snapshot
-        diagramSnapshot: diagramSnapshot,
-        pricing: {
-          basePrice: quotationData.pricing?.unitPrice || 5000,
-          sqFtPrice: 450,
-          quantity: parseInt(quotationData.windowSpecs.quantity) || 1,
-          customPricing: false
-        },
-        computedValues: {
-          sqFtPerWindow: ((quotationData.windowSpecs.width * quotationData.windowSpecs.height) / 92903) || 0, // Convert mm² to sqft
-          totalPrice: quotationData.pricing?.totalPrice || 0,
-          weight: ((quotationData.windowSpecs.width * quotationData.windowSpecs.height) / 92903) * 15 || 0
-        }
+          // Store complete configuration for accurate diagram rendering
+          slidingConfig: winData.slidingConfig,
+          bayConfig: winData.bayConfig,
+          casementConfig: winData.casementConfig,
+          doubleHungConfig: winData.doubleHungConfig,
+          singleHungConfig: winData.singleHungConfig,
+          // Include the captured diagram snapshot for this specific window
+          diagramSnapshot: diagramSnapshot,
+          pricing: {
+            basePrice: winData.pricing?.unitPrice || 5000,
+            sqFtPrice: 450,
+            quantity: parseInt(winData.windowSpecs?.quantity) || 1,
+            customPricing: false
+          },
+          computedValues: {
+            sqFtPerWindow: ((winData.windowSpecs?.width * winData.windowSpecs?.height) / 92903) || 0,
+            totalPrice: winData.pricing?.totalPrice || 0,
+            weight: ((winData.windowSpecs?.width * winData.windowSpecs?.height) / 92903) * 15 || 0
+          }
+        };
       };
+
+      // Collect ALL windows from the windows array (ONLY source of truth)
+      const allWindowConfigs = [];
+      
+      // Process ONLY the windows array - no fallback to quotationData to prevent duplication
+      windows.forEach((win, idx) => {
+        const windowConfig = createWindowConfig(win, idx, windowDiagrams[idx]);
+        allWindowConfigs.push(windowConfig);
+        console.log(`✓ PDF: Added Window ${idx + 1} - Location: ${win.windowSpecs?.location || 'N/A'}, Size: ${win.windowSpecs?.width}x${win.windowSpecs?.height}`);
+      });
+
+      console.log(`✓ PDF Generation: Processing ${allWindowConfigs.length} windows from windows array (NO quotationData used)`);
 
       // Transform QuotationPageADS data to match the PDF generator's expected format
       const pdfData = {
@@ -2332,11 +2372,20 @@ const QuotationPage = () => {
           name: quotationData.clientInfo.name || '',
           address: `${quotationData.clientInfo.address || ''}\n${quotationData.clientInfo.city || ''}\nPhone: ${quotationData.clientInfo.phone || ''}\nEmail: ${quotationData.clientInfo.email || ''}`
         },
-        windowSpecs: [windowConfig] // Single window in an array
+        windowSpecs: allWindowConfigs, // ALL windows array
+        pricing: {
+          // Calculate totals from all windows
+          subtotal: allWindowConfigs.reduce((sum, win) => sum + (win.pricing?.basePrice * win.pricing?.quantity || 0), 0),
+          transportation: quotationData.pricing?.transportation || 0,
+          loading: quotationData.pricing?.loading || 0,
+          taxRate: quotationData.pricing?.taxRate || 18,
+          tax: 0, // Will be calculated in PDF generator
+          grandTotal: 0 // Will be calculated in PDF generator
+        }
       };
 
-      // Generate the PDF
-      const result = await generateQuotationPDF(pdfData);
+      // Generate the PDF using PERFECT format generator (no duplication, exact match)
+      const result = await generatePerfectQuotationPDF(pdfData);
       
       if (result.success) {
         showNotification(`PDF generated successfully: ${result.fileName}`, 'success');
