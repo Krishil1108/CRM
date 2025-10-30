@@ -3967,27 +3967,7 @@ const QuotationPage = () => {
         </div>
       </div>
 
-      {/* Mode Indicator */}
-      <div className={`mode-indicator mode-${currentMode}`}>
-        <div className="mode-info">
-          <span className="mode-icon">{getCurrentModeConfig().icon}</span>
-          <div className="mode-details">
-            <strong>{getCurrentModeConfig().name}</strong>
-            <span className="mode-description">{getCurrentModeConfig().description}</span>
-          </div>
-        </div>
-        <div className="mode-features">
-          {canIgnoreInventory() && (
-            <span className="feature-badge unlimited">Unlimited Stock</span>
-          )}
-          {requiresInventoryValidation() && (
-            <span className="feature-badge validation">Real-time Validation</span>
-          )}
-          {shouldShowInventoryWarnings() && (
-            <span className="feature-badge warnings">Inventory Warnings</span>
-          )}
-        </div>
-      </div>
+
 
       {/* Client Information Section */}
       <div className="client-section">

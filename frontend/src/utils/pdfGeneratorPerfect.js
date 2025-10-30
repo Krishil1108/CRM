@@ -237,7 +237,7 @@ class PerfectQuotationPDFGenerator {
     this.pdf.setFont('helvetica', 'bold');
     this.pdf.text('Glass :', rightX, tableY + 2 * rowHeight + 3.5);
     this.pdf.setFont('helvetica', 'normal');
-    const glassType = this.formatGlass(window.specifications?.glassType || window.glass);
+    const glassType = this.formatGlassType(window.specifications?.glassType || window.specifications?.glass || 'single');
     this.pdf.text(glassType, rightX + 12, tableY + 2 * rowHeight + 3.5);
     
     this.currentY = tableY + tableHeight + 2; // Reduced spacing
@@ -416,19 +416,37 @@ class PerfectQuotationPDFGenerator {
     this.pdf.setTextColor(255, 255, 255);
     this.pdf.text('Accessories', this.margin + col1Width + 2, tableY + 4);
     
-    // Data rows
+    // Extract actual configuration values from window specifications
     const specs = window.specifications || {};
-    const frameColor = specs.frameColor || specs.frame?.color || 'WHITE';
-    const meshType = (specs.grilles === 'none' || !specs.grilles) ? 'No' : 'Yes';
-    const hardware = specs.hardware || 'NA';
+    
+    // Format configuration values properly
+    const frameColor = this.capitalizeText(specs.frameColor || specs.frame?.color || 'white');
+    const frameMaterial = this.capitalizeText(specs.frameMaterial || specs.frame?.material || 'aluminum');
+    const glassType = this.formatGlassType(specs.glassType || specs.glass || 'single');
+    const glassTint = this.capitalizeText(specs.glassTint || 'clear');
+    const grilles = this.formatGrilles(specs.grilles || 'none');
+    const grillColor = this.capitalizeText(specs.grillColor || 'white');
+    const hardware = this.formatHardware(specs.hardware || 'standard');
+    const openingType = this.capitalizeText(specs.openingType || 'fixed');
+    const security = this.capitalizeText(specs.security || 'standard');
+    const screenIncluded = specs.screenIncluded ? 'Yes' : 'No';
+    const motorized = specs.motorized ? 'Yes' : 'No';
+    
+    // Get window type specific details
+    const windowType = window.type || window.selectedWindowType || 'sliding';
+    console.log('Debug - Profile section windowType:', windowType, 'typeof:', typeof windowType);
+    
+    const panels = this.getPanelInfo(window, windowType);
+    const tracks = this.getTrackInfo(window, windowType);
     
     const profileRows = [
-      [`Profile Color : ${frameColor}`, `Locking : ${hardware === 'premium' ? 'Multi-Point' : 'NA'}`],
-      [`Mesh Type : ${meshType}`, `Handle color : BLACK`],
-      [`Frame : ${specs.frameMaterial || 'Aluminum'}`, `Friction : Friction Stay`],
-      [`Opening : ${specs.openingType || 'Fixed'}`, `Hinge Type : SS Single Point`],
-      [`Glass : ${this.formatGlass(specs.glassType)}`, `Security : ${specs.security || 'Standard'}`],
-      [`Screen : ${specs.screenIncluded ? 'Yes' : 'No'}`, `Motorized : ${specs.motorized ? 'Yes' : 'No'}`],
+      [`Profile Color : ${frameColor}`, `Locking System : ${hardware}`],
+      [`Frame Material : ${frameMaterial}`, `Handle Color : BLACK`],
+      [`Glass Type : ${glassType}`, `Grilles : ${grilles}`],
+      [`Glass Tint : ${glassTint}`, `Grille Color : ${grillColor}`],
+      [`Opening Type : ${openingType}`, `Security : ${security}`],
+      [`Panel Configuration : ${panels}`, `Screen Included : ${screenIncluded}`],
+      [`Track System : ${tracks}`, `Motorized : ${motorized}`],
       ['', ''],
       ['Remarks :', '']
     ];
@@ -574,10 +592,111 @@ class PerfectQuotationPDFGenerator {
   }
 
   /**
+   * Helper: Capitalize text properly
+   */
+  capitalizeText(text) {
+    if (!text) return 'N/A';
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  }
+
+  /**
+   * Helper: Format glass type
+   */
+  formatGlassType(glassType) {
+    const glassTypes = {
+      'single': 'Single Glazed',
+      'double': 'Double Glazed',
+      'triple': 'Triple Glazed',
+      'laminated': 'Laminated Glass',
+      'tempered': 'Tempered Glass',
+      'insulated': 'Insulated Glass'
+    };
+    return glassTypes[glassType?.toLowerCase()] || this.capitalizeText(glassType) || 'Single Glazed';
+  }
+
+  /**
+   * Helper: Format grilles
+   */
+  formatGrilles(grilles) {
+    const grilleTypes = {
+      'none': 'No Grilles',
+      'colonial': 'Colonial (9-Lite)',
+      'prairie': 'Prairie Style',
+      'diamond': 'Diamond Pattern',
+      'georgian': 'Georgian Pattern'
+    };
+    return grilleTypes[grilles?.toLowerCase()] || this.capitalizeText(grilles) || 'No Grilles';
+  }
+
+  /**
+   * Helper: Format hardware
+   */
+  formatHardware(hardware) {
+    const hardwareTypes = {
+      'standard': 'Standard Lock',
+      'premium': 'Multi-Point Lock',
+      'heavy-duty': 'Heavy Duty Lock',
+      'security': 'Security Lock'
+    };
+    return hardwareTypes[hardware?.toLowerCase()] || this.capitalizeText(hardware) || 'Standard Lock';
+  }
+
+  /**
+   * Helper: Get panel information based on window type
+   */
+  getPanelInfo(window, windowType) {
+    // Ensure windowType is a valid string
+    const safeWindowType = (windowType && typeof windowType === 'string') ? windowType : 'sliding';
+    
+    switch (safeWindowType.toLowerCase()) {
+      case 'sliding':
+        const panels = window.slidingConfig?.panels || window.specifications?.panels || 2;
+        return `${panels} Panel Sliding`;
+      case 'casement':
+        return window.casementConfig?.panels ? `${window.casementConfig.panels} Panel` : 'Single Panel';
+      case 'double-hung':
+        return 'Two Sash (Both Move)';
+      case 'single-hung':
+        return 'Two Sash (Bottom Move)';
+      case 'awning':
+        return 'Top Hinged Panel';
+      case 'fixed':
+        return 'Non-Operable';
+      default:
+        return 'Standard Panel';
+    }
+  }
+
+  /**
+   * Helper: Get track information
+   */
+  getTrackInfo(window, windowType) {
+    // Ensure windowType is a valid string
+    const safeWindowType = (windowType && typeof windowType === 'string') ? windowType : 'sliding';
+    
+    switch (safeWindowType.toLowerCase()) {
+      case 'sliding':
+        const tracks = window.slidingConfig?.tracks || 1;
+        return `${tracks} Track System`;
+      case 'casement':
+        return 'Hinge System';
+      case 'double-hung':
+      case 'single-hung':
+        return 'Balance System';
+      case 'awning':
+        return 'Top Hinge Track';
+      case 'fixed':
+        return 'No Track System';
+      default:
+        return 'Standard Track';
+    }
+  }
+
+  /**
    * Helper: Format window type
    */
   formatWindowType(type) {
-    if (!type) return 'Window';
+    if (!type || typeof type !== 'string') return 'Window';
     const types = {
       'sliding': 'Sliding Window',
       'casement': 'Casement Window',
