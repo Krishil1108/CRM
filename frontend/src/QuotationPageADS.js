@@ -1909,6 +1909,290 @@ const QuotationPage = () => {
     );
   };
 
+  // Safe number formatting helper function
+  const safeNumber = (value, defaultValue = 0) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? defaultValue : num;
+  };
+
+  const safeFormat = (value, decimals = 2, defaultValue = 0) => {
+    const num = safeNumber(value, defaultValue);
+    return num.toFixed(decimals);
+  };
+
+  // Format glass type for display
+  const formatGlassType = (glassType, glassTint = 'Clear') => {
+    const glassTypeMap = {
+      'single': 'Single Glazed (4mm)',
+      'double': 'Double Glazed (4-12-4mm)',
+      'triple': 'Triple Glazed',
+      'laminated': 'Laminated Glass',
+      'toughened': 'Toughened Glass',
+      'low-e': 'Low-E Glass'
+    };
+    
+    const formattedType = glassTypeMap[glassType] || glassType;
+    // Capitalize first letter of tint
+    const tint = glassTint ? glassTint.charAt(0).toUpperCase() + glassTint.slice(1).toLowerCase() : 'Clear';
+    
+    return `${formattedType} - ${tint}`;
+  };
+
+  // Calculate totals across all windows
+  const calculateCombinedTotals = () => {
+    let totalComponents = 0;
+    let totalArea = 0;
+    let basicValue = 0;
+    let transportationCost = 0;
+    let loadingCost = 0;
+    let totalProjectCost = 0;
+    let gstAmount = 0;
+    let grandTotal = 0;
+
+    // If we have multiple windows, calculate combined totals
+    if (windows.length > 0) {
+      windows.forEach(window => {
+        const windowPrice = safeNumber(window.pricing?.unitPrice, 5000);
+        const windowQuantity = safeNumber(window.windowSpecs?.quantity, 1);
+        const windowWidth = safeNumber(window.windowSpecs?.width, 1000);
+        const windowHeight = safeNumber(window.windowSpecs?.height, 1000);
+        const windowTransport = safeNumber(window.pricing?.transportationCost, 1000);
+        const windowLoading = safeNumber(window.pricing?.loadingCost, 1000);
+        const windowTaxRate = safeNumber(window.pricing?.taxRate, 18);
+
+        // Calculate window area in sq.ft
+        const windowArea = (windowWidth * windowHeight * windowQuantity) / 92903;
+        
+        // Add to totals
+        totalComponents += windowQuantity;
+        totalArea += windowArea;
+        basicValue += (windowPrice * windowQuantity);
+        transportationCost += windowTransport;
+        loadingCost += windowLoading;
+      });
+    } else {
+      // Single window mode - use quotationData
+      const windowPrice = safeNumber(quotationData.pricing?.unitPrice, 5000);
+      const windowQuantity = safeNumber(quotationData.windowSpecs?.quantity, 1);
+      const windowWidth = safeNumber(quotationData.windowSpecs?.width, 1000);
+      const windowHeight = safeNumber(quotationData.windowSpecs?.height, 1000);
+      const windowTransport = safeNumber(quotationData.pricing?.transportationCost, 1000);
+      const windowLoading = safeNumber(quotationData.pricing?.loadingCost, 1000);
+
+      totalComponents = windowQuantity;
+      totalArea = (windowWidth * windowHeight * windowQuantity) / 92903;
+      basicValue = (windowPrice * windowQuantity);
+      transportationCost = windowTransport;
+      loadingCost = windowLoading;
+    }
+
+    // Calculate project cost and GST
+    totalProjectCost = basicValue + transportationCost + loadingCost;
+    const gstRate = safeNumber(quotationData.pricing?.taxRate || getCurrentWindow()?.pricing?.taxRate, 18);
+    gstAmount = (totalProjectCost * gstRate) / 100;
+    grandTotal = totalProjectCost + gstAmount;
+
+    return {
+      totalComponents,
+      totalArea,
+      basicValue,
+      totalProjectCost,
+      transportationCost,
+      loadingCost,
+      gstAmount,
+      gstRate,
+      grandTotal,
+      avgPriceWithoutGST: totalArea > 0 ? basicValue / totalArea : 0,
+      avgPriceWithGST: totalArea > 0 ? grandTotal / totalArea : 0
+    };
+  };
+
+  // Pricing Functions
+  const handlePricingChange = (field, value) => {
+    // Validate input values
+    if (isNaN(value) || value < 0) {
+      showNotification(`Please enter a valid positive number for ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`, 'error');
+      return;
+    }
+
+    // Specific validations for different fields
+    if (field === 'taxRate' && value > 100) {
+      showNotification('Tax rate cannot exceed 100%', 'error');
+      return;
+    }
+
+    if (field === 'taxRate' && value < 0) {
+      showNotification('Tax rate cannot be negative', 'error');
+      return;
+    }
+
+    try {
+      // Update both quotationData and current window
+      const updatedQuotationData = {
+        ...quotationData,
+        pricing: {
+          ...quotationData.pricing,
+          [field]: value
+        }
+      };
+      
+      updateQuotationData(updatedQuotationData);
+
+      // Also update current window if we're in multi-window mode
+      if (windows.length > 0) {
+        updateCurrentWindow(prev => ({
+          ...prev,
+          pricing: {
+            ...prev.pricing,
+            [field]: value
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error updating pricing:', error);
+      showNotification('Error updating pricing. Please check your input values.', 'error');
+    }
+  };
+
+  const handleQuantityChange = (quantity) => {
+    // Validate quantity
+    if (isNaN(quantity) || quantity < 1) {
+      showNotification('Quantity must be at least 1', 'error');
+      return;
+    }
+
+    if (quantity > 1000) {
+      showNotification('Quantity cannot exceed 1000 units', 'error');
+      return;
+    }
+
+    try {
+      // Update both quotationData and current window
+      const updatedQuotationData = {
+        ...quotationData,
+        windowSpecs: {
+          ...quotationData.windowSpecs,
+          quantity: quantity
+        }
+      };
+      
+      updateQuotationData(updatedQuotationData);
+
+      // Also update current window if we're in multi-window mode
+      if (windows.length > 0) {
+        updateCurrentWindow(prev => ({
+          ...prev,
+          windowSpecs: {
+            ...prev.windowSpecs,
+            quantity: quantity
+          }
+        }));
+      }
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      showNotification('Error updating quantity. Please check your input values.', 'error');
+    }
+  };
+
+  const autoPopulatePricing = () => {
+    const currentWindow = getCurrentWindow();
+    const selectedType = quotationData.selectedWindowType || currentWindow?.selectedWindowType;
+    
+    if (!selectedType) {
+      showNotification('Please select a window type first', 'warning');
+      return;
+    }
+
+    // Base pricing logic based on window specifications
+    const windowSpecs = quotationData.windowSpecs || currentWindow?.windowSpecs || {};
+    const windowType = selectedType;
+    
+    // Calculate base price based on area and window type
+    const width = windowSpecs.width || 1000; // default width in mm
+    const height = windowSpecs.height || 1000; // default height in mm
+    const area = (width * height) / 92903; // convert to square feet
+    
+    // Base price per square foot by window type (in INR)
+    const basePricePerSqft = {
+      'Awning': 550,
+      'Bi-Fold': 850,
+      'Casement': 500,
+      'Double Hung': 600,
+      'Fixed': 400,
+      'Louvre': 480,
+      'Sliding': 520,
+      'Tilt & Turn': 750
+    };
+    
+    const typeBasePrice = basePricePerSqft[windowType.name] || 500;
+    const calculatedUnitPrice = typeBasePrice * area;
+    
+    // Calculate material costs based on frame and glass types
+    const frameType = windowSpecs.frameType || 'Aluminium';
+    const glassType = windowSpecs.glassType || 'Clear';
+    
+    const frameCostMultiplier = {
+      'Aluminium': 1.0,
+      'Timber': 1.3,
+      'UPVC': 0.9,
+      'Steel': 1.2
+    };
+    
+    const glassCostMultiplier = {
+      'Clear': 1.0,
+      'Tinted': 1.1,
+      'Frosted': 1.1,
+      'Laminated': 1.4,
+      'Double Glazed': 1.8,
+      'Low-E': 2.0
+    };
+    
+    const frameMultiplier = frameCostMultiplier[frameType] || 1.0;
+    const glassMultiplier = glassCostMultiplier[glassType] || 1.0;
+    
+    const adjustedUnitPrice = calculatedUnitPrice * frameMultiplier * glassMultiplier;
+    
+    // Set default transportation and loading costs
+    const defaultTransportationCost = 1000;
+    const defaultLoadingCost = 1000;
+    
+    const updatedPricing = {
+      unitPrice: Math.round(adjustedUnitPrice * 100) / 100,
+      transportationCost: defaultTransportationCost,
+      loadingCost: defaultLoadingCost,
+      taxRate: 18 // Default GST rate
+    };
+    
+    // Update both quotationData and current window
+    const updatedQuotationData = {
+      ...quotationData,
+      pricing: {
+        ...quotationData.pricing,
+        ...updatedPricing
+      }
+    };
+    
+    updateQuotationData(updatedQuotationData);
+    
+    // Also update current window if we're in multi-window mode
+    if (windows.length > 0) {
+      updateCurrentWindow(prev => ({
+        ...prev,
+        pricing: {
+          ...prev.pricing,
+          ...updatedPricing
+        }
+      }));
+    }
+    
+    showNotification('Pricing auto-populated based on window configuration', 'success');
+  };
+
+  const recalculatePricing = () => {
+    // Since we're using real-time calculations in the display, just show notification
+    showNotification('Pricing totals updated', 'success');
+  };
+
   const generatePDF = async () => {
     // Validate that we have the necessary data
     // Check if we have window specifications filled out
@@ -4213,7 +4497,7 @@ const QuotationPage = () => {
                         <div className="dimension-preview">
                           <div className="preview-label">Window Area:</div>
                           <div className="preview-value">
-                            {(((quotationData.windowSpecs?.width || 0) * (quotationData.windowSpecs?.height || 0)) / 1000000).toFixed(2)} m²
+                            {safeFormat((safeNumber(quotationData.windowSpecs?.width, 0) * safeNumber(quotationData.windowSpecs?.height, 0)) / 1000000)} m²
                           </div>
                         </div>
                       )}
@@ -4727,63 +5011,294 @@ const QuotationPage = () => {
 
 
 
-      {/* Pricing Section */}
-      {quotationData.selectedWindowType && (
-        <div className="pricing-section">
-          <div className="section-title">Pricing Details</div>
-          
-          <table className="pricing-table">
-            <thead>
-              <tr>
-                <th>Description</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
-                <th>Total Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{quotationData.selectedWindowType?.name || 'N/A'}</td>
-                <td>{quotationData.windowSpecs?.quantity || 1}</td>
-                <td>${(quotationData.pricing?.unitPrice || 0).toFixed(2)}</td>
-                <td>${(quotationData.pricing?.totalPrice || 0).toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td colSpan="3">Tax (10%)</td>
-                <td>${(quotationData.pricing?.tax || 0).toFixed(2)}</td>
-              </tr>
-              <tr className="total-row">
-                <td colSpan="3"><strong>Total Amount</strong></td>
-                <td><strong>${(quotationData.pricing?.finalTotal || 0).toFixed(2)}</strong></td>
-              </tr>
-            </tbody>
-          </table>
+      {/* Detailed Window Specifications Section */}
+      {(quotationData.selectedWindowType || (windows.length > 0 && getCurrentWindow()?.selectedWindowType)) && (
+        <div className="detailed-specifications">
+          {/* Window Details Header */}
+          <div className="window-details-header">
+            <table className="details-table">
+              <tbody>
+                <tr>
+                  <td className="label-cell"><strong>Code :</strong></td>
+                  <td className="value-cell">{quotationData.windowCode || getCurrentWindow()?.windowCode || 'W' + (currentWindowIndex + 1)}</td>
+                  <td className="label-cell"><strong>Size :</strong></td>
+                  <td className="value-cell">
+                    W = {safeFormat(quotationData.windowSpecs?.width || getCurrentWindow()?.windowSpecs?.width, 2, 1000)}; H = {safeFormat(quotationData.windowSpecs?.height || getCurrentWindow()?.windowSpecs?.height, 2, 1000)}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="label-cell"><strong>Name :</strong></td>
+                  <td className="value-cell">{(quotationData.selectedWindowType?.name || getCurrentWindow()?.selectedWindowType?.name || 'WINDOW')}</td>
+                  <td className="label-cell"><strong>Profile System :</strong></td>
+                  <td className="value-cell">
+                    ADS SYSTEM - {(quotationData.windowSpecs?.frameType || getCurrentWindow()?.windowSpecs?.frameType || 'ALUMINIUM')} {(quotationData.selectedWindowType?.name || getCurrentWindow()?.selectedWindowType?.name || 'WINDOW').toUpperCase()} SERIES
+                  </td>
+                </tr>
+                <tr>
+                  <td className="label-cell"><strong>Location :</strong></td>
+                  <td className="value-cell">{((quotationData.windowSpecs?.location || getCurrentWindow()?.windowSpecs?.location || 'ROOM 1')).toUpperCase()}</td>
+                  <td className="label-cell"><strong>Glass :</strong></td>
+                  <td className="value-cell">
+                    {formatGlassType(
+                      quotationData.windowSpecs?.glass || getCurrentWindow()?.windowSpecs?.glass || 'single',
+                      quotationData.windowSpecs?.glassTint || getCurrentWindow()?.windowSpecs?.glassTint || 'Clear'
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Computed Values Section */}
+          <div className="computed-values">
+            <div className="section-header">Computed Values</div>
+            <table className="computed-table">
+              <tbody>
+                <tr>
+                  <td className="computed-label">Sq.Ft. per window</td>
+                  <td className="computed-value">
+                    {safeFormat((safeNumber(quotationData.windowSpecs?.width || getCurrentWindow()?.windowSpecs?.width, 1000) * safeNumber(quotationData.windowSpecs?.height || getCurrentWindow()?.windowSpecs?.height, 1000)) / 92903)} Sq.Ft.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="computed-label">Value per Sq.Ft.</td>
+                  <td className="computed-value">
+                    {safeFormat(safeNumber(quotationData.pricing?.unitPrice || getCurrentWindow()?.pricing?.unitPrice, 5000) / ((safeNumber(quotationData.windowSpecs?.width || getCurrentWindow()?.windowSpecs?.width, 1000) * safeNumber(quotationData.windowSpecs?.height || getCurrentWindow()?.windowSpecs?.height, 1000)) / 92903))} INR
+                  </td>
+                </tr>
+                <tr>
+                  <td className="computed-label">Unit Price</td>
+                  <td className="computed-value">{safeFormat(quotationData.pricing?.unitPrice || getCurrentWindow()?.pricing?.unitPrice, 2, 5000)} INR</td>
+                </tr>
+                <tr>
+                  <td className="computed-label">Quantity</td>
+                  <td className="computed-value">{safeNumber(quotationData.windowSpecs?.quantity || getCurrentWindow()?.windowSpecs?.quantity, 1)} Pcs</td>
+                </tr>
+                <tr>
+                  <td className="computed-label">Value</td>
+                  <td className="computed-value">{safeFormat(safeNumber(quotationData.pricing?.unitPrice || getCurrentWindow()?.pricing?.unitPrice, 5000) * safeNumber(quotationData.windowSpecs?.quantity || getCurrentWindow()?.windowSpecs?.quantity, 1))} INR</td>
+                </tr>
+                <tr>
+                  <td className="computed-label">Weight</td>
+                  <td className="computed-value">
+                    {safeFormat((safeNumber(quotationData.windowSpecs?.width || getCurrentWindow()?.windowSpecs?.width, 1000) * safeNumber(quotationData.windowSpecs?.height || getCurrentWindow()?.windowSpecs?.height, 1000) * 0.000015) * safeNumber(quotationData.windowSpecs?.quantity || getCurrentWindow()?.windowSpecs?.quantity, 1))} KG
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Profile and Accessories Section */}
+          <div className="profile-accessories">
+            <table className="profile-table">
+              <thead>
+                <tr>
+                  <th className="profile-header">Profile</th>
+                  <th className="accessories-header">Accessories</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="profile-details">
+                    <div><strong>Profile Color :</strong> {(quotationData.windowSpecs?.frameColor || getCurrentWindow()?.windowSpecs?.frameColor || 'MILL FINISH').toUpperCase()}</div>
+                    <div><strong>MeshType :</strong> {quotationData.windowSpecs?.meshType || getCurrentWindow()?.windowSpecs?.meshType || 'No'}</div>
+                    <div><strong>Guide Rail :</strong> Sld Guidrail 14Mm X 8Mm</div>
+                    <div><strong>Sliding Sash :</strong> Sld Handle Sash 27Mm X 55Mm</div>
+                    <div><strong>Sliding Sash :</strong> Sld Interlock Sash 38Mm X 20Mm</div>
+                    <div><strong>Sliding Sash :</strong> Sld Top Bottom Sash 24Mm X 58Mm</div>
+                    <div><strong>Track :</strong> Sld 3 Track 108Mm X 43Mm</div>
+                  </td>
+                  <td className="accessories-details">
+                    <div><strong>Locking :</strong> {quotationData.windowSpecs?.lockType || getCurrentWindow()?.windowSpecs?.lockType || 'NA'}</div>
+                    <div><strong>Handle color :</strong> {(quotationData.windowSpecs?.handleColor || getCurrentWindow()?.windowSpecs?.handleColor || 'BLACK').toUpperCase()}</div>
+                    <div><strong>Handle Type :</strong> {quotationData.windowSpecs?.handleType || getCurrentWindow()?.windowSpecs?.handleType || 'S1-Concealed Lock'}</div>
+                    <div><strong>Handle</strong></div>
+                    <div><strong>Handle Type :</strong> {quotationData.windowSpecs?.handleType2 || getCurrentWindow()?.windowSpecs?.handleType2 || 'S2-Concealed Lock'}</div>
+                    <div><strong>Handle</strong></div>
+                    <div><strong>Roller :</strong> {quotationData.windowSpecs?.rollerType || getCurrentWindow()?.windowSpecs?.rollerType || 'Single Wheel Adjustable Roller'}</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div className="remarks-section">
+              <strong>Remarks :</strong> {quotationData.remarks || getCurrentWindow()?.remarks || ''}
+            </div>
+          </div>
+
+          {/* Quote Total Section */}
+          <div className="quote-total">
+            <div className="section-header">Quote Total</div>
+            <table className="quote-total-table">
+              <tbody>
+                <tr>
+                  <td className="total-label">No. of Components</td>
+                  <td className="total-value">{calculateCombinedTotals().totalComponents} Pcs</td>
+                </tr>
+                <tr>
+                  <td className="total-label">Total Area</td>
+                  <td className="total-value">
+                    {safeFormat(calculateCombinedTotals().totalArea)} Sq.Ft.
+                  </td>
+                </tr>
+                <tr>
+                  <td className="total-label">Basic Value</td>
+                  <td className="total-value">{safeFormat(calculateCombinedTotals().basicValue)} INR</td>
+                </tr>
+                <tr>
+                  <td className="total-label">Sub Total</td>
+                  <td className="total-value">{safeFormat(calculateCombinedTotals().basicValue)} INR</td>
+                </tr>
+                <tr>
+                  <td className="total-label">Transportation Cost</td>
+                  <td className="total-value">{safeFormat(calculateCombinedTotals().transportationCost, 0)} INR</td>
+                </tr>
+                <tr>
+                  <td className="total-label">Loading And Unloading</td>
+                  <td className="total-value">{safeFormat(calculateCombinedTotals().loadingCost, 0)} INR</td>
+                </tr>
+                <tr>
+                  <td className="total-label">Total Project Cost</td>
+                  <td className="total-value">
+                    {safeFormat(calculateCombinedTotals().totalProjectCost)} INR
+                  </td>
+                </tr>
+                <tr>
+                  <td className="total-label">Gst @{calculateCombinedTotals().gstRate}%</td>
+                  <td className="total-value">
+                    {safeFormat(calculateCombinedTotals().gstAmount)} INR
+                  </td>
+                </tr>
+                <tr className="grand-total-row">
+                  <td className="total-label"><strong>Grand Total</strong></td>
+                  <td className="total-value">
+                    <strong>
+                      {safeFormat(calculateCombinedTotals().grandTotal)} INR
+                    </strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="total-label">Average Price per Sq.Ft. without GST</td>
+                  <td className="total-value">
+                    {safeFormat(calculateCombinedTotals().avgPriceWithoutGST)} INR
+                  </td>
+                </tr>
+                <tr>
+                  <td className="total-label">Average Price per Sq.Ft.</td>
+                  <td className="total-value">
+                    {safeFormat(calculateCombinedTotals().avgPriceWithGST)} INR
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Manual Pricing Adjustments */}
+          <div className="manual-pricing-form">
+            <div className="form-title">Manual Pricing Adjustments</div>
+            
+            <div className="pricing-form-grid">
+              <div className="pricing-form-group">
+                <label htmlFor="unitPrice">Unit Price (INR)</label>
+                <input
+                  type="number"
+                  id="unitPrice"
+                  value={quotationData.pricing?.unitPrice || getCurrentWindow()?.pricing?.unitPrice || ''}
+                  onChange={(e) => handlePricingChange('unitPrice', parseFloat(e.target.value) || 0)}
+                  min="0"
+                  step="0.01"
+                  className="pricing-input"
+                />
+              </div>
+
+              <div className="pricing-form-group">
+                <label htmlFor="quantity">Quantity</label>
+                <input
+                  type="number"
+                  id="quantity"
+                  value={quotationData.windowSpecs?.quantity || getCurrentWindow()?.windowSpecs?.quantity || 1}
+                  onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
+                  min="1"
+                  className="pricing-input"
+                />
+              </div>
+
+              <div className="pricing-form-group">
+                <label htmlFor="transportationCost">Transportation Cost (INR)</label>
+                <input
+                  type="number"
+                  id="transportationCost"
+                  value={quotationData.pricing?.transportationCost || getCurrentWindow()?.pricing?.transportationCost || ''}
+                  onChange={(e) => handlePricingChange('transportationCost', parseFloat(e.target.value) || 0)}
+                  min="0"
+                  step="1"
+                  className="pricing-input"
+                />
+              </div>
+
+              <div className="pricing-form-group">
+                <label htmlFor="loadingCost">Loading & Unloading Cost (INR)</label>
+                <input
+                  type="number"
+                  id="loadingCost"
+                  value={quotationData.pricing?.loadingCost || getCurrentWindow()?.pricing?.loadingCost || ''}
+                  onChange={(e) => handlePricingChange('loadingCost', parseFloat(e.target.value) || 0)}
+                  min="0"
+                  step="1"
+                  className="pricing-input"
+                />
+              </div>
+
+              <div className="pricing-form-group">
+                <label htmlFor="taxRate">GST Rate (%)</label>
+                <input
+                  type="number"
+                  id="taxRate"
+                  value={quotationData.pricing?.taxRate || getCurrentWindow()?.pricing?.taxRate || 18}
+                  onChange={(e) => handlePricingChange('taxRate', parseFloat(e.target.value) || 18)}
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  className="pricing-input"
+                />
+              </div>
+
+              <div className="pricing-form-group">
+                <label htmlFor="windowCode">Window Code</label>
+                <input
+                  type="text"
+                  id="windowCode"
+                  value={quotationData.windowCode || getCurrentWindow()?.windowCode || ''}
+                  onChange={(e) => {
+                    setQuotationData(prev => ({...prev, windowCode: e.target.value}));
+                    if (windows.length > 0) {
+                      updateCurrentWindow(prev => ({...prev, windowCode: e.target.value}));
+                    }
+                  }}
+                  className="pricing-input"
+                  placeholder={`e.g., W${currentWindowIndex + 1}`}
+                />
+              </div>
+            </div>
+
+            <div className="pricing-actions">
+              <button 
+                type="button" 
+                className="btn-secondary"
+                onClick={autoPopulatePricing}
+              >
+                Auto-Populate from Configuration
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary"
+                onClick={recalculatePricing}
+              >
+                Recalculate Total
+              </button>
+            </div>
+          </div>
         </div>
       )}
-
-      {/* Terms and Conditions */}
-      <div className="terms-section">
-        <h4>Terms and Conditions</h4>
-        <ul>
-          <li>This quotation is valid for 30 days from the date of issue.</li>
-          <li>All prices are in USD and include standard installation.</li>
-          <li>Delivery time: 2-4 weeks from order confirmation.</li>
-          <li>50% advance payment required to commence work.</li>
-          <li>Balance payment due on completion of installation.</li>
-        </ul>
-      </div>
-
-      {/* Signature Section */}
-      <div className="signature-section">
-        <div className="signature-box">
-          <div className="signature-line"></div>
-          <div className="signature-label">Customer Signature</div>
-        </div>
-        <div className="signature-box">
-          <div className="signature-line"></div>
-          <div className="signature-label">Company Representative</div>
-        </div>
-      </div>
 
       {/* Action Buttons */}
       <div className="quotation-actions">
