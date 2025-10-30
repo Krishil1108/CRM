@@ -484,15 +484,28 @@ const QuotationPage = () => {
       // *** FIX: Load all windows from the quote data ***
       if (quoteData.windowSpecs && Array.isArray(quoteData.windowSpecs) && quoteData.windowSpecs.length > 0) {
         console.log('Loading all windows from quote data:', quoteData.windowSpecs);
+        console.log('Available rawConfigurationData:', rawConfig);
+        console.log('Individual window configs in rawConfig:', rawConfig?.windows);
         
         // Convert quote window specs to the format expected by the windows state
-        const loadedWindows = quoteData.windowSpecs.map((windowSpec, index) => ({
-          id: `window-${index + 1}`,
-          name: windowSpec.name || `Window ${index + 1}`,
-          type: windowSpec.type || quoteData.selectedWindowType || 'sliding',
-          selectedWindowType: WINDOW_TYPES.find(type => 
-            type.id === (windowSpec.type || quoteData.selectedWindowType)
-          ) || WINDOW_TYPES.find(type => type.id === 'sliding'),
+        const loadedWindows = quoteData.windowSpecs.map((windowSpec, index) => {
+          
+          // Try to get window-specific config from rawConfigurationData if available
+          const windowRawConfig = rawConfig?.windows?.[index] || null;
+          console.log(`=== Loading Window ${index + 1} ===`);
+          console.log(`Window ${index + 1} - Raw Config:`, windowRawConfig);
+          console.log(`Window ${index + 1} - WindowSpec:`, windowSpec);
+          console.log(`Window ${index + 1} - Type:`, windowSpec.type);
+          console.log(`Window ${index + 1} - Dimensions:`, windowSpec.dimensions);
+          console.log(`Window ${index + 1} - Specifications:`, windowSpec.specifications);
+          
+          return {
+            id: `window-${index + 1}`,
+            name: windowSpec.name || `Window ${index + 1}`,
+            type: windowSpec.type || quoteData.selectedWindowType || 'sliding',
+            selectedWindowType: WINDOW_TYPES.find(type => 
+              type.id === (windowSpec.type || quoteData.selectedWindowType)
+            ) || WINDOW_TYPES.find(type => type.id === 'sliding'),
           windowSpecs: {
             // Dimensions
             width: windowSpec.dimensions?.width || '',
@@ -550,61 +563,102 @@ const QuotationPage = () => {
             ventilation: windowSpec.specifications?.ventilation || false,
             trimStyle: windowSpec.specifications?.trimStyle || 'standard'
           },
-          // *** ADD WINDOW-TYPE SPECIFIC CONFIGURATIONS ***
+          // *** ENHANCED WINDOW-TYPE SPECIFIC CONFIGURATIONS WITH RAW CONFIG PRIORITY ***
           slidingConfig: {
-            panels: windowSpec.specifications?.slidingDetails?.panels || 
+            panels: windowRawConfig?.slidingConfig?.panels || 
+                   windowSpec.specifications?.slidingDetails?.panels || 
                    windowSpec.specifications?.panels || 
                    quoteData.slidingConfig?.panels || 2,
-            tracks: windowSpec.specifications?.slidingDetails?.tracks || 
+            tracks: windowRawConfig?.slidingConfig?.tracks ||
+                   windowSpec.specifications?.slidingDetails?.tracks || 
                    windowSpec.specifications?.tracks || 
                    quoteData.slidingConfig?.tracks || 2,
-            combination: windowSpec.specifications?.slidingDetails?.combination || 
+            combination: windowRawConfig?.slidingConfig?.combination ||
+                        windowSpec.specifications?.slidingDetails?.combination || 
                         quoteData.slidingConfig?.combination || null,
+            openingType: windowRawConfig?.slidingConfig?.openingType ||
+                        windowSpec.specifications?.slidingDetails?.openingType || 
+                        quoteData.slidingConfig?.openingType || 'left-to-right',
             // Additional sliding-specific options
-            railType: windowSpec.specifications?.slidingDetails?.railType || 'standard',
-            rollerType: windowSpec.specifications?.slidingDetails?.rollerType || 'standard'
+            railType: windowRawConfig?.slidingConfig?.railType ||
+                     windowSpec.specifications?.slidingDetails?.railType || 'standard',
+            rollerType: windowRawConfig?.slidingConfig?.rollerType ||
+                       windowSpec.specifications?.slidingDetails?.rollerType || 'standard'
           },
           casementConfig: {
-            direction: windowSpec.specifications?.casementDetails?.direction || 
+            panels: windowRawConfig?.casementConfig?.panels ||
+                   windowSpec.specifications?.casementDetails?.panels ||
+                   quoteData.casementConfig?.panels || 2,
+            direction: windowRawConfig?.casementConfig?.direction ||
+                      windowSpec.specifications?.casementDetails?.direction || 
                       quoteData.casementConfig?.direction || 'outward',
-            hinge: windowSpec.specifications?.casementDetails?.hinge || 
-                   quoteData.casementConfig?.hinge || 'left',
-            combination: windowSpec.specifications?.casementDetails?.combination || 
+            hinge: windowRawConfig?.casementConfig?.hinge ||
+                  windowSpec.specifications?.casementDetails?.hinge || 
+                  quoteData.casementConfig?.hinge || 'left',
+            combination: windowRawConfig?.casementConfig?.combination ||
+                        windowSpec.specifications?.casementDetails?.combination || 
                         quoteData.casementConfig?.combination || null,
             // Additional casement-specific options
-            openingAngle: windowSpec.specifications?.casementDetails?.openingAngle || 90,
-            chainStay: windowSpec.specifications?.casementDetails?.chainStay || false
+            openingAngle: windowRawConfig?.casementConfig?.openingAngle ||
+                         windowSpec.specifications?.casementDetails?.openingAngle || 90,
+            chainStay: windowRawConfig?.casementConfig?.chainStay ||
+                      windowSpec.specifications?.casementDetails?.chainStay || false
           },
           bayConfig: {
-            angle: windowSpec.specifications?.bayDetails?.angle || 
-                   quoteData.bayConfig?.angle || 30,
-            combination: windowSpec.specifications?.bayDetails?.combination || 
+            angle: windowRawConfig?.bayConfig?.angle ||
+                  windowSpec.specifications?.bayDetails?.angle || 
+                  quoteData.bayConfig?.angle || 30,
+            combination: windowRawConfig?.bayConfig?.combination ||
+                        windowSpec.specifications?.bayDetails?.combination || 
                         quoteData.bayConfig?.combination || null,
+            style: windowRawConfig?.bayConfig?.style ||
+                  windowSpec.specifications?.bayDetails?.style || 'traditional',
             // Additional bay-specific options
-            projection: windowSpec.specifications?.bayDetails?.projection || 'standard',
-            sideWindows: windowSpec.specifications?.bayDetails?.sideWindows || 2, // Should be a number
-            sideWindowType: windowSpec.specifications?.bayDetails?.sideWindowType || 'casement' // Window type as string
+            projection: windowRawConfig?.bayConfig?.projection ||
+                       windowSpec.specifications?.bayDetails?.projection || 'standard',
+            sideWindows: windowRawConfig?.bayConfig?.sideWindows ||
+                        windowSpec.specifications?.bayDetails?.sideWindows || 2,
+            sideWindowType: windowRawConfig?.bayConfig?.sideWindowType ||
+                           windowSpec.specifications?.bayDetails?.sideWindowType || 'casement'
           },
           awningConfig: {
-            combination: windowSpec.specifications?.awningDetails?.combination || 
+            panels: windowRawConfig?.awningConfig?.panels ||
+                   windowSpec.specifications?.awningDetails?.panels ||
+                   quoteData.awningConfig?.panels || 1,
+            combination: windowRawConfig?.awningConfig?.combination ||
+                        windowSpec.specifications?.awningDetails?.combination || 
                         quoteData.awningConfig?.combination || null,
+            size: windowRawConfig?.awningConfig?.size ||
+                 windowSpec.specifications?.awningDetails?.size ||
+                 quoteData.awningConfig?.size || 'standard',
+            orientation: windowRawConfig?.awningConfig?.orientation ||
+                        windowSpec.specifications?.awningDetails?.orientation ||
+                        quoteData.awningConfig?.orientation || 'horizontal',
             // Additional awning-specific options
-            openingAngle: windowSpec.specifications?.awningDetails?.openingAngle || 45,
-            supportArm: windowSpec.specifications?.awningDetails?.supportArm || 'standard'
+            openingAngle: windowRawConfig?.awningConfig?.openingAngle ||
+                         windowSpec.specifications?.awningDetails?.openingAngle || 45,
+            supportArm: windowRawConfig?.awningConfig?.supportArm ||
+                       windowSpec.specifications?.awningDetails?.supportArm || 'standard'
           },
           doubleHungConfig: {
-            combination: windowSpec.specifications?.doubleHungDetails?.combination || 
+            combination: windowRawConfig?.doubleHungConfig?.combination ||
+                        windowSpec.specifications?.doubleHungDetails?.combination || 
                         quoteData.doubleHungConfig?.combination || null,
             // Additional double hung-specific options
-            balanceType: windowSpec.specifications?.doubleHungDetails?.balanceType || 'spiral',
-            tiltFeature: windowSpec.specifications?.doubleHungDetails?.tiltFeature || true
+            balanceType: windowRawConfig?.doubleHungConfig?.balanceType ||
+                        windowSpec.specifications?.doubleHungDetails?.balanceType || 'spiral',
+            tiltFeature: windowRawConfig?.doubleHungConfig?.tiltFeature ||
+                        windowSpec.specifications?.doubleHungDetails?.tiltFeature || true
           },
           singleHungConfig: {
-            combination: windowSpec.specifications?.singleHungDetails?.combination || 
+            combination: windowRawConfig?.singleHungConfig?.combination ||
+                        windowSpec.specifications?.singleHungDetails?.combination || 
                         quoteData.singleHungConfig?.combination || 'sh-standard',
             // Additional single hung-specific options
-            balanceType: windowSpec.specifications?.singleHungDetails?.balanceType || 'spiral',
-            lockType: windowSpec.specifications?.singleHungDetails?.lockType || 'cam'
+            balanceType: windowRawConfig?.singleHungConfig?.balanceType ||
+                        windowSpec.specifications?.singleHungDetails?.balanceType || 'spiral',
+            lockType: windowRawConfig?.singleHungConfig?.lockType ||
+                     windowSpec.specifications?.singleHungDetails?.lockType || 'cam'
           },
           pricing: {
             basePrice: windowSpec.pricing?.basePrice || 0,
@@ -613,12 +667,14 @@ const QuotationPage = () => {
             tax: windowSpec.pricing?.tax || 0,
             finalTotal: windowSpec.pricing?.finalTotal || 0
           }
-        }));
+        };
+        });
         
         setWindows(loadedWindows);
         console.log('=== LOADED WINDOWS WITH FULL CONFIGS ===');
         console.log('Number of windows loaded:', loadedWindows.length);
         loadedWindows.forEach((window, index) => {
+          console.log(`=== FINAL LOADED Window ${index + 1} ===`);
           console.log(`Window ${index + 1}:`, {
             name: window.name,
             type: window.type,
@@ -627,8 +683,14 @@ const QuotationPage = () => {
             hasSlidingConfig: !!window.slidingConfig,
             hasCasementConfig: !!window.casementConfig,
             hasBayConfig: !!window.bayConfig,
+            hasDoubleHungConfig: !!window.doubleHungConfig,
+            hasSingleHungConfig: !!window.singleHungConfig,
             windowSpecs: window.windowSpecs,
-            slidingConfig: window.slidingConfig
+            slidingConfig: window.slidingConfig,
+            casementConfig: window.casementConfig,
+            bayConfig: window.bayConfig,
+            doubleHungConfig: window.doubleHungConfig,
+            singleHungConfig: window.singleHungConfig
           });
         });
         console.log('=== END WINDOW LOADING DEBUG ===');
@@ -1306,39 +1368,39 @@ const QuotationPage = () => {
           openingType: window.windowSpecs?.opening || 'fixed',
           hardware: window.windowSpecs?.hardware || 'standard',
           
-          // Configuration details
-          panels: quotationData.slidingConfig?.panels || quotationData.casementConfig?.panels || quotationData.awningConfig?.panels || 2,
-          tracks: quotationData.slidingConfig?.tracks || 2,
+          // Configuration details - USE WINDOW-SPECIFIC CONFIGS NOT GLOBAL
+          panels: window.slidingConfig?.panels || window.casementConfig?.panels || window.awningConfig?.panels || 2,
+          tracks: window.slidingConfig?.tracks || 2,
           
-          // Weather & Energy Features
-          weatherSealing: quotationData.windowSpecs?.weatherSealing || quotationData.windowSpecs?.weatherStripping || 'standard',
-          weatherStripping: quotationData.windowSpecs?.weatherStripping || quotationData.windowSpecs?.weatherSealing || 'standard',
-          insulation: quotationData.windowSpecs?.insulation || 'standard',
-          energyRating: quotationData.windowSpecs?.energyRating || 'standard',
-          drainage: quotationData.windowSpecs?.drainage || 'standard',
+          // Weather & Energy Features - USE WINDOW-SPECIFIC SPECS
+          weatherSealing: window.windowSpecs?.weatherSealing || window.windowSpecs?.weatherStripping || 'standard',
+          weatherStripping: window.windowSpecs?.weatherStripping || window.windowSpecs?.weatherSealing || 'standard',
+          insulation: window.windowSpecs?.insulation || 'standard',
+          energyRating: window.windowSpecs?.energyRating || 'standard',
+          drainage: window.windowSpecs?.drainage || 'standard',
           
-          // Comfort & Safety Features
-          screenIncluded: quotationData.windowSpecs?.screenIncluded || false,
-          motorized: quotationData.windowSpecs?.motorized || false,
-          security: quotationData.windowSpecs?.security || 'standard',
-          childSafety: quotationData.windowSpecs?.childSafety || false,
-          tiltAndTurn: quotationData.windowSpecs?.tiltAndTurn || false,
-          smartHome: quotationData.windowSpecs?.smartHome || false,
+          // Comfort & Safety Features - USE WINDOW-SPECIFIC SPECS
+          screenIncluded: window.windowSpecs?.screenIncluded || false,
+          motorized: window.windowSpecs?.motorized || false,
+          security: window.windowSpecs?.security || 'standard',
+          childSafety: window.windowSpecs?.childSafety || false,
+          tiltAndTurn: window.windowSpecs?.tiltAndTurn || false,
+          smartHome: window.windowSpecs?.smartHome || false,
           
-          // Accessories & Add-ons
-          blindsIntegrated: quotationData.windowSpecs?.blindsIntegrated || false,
-          blindsIncluded: quotationData.windowSpecs?.blindsIncluded || false,
-          curtainRail: quotationData.windowSpecs?.curtainRail || false,
-          ventilation: quotationData.windowSpecs?.ventilation || false,
-          trimStyle: quotationData.windowSpecs?.trimStyle || 'standard',
+          // Accessories & Add-ons - USE WINDOW-SPECIFIC SPECS
+          blindsIntegrated: window.windowSpecs?.blindsIntegrated || false,
+          blindsIncluded: window.windowSpecs?.blindsIncluded || false,
+          curtainRail: window.windowSpecs?.curtainRail || false,
+          ventilation: window.windowSpecs?.ventilation || false,
+          trimStyle: window.windowSpecs?.trimStyle || 'standard',
           
-          // COMPREHENSIVE Grille specifications
+          // COMPREHENSIVE Grille specifications - USE WINDOW-SPECIFIC SPECS
           grille: {
-            enabled: quotationData.windowSpecs?.grilles !== 'none',
-            style: quotationData.windowSpecs?.grilles || 'none',
-            pattern: quotationData.windowSpecs?.grillePattern || 'grid'
+            enabled: window.windowSpecs?.grilles !== 'none',
+            style: window.windowSpecs?.grilles || 'none',
+            pattern: window.windowSpecs?.grillePattern || 'grid'
           },
-          grillColor: quotationData.windowSpecs?.grillColor || 'white',
+          grillColor: window.windowSpecs?.grillColor || 'white',
           
           // Configuration details
           slidingDetails: window.slidingConfig || {},
@@ -1453,6 +1515,21 @@ const QuotationPage = () => {
         // Note: doubleHungConfig and singleHungConfig not supported in backend schema
         doubleHungConfig: quotationData.doubleHungConfig,
         singleHungConfig: quotationData.singleHungConfig,
+        
+        // *** INDIVIDUAL WINDOW CONFIGURATIONS FOR MULTI-WINDOW SUPPORT ***
+        windows: activeWindows.map((window, index) => ({
+          id: window.id || `window-${index + 1}`,
+          name: window.name || `Window ${index + 1}`,
+          selectedWindowType: window.selectedWindowType,
+          windowSpecs: window.windowSpecs,
+          slidingConfig: window.slidingConfig,
+          casementConfig: window.casementConfig,
+          bayConfig: window.bayConfig,
+          awningConfig: window.awningConfig,
+          doubleHungConfig: window.doubleHungConfig,
+          singleHungConfig: window.singleHungConfig,
+          pricing: window.pricing
+        })),
         
         // COMPREHENSIVE Window Specifications (ALL FIELDS)
         windowSpecs: {
@@ -3905,9 +3982,9 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Bay Angle</label>
                             <select
-                              value={quotationData.bayConfig?.angle || 30}
+                              value={getCurrentWindow().bayConfig?.angle || 30}
                               onChange={(e) => {
-                                setQuotationData(prev => ({
+                                updateCurrentWindow(prev => ({
                                   ...prev,
                                   bayConfig: {
                                     ...prev.bayConfig,
@@ -3928,9 +4005,9 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Bay Style</label>
                             <select
-                              value={quotationData.bayConfig?.style || 'traditional'}
+                              value={getCurrentWindow().bayConfig?.style || 'traditional'}
                               onChange={(e) => {
-                                setQuotationData(prev => ({
+                                updateCurrentWindow(prev => ({
                                   ...prev,
                                   bayConfig: {
                                     ...prev.bayConfig,
@@ -3961,9 +4038,9 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Opening Direction</label>
                             <select
-                              value={quotationData.casementConfig?.direction || 'outward'}
+                              value={getCurrentWindow().casementConfig?.direction || 'outward'}
                               onChange={(e) => {
-                                setQuotationData(prev => ({
+                                updateCurrentWindow(prev => ({
                                   ...prev,
                                   casementConfig: {
                                     ...prev.casementConfig,
@@ -3982,9 +4059,9 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Hinge Position</label>
                             <select
-                              value={quotationData.casementConfig?.hinge || 'left'}
+                              value={getCurrentWindow().casementConfig?.hinge || 'left'}
                               onChange={(e) => {
-                                setQuotationData(prev => ({
+                                updateCurrentWindow(prev => ({
                                   ...prev,
                                   casementConfig: {
                                     ...prev.casementConfig,
@@ -4016,9 +4093,9 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Window Type</label>
                             <select
-                              value={quotationData.singleHungConfig?.combination || 'sh-standard'}
+                              value={getCurrentWindow().singleHungConfig?.combination || 'sh-standard'}
                               onChange={(e) => {
-                                setQuotationData(prev => ({
+                                updateCurrentWindow(prev => ({
                                   ...prev,
                                   singleHungConfig: {
                                     ...prev.singleHungConfig,
@@ -4035,7 +4112,7 @@ const QuotationPage = () => {
                               ))}
                             </select>
                             <small className="field-hint">
-                              {SINGLE_HUNG_COMBINATIONS.find(c => c.id === quotationData.singleHungConfig?.combination)?.description || 'Select single hung configuration'}
+                              {SINGLE_HUNG_COMBINATIONS.find(c => c.id === getCurrentWindow().singleHungConfig?.combination)?.description || 'Select single hung configuration'}
                             </small>
                           </div>
                         </div>
@@ -4053,9 +4130,9 @@ const QuotationPage = () => {
                           <div className="form-field">
                             <label className="field-label">Sash Operation</label>
                             <select
-                              value={quotationData.doubleHungConfig?.combination || ''}
+                              value={getCurrentWindow().doubleHungConfig?.combination || ''}
                               onChange={(e) => {
-                                setQuotationData(prev => ({
+                                updateCurrentWindow(prev => ({
                                   ...prev,
                                   doubleHungConfig: {
                                     ...prev.doubleHungConfig,
