@@ -18,6 +18,9 @@ import {
 import { Doughnut, Line, Bar } from 'react-chartjs-2';
 import { AiOutlineEye, AiOutlineForm } from "react-icons/ai";
 import { FiTrash2 } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
+import { useToast } from '../context/ToastContext';
+import WhatsAppIntegration from './WhatsAppIntegration';
 
 ChartJS.register(
   CategoryScale,
@@ -43,7 +46,7 @@ const QuoteHistory = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('view'); // 'view', 'edit', 'delete', 'compare'
   const [compareQuotes, setCompareQuotes] = useState([]);
-  const [showNotification, setShowNotification] = useState({ show: false, message: '', type: '' });
+  const { showSuccess, showError, showWarning, showInfo } = useToast();
 
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState({
@@ -109,6 +112,11 @@ const QuoteHistory = () => {
     topClients: [],
     topProducts: []
   });
+
+  // WhatsApp Integration state
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [selectedClientForWhatsApp, setSelectedClientForWhatsApp] = useState(null);
+  const [selectedQuotationForWhatsApp, setSelectedQuotationForWhatsApp] = useState(null);
 
   // Load quotes with advanced filtering
   const loadQuotes = useCallback(async () => {
@@ -465,10 +473,22 @@ const QuoteHistory = () => {
       .slice(0, 10);
   };
 
-  // Notification helper
+  // Notification helper (now using toast)
   const showNotificationMessage = (message, type = 'info') => {
-    setShowNotification({ show: true, message, type });
-    setTimeout(() => setShowNotification({ show: false, message: '', type: '' }), 5000);
+    switch (type) {
+      case 'success':
+        showSuccess(message);
+        break;
+      case 'error':
+        showError(message);
+        break;
+      case 'warning':
+        showWarning(message);
+        break;
+      default:
+        showInfo(message);
+        break;
+    }
   };
 
   // Helper function to show confirmation dialog
@@ -611,6 +631,74 @@ const QuoteHistory = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // WhatsApp Integration Handler
+  const handleWhatsAppSend = (quote) => {
+    // Extract client phone number from various possible locations
+    const clientPhone = quote.clientInfo?.phone || 
+                       quote.customerInfo?.phone || 
+                       quote.phone || 
+                       quote.clientPhone || 
+                       '';
+
+    // Validate phone number exists
+    if (!clientPhone || clientPhone.trim() === '') {
+      setConfirmDialog({
+        isOpen: true,
+        title: 'Phone Number Missing',
+        message: `No phone number found for client "${quote.clientInfo?.name || 'Unknown Client'}". Please add a phone number to the client information before sending WhatsApp messages.`,
+        onConfirm: () => {
+          closeConfirmDialog();
+          // Optionally redirect to edit the quote
+          handleEdit(quote);
+        },
+        type: 'warning',
+        confirmText: 'Edit Quote',
+        cancelText: 'Cancel'
+      });
+      return;
+    }
+
+    // Create client object from quote data
+    const client = {
+      name: quote.clientInfo?.name || quote.clientName || quote.customerInfo?.name || 'Client',
+      phone: clientPhone,
+      email: quote.clientInfo?.email || quote.customerInfo?.email || quote.email || '',
+      company: quote.clientInfo?.company || '',
+      address: quote.clientInfo?.address || ''
+    };
+
+    // Prepare quotation data for WhatsApp
+    const quotationData = {
+      quotationNumber: quote.quoteNumber || quote._id,
+      date: quote.createdAt || new Date(),
+      amount: quote.pricing?.total || quote.pricing?.grandTotal || 0,
+      status: quote.status || 'draft',
+      created: quote.createdAt || new Date(),
+      items: quote.windowDetails || [
+        {
+          description: 'Window Services',
+          quantity: 1,
+          rate: quote.pricing?.total || 0,
+          amount: quote.pricing?.total || 0
+        }
+      ],
+      subtotal: quote.pricing?.subtotal || quote.pricing?.total || 0,
+      tax: quote.pricing?.tax || 0,
+      taxRate: 18,
+      total: quote.pricing?.total || quote.pricing?.grandTotal || 0
+    };
+
+    setSelectedClientForWhatsApp(client);
+    setSelectedQuotationForWhatsApp(quotationData);
+    setShowWhatsApp(true);
+  };
+
+  const handleCloseWhatsApp = () => {
+    setShowWhatsApp(false);
+    setSelectedClientForWhatsApp(null);
+    setSelectedQuotationForWhatsApp(null);
   };
 
   const handleBulkExport = async (format = 'csv') => {
@@ -1026,14 +1114,6 @@ const QuoteHistory = () => {
 
   return (
     <div className="quote-history">
-      {/* Notification */}
-      {showNotification.show && (
-        <div className={`notification notification-${showNotification.type}`}>
-          <span>{showNotification.message}</span>
-          <button onClick={() => setShowNotification({ show: false, message: '', type: '' })}>×</button>
-        </div>
-      )}
-
       {/* Header */}
       <div className="quote-history-header">
         <div className="header-left">
@@ -1532,6 +1612,13 @@ const QuoteHistory = () => {
                         >
                           <FiTrash2 size={40} />
                         </button>
+                        <button 
+                          className="whatsapp-action-btn" 
+                          onClick={() => handleWhatsAppSend(quote)}
+                          title="Send via WhatsApp"
+                        >
+                          <FaWhatsapp size={20} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -1659,6 +1746,13 @@ const QuoteHistory = () => {
                   >
                     Edit
                   </button>
+                  <button
+                    className="whatsapp-action-btn"
+                    onClick={() => handleWhatsAppSend(quote)}
+                    title="Send via WhatsApp"
+                  >
+                    <FaWhatsapp size={20} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -1750,6 +1844,13 @@ const QuoteHistory = () => {
                       onClick={() => handleEdit(quote)}
                     >
                       Edit
+                    </button>
+                    <button
+                      className="whatsapp-action-btn"
+                      onClick={() => handleWhatsAppSend(quote)}
+                      title="Send via WhatsApp"
+                    >
+                      <FaWhatsapp size={20} />
                     </button>
                   </div>
                 </div>
@@ -2045,6 +2146,15 @@ const QuoteHistory = () => {
         cancelText={confirmDialog.cancelText}
         type={confirmDialog.type}
       />
+
+      {/* WhatsApp Integration Modal */}
+      {showWhatsApp && selectedClientForWhatsApp && (
+        <WhatsAppIntegration
+          client={selectedClientForWhatsApp}
+          quotation={selectedQuotationForWhatsApp}
+          onClose={handleCloseWhatsApp}
+        />
+      )}
     </div>
   );
 };

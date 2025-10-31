@@ -719,6 +719,38 @@
   align-items: center;
 }
 
+/* WhatsApp Action Button */
+.whatsapp-action-btn {
+  background: #25D366;
+  border: none;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.2s;
+  min-width: 32px;
+  height: 32px;
+}
+
+.whatsapp-action-btn:hover {
+  background: #128C7E;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+}
+
+.whatsapp-action-btn:active {
+  transform: scale(0.95);
+}
+
+.whatsapp-action-btn svg {
+  color: white;
+}
+
 .modal-body {
   max-height: 75vh;
   overflow-y: auto;

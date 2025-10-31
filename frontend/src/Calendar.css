@@ -342,6 +342,114 @@
   background: #667eea;
 }
 
+/* Event Tooltip Styles */
+.event-tooltip-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.event-tooltip {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 300px;
+  max-width: 90vw;
+}
+
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.tooltip-header h4 {
+  margin: 0;
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-tooltip {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.close-tooltip:hover {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.tooltip-content {
+  padding: 16px 20px;
+}
+
+.tooltip-content p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.tooltip-content strong {
+  color: #495057;
+}
+
+.tooltip-actions {
+  padding: 16px 20px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 8px;
+}
+
+.edit-event-btn,
+.delete-event-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-event-btn {
+  background: #007bff;
+  color: white;
+  flex: 1;
+}
+
+.edit-event-btn:hover {
+  background: #0056b3;
+}
+
+.delete-event-btn {
+  background: #dc3545;
+  color: white;
+  flex: 1;
+}
+
+.delete-event-btn:hover {
+  background: #c82333;
+}
+
 [data-theme="dark"] .event-item {
   background: rgba(102, 126, 234, 0.15);
   color: #8b9aff;

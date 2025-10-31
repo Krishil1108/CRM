@@ -4,6 +4,7 @@ import './App.css';
 import './styles/theme.css';
 import { CompanyProvider } from './CompanyContext';
 import { AppModeProvider } from './contexts/AppModeContext';
+import { ToastProvider } from './context/ToastContext';
 import Sidebar from './Sidebar';
 import HomePage from './HomePage';
 import ClientsPage from './ClientsPage';
@@ -24,7 +25,8 @@ function App() {
     <Router>
       <CompanyProvider>
         <AppModeProvider>
-          <div className="App">
+          <ToastProvider>
+            <div className="App">
             <Sidebar 
               isExpanded={isSidebarExpanded} 
               toggleSidebar={toggleSidebar}
@@ -46,6 +48,7 @@ function App() {
               </Routes>
             </div>
           </div>
+          </ToastProvider>
         </AppModeProvider>
       </CompanyProvider>
     </Router>
