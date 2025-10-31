@@ -26,12 +26,16 @@ const SettingsPage = () => {
   // Display Preferences State
   const [displayPrefs, setDisplayPrefs] = useState({
     theme: localStorage.getItem('theme') || 'light',
+    darkMode: localStorage.getItem('darkMode') === 'true' || false,
     timezone: 'America/New_York',
     dateFormat: 'MM/DD/YYYY',
     timeFormat: '12-hour',
     language: 'en',
     itemsPerPage: 50,
-    defaultView: 'grid'
+    defaultView: 'grid',
+    animations: true,
+    compactMode: false,
+    fontSize: 'medium'
   });
 
   // Notification Settings State
@@ -39,9 +43,16 @@ const SettingsPage = () => {
     emailNotifications: true,
     systemAlerts: true,
     activityNotifications: true,
-    weeklyReports: false,
-    marketingEmails: false,
-    frequency: 'immediate'
+    weeklyReports: true,
+    marketingEmails: true,
+    frequency: 'immediate',
+    pushNotifications: true,
+    smsNotifications: true,
+    desktopNotifications: true,
+    soundEnabled: true,
+    vibrationEnabled: true,
+    notificationHistory: true,
+    digestEmails: true
   });
 
   // Quotation Settings State
@@ -58,11 +69,44 @@ const SettingsPage = () => {
 
   // Security Settings State
   const [security, setSecurity] = useState({
-    twoFactorAuth: false,
+    twoFactorAuth: true,
     sessionTimeout: '30',
     passwordExpiry: '90',
     loginNotifications: true,
-    deviceTracking: true
+    deviceTracking: true,
+    ipWhitelist: true,
+    encryptionEnabled: true,
+    backupEncryption: true,
+    auditLogging: true,
+    accessControl: true
+  });
+
+  // Data Settings State
+  const [dataSettings, setDataSettings] = useState({
+    autoBackup: true,
+    backupFrequency: 'daily',
+    retentionPeriod: '90',
+    compressionEnabled: true,
+    encryptBackups: true,
+    cloudSync: true,
+    exportFormat: 'json',
+    importValidation: true,
+    dataValidation: true,
+    archiveOldData: true
+  });
+
+  // System Settings State
+  const [systemSettings, setSystemSettings] = useState({
+    realTimeData: true,
+    autoUpdates: true,
+    systemLogging: true,
+    performanceMonitoring: true,
+    errorReporting: true,
+    debugMode: false,
+    cacheEnabled: true,
+    compressionEnabled: true,
+    apiRateLimit: '1000',
+    maxConcurrentUsers: '100'
   });
 
   // System Stats State
@@ -118,25 +162,50 @@ const SettingsPage = () => {
         break;
       case 'display':
         setDisplayPrefs(data);
-        localStorage.setItem('theme', data.theme);
+        localStorage.setItem('displayPrefs', JSON.stringify(data));
+        // Apply theme changes immediately
+        applyTheme(data.theme);
         break;
       case 'notifications':
         setNotifications(data);
+        localStorage.setItem('notificationSettings', JSON.stringify(data));
         break;
       case 'security':
         setSecurity(data);
+        localStorage.setItem('securitySettings', JSON.stringify(data));
+        break;
+      case 'data':
+        setDataSettings(data);
+        localStorage.setItem('dataSettings', JSON.stringify(data));
+        break;
+      case 'system':
+        setSystemSettings(data);
+        localStorage.setItem('systemSettings', JSON.stringify(data));
         break;
       default:
-        break;
+        console.warn('Unknown settings section:', section);
     }
     
-    setSaveMessage(`${section.charAt(0).toUpperCase() + section.slice(1)} settings saved successfully!`);
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-      setSaveMessage('');
-    }, 3000);
+    // Show success message
+    alert(`${section.charAt(0).toUpperCase() + section.slice(1)} settings saved successfully!`);
   };
+
+  // Function to apply theme
+  const applyTheme = (theme) => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  };
+
+  // Apply theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || displayPrefs.theme;
+    applyTheme(savedTheme);
+    
+    // Update display preferences if theme was loaded from localStorage
+    if (savedTheme !== displayPrefs.theme) {
+      setDisplayPrefs(prev => ({ ...prev, theme: savedTheme }));
+    }
+  }, []);
 
   const renderProfileSection = () => (
     <div className="settings-section">
@@ -492,7 +561,12 @@ const SettingsPage = () => {
                   name="theme"
                   value="light"
                   checked={displayPrefs.theme === 'light'}
-                  onChange={(e) => setDisplayPrefs(prev => ({...prev, theme: e.target.value}))}
+                  onChange={(e) => {
+                    const newPrefs = {...displayPrefs, theme: e.target.value};
+                    setDisplayPrefs(newPrefs);
+                    applyTheme(e.target.value);
+                    localStorage.setItem('displayPrefs', JSON.stringify(newPrefs));
+                  }}
                 />
                 <span className="theme-preview light-theme">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -508,7 +582,12 @@ const SettingsPage = () => {
                   name="theme"
                   value="dark"
                   checked={displayPrefs.theme === 'dark'}
-                  onChange={(e) => setDisplayPrefs(prev => ({...prev, theme: e.target.value}))}
+                  onChange={(e) => {
+                    const newPrefs = {...displayPrefs, theme: e.target.value};
+                    setDisplayPrefs(newPrefs);
+                    applyTheme(e.target.value);
+                    localStorage.setItem('displayPrefs', JSON.stringify(newPrefs));
+                  }}
                 />
                 <span className="theme-preview dark-theme">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

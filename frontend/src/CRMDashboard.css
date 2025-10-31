@@ -61,36 +61,6 @@
   font-size: 14px;
 }
 
-.header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.action-btn {
-  padding: 8px 16px;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  background: white;
-  color: #495057;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.action-btn.primary {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-
-.action-btn:hover {
-  background: #f8f9fa;
-}
-
-.action-btn.primary:hover {
-  background: #0056b3;
-}
-
 /* CRM Content */
 .crm-content {
   padding: 0;
@@ -414,4 +384,106 @@
     flex-direction: column;
     gap: 8px;
   }
+}
+
+/* Dark Mode Support for CRM Dashboard */
+[data-theme="dark"] .page-container {
+  background: var(--background-color);
+}
+
+[data-theme="dark"] .crm-header {
+  background: var(--surface-color);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .company-info h1 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .company-info p {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .crm-tabs {
+  background: var(--surface-color);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .tab-button {
+  background: var(--surface-color);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .tab-button:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .tab-button.active {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+[data-theme="dark"] .user-profile {
+  background: var(--surface-color);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .user-avatar {
+  background: var(--accent-color);
+  color: white;
+}
+
+[data-theme="dark"] .user-info h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .user-info p {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .main-content {
+  background: var(--background-color);
+}
+
+[data-theme="dark"] .content-wrapper {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .dashboard-grid {
+  background: var(--background-color);
+}
+
+[data-theme="dark"] .dashboard-widget {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .widget-header h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .widget-content {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .notification-badge {
+  background: #ef4444;
+  color: white;
+}
+
+[data-theme="dark"] .loading-container {
+  background: var(--card-bg);
+}
+
+[data-theme="dark"] .loading-spinner {
+  border-color: var(--border-color);
+  border-top-color: var(--accent-color);
+}
+
+[data-theme="dark"] .loading-text {
+  color: var(--text-secondary);
 }

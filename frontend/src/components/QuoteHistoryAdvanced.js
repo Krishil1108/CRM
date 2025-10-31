@@ -1655,11 +1655,7 @@ const QuoteHistory = () => {
                   </button>
                   <button
                     className="btn btn-sm btn-outline"
-                    onClick={() => {
-                      setSelectedQuote(quote);
-                      setModalType('edit');
-                      setShowModal(true);
-                    }}
+                    onClick={() => handleEdit(quote)}
                   >
                     Edit
                   </button>
@@ -1671,58 +1667,94 @@ const QuoteHistory = () => {
 
         {/* List View */}
         {viewMode === 'list' && quotes.length > 0 && (
-          <div className="quotes-list">
-            {processedQuotes.map((quote) => (
-              <div 
-                key={quote._id} 
-                className={`quote-list-item ${selectedQuotes.has(quote._id) ? 'selected' : ''}`}
-              >
-                <div className="quote-list-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={selectedQuotes.has(quote._id)}
-                    onChange={() => handleSelectQuote(quote._id)}
-                  />
-                </div>
+          <div className="quotes-list-container">
+            {/* List Headers */}
+            <div className="quote-list-header-row">
+              <div className="quote-list-checkbox-header">
+                <input
+                  type="checkbox"
+                  checked={selectedQuotes.size === quotes.length && quotes.length > 0}
+                  onChange={handleSelectAll}
+                />
+              </div>
+              <div className="quote-list-column-header">Quote & Client</div>
+              <div className="quote-list-column-header">Status</div>
+              <div className="quote-list-column-header">Window Types</div>
+              <div className="quote-list-column-header">Amount</div>
+              <div className="quote-list-column-header">Created</div>
+              <div className="quote-list-column-header">Actions</div>
+            </div>
 
-                <div className="quote-list-main">
-                  <div className="quote-list-header">
-                    <span className="quote-number">#{quote.quotationNumber}</span>
+            <div className="quotes-list">
+              {processedQuotes.map((quote) => (
+                <div 
+                  key={quote._id} 
+                  className={`quote-list-item ${selectedQuotes.has(quote._id) ? 'selected' : ''}`}
+                >
+                  <div className="quote-list-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={selectedQuotes.has(quote._id)}
+                      onChange={() => handleSelectQuote(quote._id)}
+                    />
+                  </div>
+
+                  <div className="quote-list-column quote-list-primary">
+                    <div className="quote-number-row">
+                      <span className="quote-number">#{quote.quotationNumber}</span>
+                    </div>
+                    <div className="client-info">
+                      <div className="client-name">{quote.clientInfo?.name || 'Unknown Client'}</div>
+                      {quote.clientInfo?.company && (
+                        <div className="client-company">{quote.clientInfo.company}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="quote-list-column quote-status-column">
                     <span 
                       className={`status-badge status-${quote.status}`}
                       style={{ backgroundColor: getStatusColor(quote.status) }}
                     >
                       {quote.status}
                     </span>
-                    <span className="quote-date">{new Date(quote.createdAt).toLocaleDateString()}</span>
                   </div>
 
-                  <div className="quote-list-details">
-                    <div className="client-details">
-                      <strong>{quote.clientInfo?.name || 'Unknown Client'}</strong>
-                      {quote.clientInfo?.company && <span> - {quote.clientInfo.company}</span>}
-                    </div>
-                    <div className="quote-details">
-                      <span title={getWindowTypesTooltip(quote)}>{formatWindowTypesDisplay(quote)}</span>
-                      <span className="amount">{formatCurrency(quote.pricing?.total || 0)}</span>
+                  <div className="quote-list-column">
+                    <div className="window-info" title={getWindowTypesTooltip(quote)}>
+                      {formatWindowTypesDisplay(quote)}
                     </div>
                   </div>
-                </div>
 
-                <div className="quote-list-actions">
-                  <button
-                    className="btn btn-sm btn-outline"
-                    onClick={() => {
-                      setSelectedQuote(quote);
-                      setModalType('view');
-                      setShowModal(true);
-                    }}
-                  >
-                    View
-                  </button>
+                  <div className="quote-list-column">
+                    <div className="quote-amount">{formatCurrency(quote.pricing?.total || 0)}</div>
+                  </div>
+
+                  <div className="quote-list-column">
+                    <div className="quote-date">{new Date(quote.createdAt).toLocaleDateString()}</div>
+                  </div>
+
+                  <div className="quote-list-column quote-list-actions">
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => {
+                        setSelectedQuote(quote);
+                        setModalType('view');
+                        setShowModal(true);
+                      }}
+                    >
+                      View
+                    </button>
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => handleEdit(quote)}
+                    >
+                      Edit
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
 

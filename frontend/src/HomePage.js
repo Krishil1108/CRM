@@ -32,10 +32,6 @@ const HomePage = () => {
             <p className="company-tagline">{companyInfo.tagline}</p>
           </div>
         </div>
-        <div className="header-actions">
-          <button className="action-btn primary">+ Add new</button>
-          <button className="action-btn">Export</button>
-        </div>
       </div>
       
       <div className="crm-content">

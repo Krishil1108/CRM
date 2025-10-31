@@ -215,3 +215,96 @@
   50% { transform: scale(1.05); }
   100% { transform: scale(1); }
 }
+
+/* Dark Mode Support for Mode Selector */
+[data-theme="dark"] .mode-selector-fixed {
+  background: rgba(30, 32, 37, 0.95);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .mode-selector-fixed.mode-test {
+  background: rgba(25, 40, 25, 0.95);
+  border-color: #4CAF50;
+}
+
+[data-theme="dark"] .mode-selector-fixed.mode-quotation {
+  background: rgba(25, 35, 45, 0.95);
+  border-color: #2196F3;
+}
+
+[data-theme="dark"] .mode-selector-fixed.mode-training {
+  background: rgba(45, 25, 35, 0.95);
+  border-color: #E91E63;
+}
+
+[data-theme="dark"] .mode-selector-fixed.mode-live {
+  background: rgba(45, 35, 25, 0.95);
+  border-color: #FF9800;
+}
+
+[data-theme="dark"] .mode-label {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .mode-selector {
+  background: var(--surface-color);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .mode-option {
+  background: var(--surface-color);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .mode-option:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .mode-option.active {
+  background: var(--accent-color);
+  color: white;
+  border-color: var(--accent-color);
+}
+
+[data-theme="dark"] .mode-option.active.mode-test {
+  background: #4CAF50;
+  border-color: #4CAF50;
+}
+
+[data-theme="dark"] .mode-option.active.mode-quotation {
+  background: #2196F3;
+  border-color: #2196F3;
+}
+
+[data-theme="dark"] .mode-option.active.mode-training {
+  background: #E91E63;
+  border-color: #E91E63;
+}
+
+[data-theme="dark"] .mode-option.active.mode-live {
+  background: #FF9800;
+  border-color: #FF9800;
+}
+
+[data-theme="dark"] .mode-description {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .mode-status-indicator {
+  background: var(--surface-color);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .status-dot.active {
+  background: #4CAF50;
+}
+
+[data-theme="dark"] .status-dot.inactive {
+  background: var(--text-muted);
+}
+
+[data-theme="dark"] .status-text {
+  color: var(--text-secondary);
+}

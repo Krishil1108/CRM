@@ -2026,3 +2026,132 @@
 }
 
 /* Inventory page now matches Client page UI exactly - no overrides needed */
+
+/* Dark Mode Support for Page Content */
+[data-theme="dark"] .page-container {
+  background: var(--background-color, #1a1b23);
+  color: var(--text-primary, #e2e8f0);
+}
+
+[data-theme="dark"] .page-header h1 {
+  color: var(--text-primary, #e2e8f0);
+}
+
+[data-theme="dark"] .page-header p {
+  color: var(--text-secondary, #a2a8b2);
+}
+
+[data-theme="dark"] .add-client-btn {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+[data-theme="dark"] .add-client-btn:hover {
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Dark mode for modals and popups */
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .popup-content {
+  background: var(--card-bg, #2d2e37);
+  border-color: var(--border-color, #374151);
+  color: var(--text-primary, #e2e8f0);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .modal-header h2,
+[data-theme="dark"] .popup-header h2 {
+  color: var(--text-primary, #e2e8f0);
+}
+
+/* Dark mode for form elements */
+[data-theme="dark"] .form-group label {
+  color: var(--text-primary, #e2e8f0);
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea {
+  background: var(--input-bg, #374151);
+  border-color: var(--border-color, #4b5563);
+  color: var(--text-primary, #e2e8f0);
+}
+
+[data-theme="dark"] .form-group input::placeholder {
+  color: var(--text-muted, #6b7280);
+}
+
+[data-theme="dark"] .form-group input:focus,
+[data-theme="dark"] .form-group select:focus,
+[data-theme="dark"] .form-group textarea:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Dark mode for tables */
+[data-theme="dark"] .clients-table,
+[data-theme="dark"] .inventory-table {
+  background: var(--card-bg, #2d2e37);
+  border-color: var(--border-color, #374151);
+}
+
+[data-theme="dark"] .clients-table th,
+[data-theme="dark"] .inventory-table th {
+  background: var(--surface-color, #374151);
+  color: var(--text-primary, #e2e8f0);
+  border-color: var(--border-color, #4b5563);
+}
+
+[data-theme="dark"] .clients-table td,
+[data-theme="dark"] .inventory-table td {
+  border-color: var(--border-color, #374151);
+  color: var(--text-primary, #e2e8f0);
+}
+
+[data-theme="dark"] .clients-table tr:hover,
+[data-theme="dark"] .inventory-table tr:hover {
+  background: var(--hover-bg, #374151);
+}
+
+/* Dark mode for buttons */
+[data-theme="dark"] .btn-secondary {
+  background: var(--surface-color, #374151);
+  border-color: var(--border-color, #4b5563);
+  color: var(--text-primary, #e2e8f0);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background: var(--hover-bg, #4b5563);
+}
+
+[data-theme="dark"] .btn-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: white;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* Dark mode for pagination */
+[data-theme="dark"] .pagination-container {
+  background: var(--card-bg, #2d2e37);
+  border-color: var(--border-color, #374151);
+}
+
+[data-theme="dark"] .pagination-number {
+  background: var(--surface-color, #374151);
+  border-color: var(--border-color, #4b5563);
+  color: var(--text-primary, #e2e8f0);
+}
+
+[data-theme="dark"] .pagination-number:hover {
+  background: var(--hover-bg, #4b5563);
+}
+
+[data-theme="dark"] .pagination-number.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}

@@ -45,6 +45,32 @@
   color: #6b7280;
 }
 
+/* Dark Mode Styles for Main App */
+[data-theme="dark"] .App {
+  background-color: #1a1b23;
+}
+
+[data-theme="dark"] .main-content {
+  background: linear-gradient(to bottom left, #1a1b23 60%, #252730 100%);
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .welcome-message h1 {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .welcome-message p {
+  color: #a2a8b2;
+}
+
+/* Global dark mode form elements */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea,
+[data-theme="dark"] button {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
 /* Responsive design for main content */
 @media (max-width: 768px) {
   .main-content {

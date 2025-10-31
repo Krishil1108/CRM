@@ -57,3 +57,12 @@
     left: 12px;
   }
 }
+
+/* Dark Mode Support for Hamburger Menu */
+[data-theme="dark"] .hamburger:hover {
+  background: var(--hover-bg);
+}
+
+[data-theme="dark"] .hamburger-line {
+  background-color: var(--text-primary);
+}

@@ -658,3 +658,525 @@
   font-weight: bold;
   letter-spacing: 1px;
 }
+
+/* Data Management Section Styles */
+.settings-page .data-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.settings-page .data-card h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.settings-page .data-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.settings-page .data-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-page .data-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+.settings-page .export-btn {
+  border-color: #10b981;
+  color: #10b981;
+}
+
+.settings-page .export-btn:hover {
+  background: #ecfdf5;
+  border-color: #059669;
+}
+
+.settings-page .import-btn {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.settings-page .import-btn:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.settings-page .backup-btn {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.settings-page .backup-btn:hover {
+  background: #fffbeb;
+  border-color: #d97706;
+}
+
+.settings-page .cleanup-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-page .cleanup-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.settings-page .cleanup-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.settings-page .data-note {
+  margin: 0;
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.settings-page .danger-zone {
+  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+}
+
+.settings-page .danger-zone h4 {
+  color: #dc2626 !important;
+  display: flex;
+  align-items: center;
+}
+
+.settings-page .danger-zone p {
+  color: #7f1d1d;
+  font-size: 14px;
+  margin: 8px 0 16px 0;
+}
+
+.settings-page .danger-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settings-page .danger-btn {
+  padding: 8px 16px;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  background: white;
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.settings-page .danger-btn:hover {
+  background: #dc2626;
+  color: white;
+}
+
+/* System Information Section Styles */
+.settings-page .system-stats {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.settings-page .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.settings-page .stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.settings-page .stat-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  color: white;
+}
+
+.settings-page .stat-info h3 {
+  margin: 0 0 4px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.settings-page .stat-info p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.settings-page .system-info {
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.settings-page .system-info h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.settings-page .status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.settings-page .status-item:last-child {
+  border-bottom: none;
+}
+
+.settings-page .status-label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.settings-page .status-value {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+}
+
+/* Security Section Enhancements */
+.settings-page .security-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.settings-page .security-card h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.settings-page .security-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-page .security-btn {
+  padding: 10px 16px;
+  border: 1px solid #667eea;
+  border-radius: 6px;
+  background: white;
+  color: #667eea;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.settings-page .security-btn:hover {
+  background: #667eea;
+  color: white;
+}
+
+/* Dark Mode Specific Styles */
+[data-theme="dark"] .settings-page {
+  background: var(--background-color);
+}
+
+[data-theme="dark"] .settings-page .settings-nav,
+[data-theme="dark"] .settings-page .settings-section,
+[data-theme="dark"] .settings-page .data-card,
+[data-theme="dark"] .settings-page .security-card,
+[data-theme="dark"] .settings-page .system-stats,
+[data-theme="dark"] .settings-page .system-info {
+  background: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .settings-content {
+  background: var(--card-bg);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+}
+
+/* Dark Mode Form Fields and Labels */
+[data-theme="dark"] .settings-page .form-group label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .settings-page .form-group input,
+[data-theme="dark"] .settings-page .form-group select,
+[data-theme="dark"] .settings-page .form-group textarea {
+  background: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .form-group input::placeholder,
+[data-theme="dark"] .settings-page .form-group textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+[data-theme="dark"] .settings-page .form-group input:focus,
+[data-theme="dark"] .settings-page .form-group select:focus,
+[data-theme="dark"] .settings-page .form-group textarea:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Dark Mode Section Headers */
+[data-theme="dark"] .settings-page .section-header {
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .settings-page .section-header h2 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .section-header p {
+  color: var(--text-secondary);
+}
+
+/* Dark Mode Navigation */
+[data-theme="dark"] .settings-page .nav-item {
+  color: var(--text-secondary);
+  border-left-color: transparent;
+}
+
+[data-theme="dark"] .settings-page .nav-item:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .nav-item.active {
+  background: rgba(102, 126, 234, 0.15);
+  color: #8b9aff;
+  border-left-color: #667eea;
+}
+
+/* Dark Mode Theme Selector */
+[data-theme="dark"] .settings-page .theme-preview {
+  background: var(--surface-color);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .theme-option input[type="radio"]:checked + .theme-preview {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.15);
+  color: #8b9aff;
+}
+
+/* Dark Mode Toggle Switches */
+[data-theme="dark"] .settings-page .toggle-label {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .toggle-content h4 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .toggle-content p {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .settings-page .toggle-slider {
+  background: var(--border-color);
+}
+
+[data-theme="dark"] .settings-page .toggle-label input:checked + .toggle-slider {
+  background: #667eea;
+}
+
+/* Dark Mode Buttons */
+[data-theme="dark"] .settings-page .save-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+}
+
+[data-theme="dark"] .settings-page .save-btn:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+[data-theme="dark"] .settings-page .avatar-placeholder {
+  background: var(--surface-color);
+  color: var(--text-muted);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .settings-page .avatar-preview {
+  border-color: var(--border-color);
+}
+
+/* Dark Mode Data Management Section */
+[data-theme="dark"] .settings-page .stat-card {
+  background: var(--surface-color);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .settings-page .stat-info h3 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .stat-info p {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .settings-page .data-btn,
+[data-theme="dark"] .settings-page .cleanup-btn,
+[data-theme="dark"] .settings-page .security-btn {
+  background: var(--surface-color);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .data-btn:hover,
+[data-theme="dark"] .settings-page .cleanup-btn:hover {
+  background: var(--hover-bg);
+  border-color: var(--text-muted);
+}
+
+[data-theme="dark"] .settings-page .security-btn:hover {
+  background: #667eea;
+  color: white;
+}
+
+[data-theme="dark"] .settings-page .data-note {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .settings-page .data-card h4,
+[data-theme="dark"] .settings-page .security-card h4,
+[data-theme="dark"] .settings-page .system-info h4 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .status-label {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .settings-page .status-value {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .settings-page .status-item {
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .settings-page .danger-zone {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: #dc2626 !important;
+}
+
+[data-theme="dark"] .settings-page .danger-zone h4 {
+  color: #ff6b6b !important;
+}
+
+[data-theme="dark"] .settings-page .danger-zone p {
+  color: #ffb3b3 !important;
+}
+
+/* Dark Mode Specific Color Adjustments for Better Contrast */
+[data-theme="dark"] .settings-page .export-btn {
+  border-color: #10d97a;
+  color: #10d97a;
+}
+
+[data-theme="dark"] .settings-page .export-btn:hover {
+  background: rgba(16, 217, 122, 0.1);
+  border-color: #0dd670;
+}
+
+[data-theme="dark"] .settings-page .import-btn {
+  border-color: #60a5fa;
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .settings-page .import-btn:hover {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: #3b82f6;
+}
+
+[data-theme="dark"] .settings-page .backup-btn {
+  border-color: #fbbf24;
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .settings-page .backup-btn:hover {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: #f59e0b;
+}
+
+/* Responsive Design for New Sections */
+@media (max-width: 768px) {
+  .settings-page .data-actions {
+    flex-direction: column;
+  }
+  
+  .settings-page .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .settings-page .danger-actions {
+    flex-direction: column;
+  }
+}
