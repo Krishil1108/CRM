@@ -1717,18 +1717,6 @@ const QuotationPage = () => {
           showNotification(`Quotation ${action} to local storage. Backend server is not available.`, 'warning');
         }
         
-        // Optionally generate PDF after submission
-        showConfirmation(
-          'Generate PDF?',
-          'Would you like to generate a PDF for this quotation?',
-          async () => {
-            await generatePDF();
-          },
-          'info',
-          'Yes, Generate PDF',
-          'No, Skip'
-        );
-        
       } catch (dbError) {
         console.error('Database submit error:', dbError);
         showNotification('Quotation saved locally, but failed to submit to Quote History database. Please check if the backend server is running.', 'error');
@@ -5333,9 +5321,6 @@ const QuotationPage = () => {
       <div className="quotation-actions">
         <button className="btn-success" onClick={handleNewQuotation}>
           New Quotation
-        </button>
-        <button className="btn-primary" onClick={handleSaveQuotation}>
-          Save Quotation
         </button>
         <button className="btn-draft" onClick={handleSaveDraft}>
           Save as Draft
