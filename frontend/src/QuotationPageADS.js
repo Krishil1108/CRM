@@ -1241,6 +1241,7 @@ const QuotationPage = () => {
         if (index >= 0) {
           quotations[index] = {
             ...quotationData,
+            windows: windows, // Include all windows
             id: quotationData.quotationNumber,
             updatedAt: new Date().toISOString(),
             status: saveStatus
@@ -1250,6 +1251,7 @@ const QuotationPage = () => {
         // Add new quotation to localStorage
         const newQuotation = {
           ...quotationData,
+          windows: windows, // Include all windows
           id: quotationData.quotationNumber,
           createdAt: new Date().toISOString(),
           status: saveStatus
@@ -1665,6 +1667,7 @@ const QuotationPage = () => {
         if (index >= 0) {
           quotations[index] = {
             ...quotationData,
+            windows: windows, // Include all windows
             id: quotationData.quotationNumber,
             updatedAt: new Date().toISOString(),
             status: 'submitted' // Change status to submitted when submitting
@@ -1674,6 +1677,7 @@ const QuotationPage = () => {
         // Add new quotation to localStorage
         const newQuotation = {
           ...quotationData,
+          windows: windows, // Include all windows
           id: quotationData.quotationNumber,
           createdAt: new Date().toISOString(),
           status: 'submitted'

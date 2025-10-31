@@ -1738,29 +1738,6 @@ const QuoteHistory = () => {
                 <div className="modal-header">
                   <h3>Quote Details - {selectedQuote.quotationNumber}</h3>
                   <div className="modal-header-actions">
-                    <button
-                      className="btn btn-outline"
-                      onClick={() => {
-                        setModalType('edit');
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn btn-outline"
-                      onClick={async () => {
-                        try {
-                          await QuoteService.duplicateQuote(selectedQuote._id);
-                          await loadQuotes();
-                          showNotificationMessage('Quote duplicated successfully', 'success');
-                          setShowModal(false);
-                        } catch (error) {
-                          showNotificationMessage('Failed to duplicate quote', 'error');
-                        }
-                      }}
-                    >
-                      Duplicate
-                    </button>
                     <button className="btn btn-close" onClick={() => setShowModal(false)}>×</button>
                   </div>
                 </div>
