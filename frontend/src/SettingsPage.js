@@ -114,14 +114,28 @@ const SettingsPage = () => {
     totalClients: 0,
     totalInventory: 0,
     totalActivities: 0,
+    totalQuotes: 0,
     dbSize: 'Loading...',
-    lastBackup: 'Never',
-    uptime: '0 days'
+    lastBackup: 'Loading...',
+    uptime: 'Loading...',
+    systemHealth: 'Loading...',
+    memoryUsage: 'Loading...',
+    timestamp: null
   });
 
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState(null);
+
   useEffect(() => {
-    // Load system statistics
+    // Load system statistics immediately
     loadSystemStats();
+
+    // Set up auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      loadSystemStats();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
   }, []);
 
   // Sync quotationSettings when companyInfo changes
@@ -133,17 +147,41 @@ const SettingsPage = () => {
 
   const loadSystemStats = async () => {
     try {
-      // This would typically fetch from API
-      setSystemStats({
-        totalClients: 156,
-        totalInventory: 2834,
-        totalActivities: 1247,
-        dbSize: '45.2 MB',
-        lastBackup: '2 hours ago',
-        uptime: '12 days'
+      setIsLoadingStats(true);
+      setStatsError(null);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/system/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch system statistics');
+      }
+
+      const data = await response.json();
+      setSystemStats(data);
+      setIsLoadingStats(false);
     } catch (error) {
       console.error('Error loading system stats:', error);
+      setStatsError('Unable to load system statistics');
+      setIsLoadingStats(false);
+      
+      // Fallback to mock data if API fails
+      setSystemStats({
+        totalClients: '---',
+        totalInventory: '---',
+        totalActivities: '---',
+        totalQuotes: '---',
+        dbSize: 'N/A',
+        lastBackup: 'N/A',
+        uptime: 'N/A',
+        systemHealth: 'Unknown',
+        memoryUsage: 'N/A',
+        timestamp: null
+      });
     }
   };
 
@@ -952,6 +990,62 @@ const SettingsPage = () => {
           System Information
         </h2>
         <p>View system statistics and performance metrics</p>
+        
+        <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button 
+            onClick={loadSystemStats} 
+            disabled={isLoadingStats}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#667eea',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: isLoadingStats ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              opacity: isLoadingStats ? 0.6 : 1,
+              transition: 'all 0.3s ease'
+            }}
+          >
+            <svg 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2"
+              style={{
+                animation: isLoadingStats ? 'spin 1s linear infinite' : 'none'
+              }}
+            >
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            {isLoadingStats ? 'Refreshing...' : 'Refresh Now'}
+          </button>
+          
+          {systemStats.timestamp && !isLoadingStats && (
+            <span style={{ fontSize: '12px', color: '#666' }}>
+              Last updated: {new Date(systemStats.timestamp).toLocaleTimeString()}
+            </span>
+          )}
+          
+          {statsError && (
+            <span style={{ fontSize: '12px', color: '#dc3545' }}>
+              ⚠️ {statsError}
+            </span>
+          )}
+          
+          {!statsError && !isLoadingStats && (
+            <span style={{ fontSize: '12px', color: '#28a745' }}>
+              🟢 Auto-refresh: 30s
+            </span>
+          )}
+        </div>
       </div>
       
       <div className="system-stats">
@@ -966,7 +1060,7 @@ const SettingsPage = () => {
               </svg>
             </div>
             <div className="stat-info">
-              <h3>{systemStats.totalClients}</h3>
+              <h3>{isLoadingStats ? '...' : systemStats.totalClients}</h3>
               <p>Total Clients</p>
             </div>
           </div>
@@ -979,7 +1073,7 @@ const SettingsPage = () => {
               </svg>
             </div>
             <div className="stat-info">
-              <h3>{systemStats.totalInventory}</h3>
+              <h3>{isLoadingStats ? '...' : systemStats.totalInventory}</h3>
               <p>Inventory Items</p>
             </div>
           </div>
@@ -990,7 +1084,7 @@ const SettingsPage = () => {
               </svg>
             </div>
             <div className="stat-info">
-              <h3>{systemStats.totalActivities}</h3>
+              <h3>{isLoadingStats ? '...' : systemStats.totalActivities}</h3>
               <p>Activities Logged</p>
             </div>
           </div>
@@ -1004,7 +1098,7 @@ const SettingsPage = () => {
               </svg>
             </div>
             <div className="stat-info">
-              <h3>{systemStats.dbSize}</h3>
+              <h3>{isLoadingStats ? '...' : systemStats.dbSize}</h3>
               <p>Database Size</p>
             </div>
           </div>
@@ -1014,15 +1108,21 @@ const SettingsPage = () => {
           <h4>System Status</h4>
           <div className="status-item">
             <span className="status-label">Uptime:</span>
-            <span className="status-value">{systemStats.uptime}</span>
+            <span className="status-value">{isLoadingStats ? 'Loading...' : systemStats.uptime}</span>
           </div>
           <div className="status-item">
             <span className="status-label">Last Backup:</span>
-            <span className="status-value">{systemStats.lastBackup}</span>
+            <span className="status-value">{isLoadingStats ? 'Loading...' : systemStats.lastBackup}</span>
           </div>
           <div className="status-item">
             <span className="status-label">System Health:</span>
-            <span className="status-value status-good">Excellent</span>
+            <span className={`status-value ${systemStats.systemHealth === 'Excellent' ? 'status-good' : ''}`}>
+              {isLoadingStats ? 'Loading...' : systemStats.systemHealth}
+            </span>
+          </div>
+          <div className="status-item">
+            <span className="status-label">Memory Usage:</span>
+            <span className="status-value">{isLoadingStats ? 'Loading...' : systemStats.memoryUsage}</span>
           </div>
         </div>
       </div>
