@@ -2,6 +2,33 @@ import axios from 'axios';
 
 const API_BASE_URL = '/api';
 
+// Configure axios to include auth token in all requests
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Configure axios to handle 401 errors (unauthorized)
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Unauthorized - clear token and redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Client API calls
 export const clientAPI = {
   getAll: () => axios.get(`${API_BASE_URL}/clients`),

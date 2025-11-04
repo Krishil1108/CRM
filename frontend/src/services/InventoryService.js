@@ -1,5 +1,28 @@
 const API_BASE_URL = 'http://localhost:5000/api';
 
+// Helper function to make authenticated fetch calls
+const authenticatedFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...options.headers
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  });
+
+  if (response.status === 401) {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+    throw new Error('Unauthorized');
+  }
+
+  return response;
+};
+
 class InventoryService {
   // Get all inventory items with enhanced filtering
   static async getAllInventory(filters = {}) {
@@ -55,7 +78,7 @@ class InventoryService {
       }
       
       const url = `${API_BASE_URL}/inventory/items${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-      const response = await fetch(url);
+      const response = await authenticatedFetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch inventory items');
@@ -83,7 +106,7 @@ class InventoryService {
       }
       
       const url = `${API_BASE_URL}/inventory/categories/list${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-      const response = await fetch(url);
+      const response = await authenticatedFetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch categories');
@@ -117,7 +140,7 @@ class InventoryService {
   // Get all categories
   static async getCategories() {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/categories`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/categories`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch categories');
@@ -132,7 +155,7 @@ class InventoryService {
 
   static async createCategory(categoryData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/categories`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +177,7 @@ class InventoryService {
 
   static async getInventoryById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/items/${id}`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/items/${id}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch inventory item');
@@ -169,7 +192,7 @@ class InventoryService {
 
   static async createInventoryItem(itemData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/items`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/items`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,7 +214,7 @@ class InventoryService {
 
   static async updateInventoryItem(id, itemData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/items/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/items/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +237,7 @@ class InventoryService {
   // Stock management methods
   static async addStock(id, stockData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/items/${id}/stock/add`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/items/${id}/stock/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -236,7 +259,7 @@ class InventoryService {
 
   static async consumeStock(id, stockData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/items/${id}/stock/consume`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/items/${id}/stock/consume`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -258,7 +281,7 @@ class InventoryService {
 
   static async reserveStock(id, stockData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/items/${id}/stock/reserve`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/items/${id}/stock/reserve`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -281,7 +304,7 @@ class InventoryService {
   // Get inventory dashboard stats
   static async getDashboardStats() {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/dashboard/stats`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/dashboard/stats`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard stats');
@@ -297,7 +320,7 @@ class InventoryService {
   // Get low stock report
   static async getLowStockItems() {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/reports/low-stock`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/reports/low-stock`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch low stock items');
@@ -312,7 +335,7 @@ class InventoryService {
 
   static async deleteInventoryItem(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/items/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/items/${id}`, {
         method: 'DELETE',
       });
       
@@ -330,7 +353,7 @@ class InventoryService {
 
   static async bulkUpdateQuantities(updates) {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/bulk-update`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/bulk-update`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -352,7 +375,7 @@ class InventoryService {
 
   static async getInventoryStats() {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/stats/summary`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/inventory/stats/summary`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch inventory statistics');

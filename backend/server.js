@@ -20,21 +20,32 @@ mongoose.connect(MONGODB_URI, {
 .then(() => console.log('MongoDB connected successfully'))
 .catch((err) => console.log('MongoDB connection error:', err));
 
+// Import authentication middleware
+const { authenticate } = require('./middleware/auth');
+
 // Routes
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const roleRoutes = require('./routes/roles');
 const clientRoutes = require('./routes/clients');
 const inventoryRoutes = require('./routes/inventory');
 const meetingRoutes = require('./routes/meetings');
 const noteRoutes = require('./routes/notes');
 const quoteRoutes = require('./routes/quotes');
-
 const activityRoutes = require('./routes/activities');
 
-app.use('/api/clients', clientRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/meetings', meetingRoutes);
-app.use('/api/notes', noteRoutes);
-app.use('/api/quotes', quoteRoutes);
-app.use('/api/activities', activityRoutes);
+// Public routes (no authentication required)
+app.use('/api/auth', authRoutes);
+
+// Protected routes (authentication required)
+app.use('/api/users', authenticate, userRoutes);
+app.use('/api/roles', authenticate, roleRoutes);
+app.use('/api/clients', authenticate, clientRoutes);
+app.use('/api/inventory', authenticate, inventoryRoutes);
+app.use('/api/meetings', authenticate, meetingRoutes);
+app.use('/api/notes', authenticate, noteRoutes);
+app.use('/api/quotes', authenticate, quoteRoutes);
+app.use('/api/activities', authenticate, activityRoutes);
 
 // Basic route
 app.get('/api/test', (req, res) => {

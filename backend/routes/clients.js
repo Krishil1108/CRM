@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Client = require('../models/Client');
 const Activity = require('../models/Activity');
+const { checkPermission } = require('../middleware/auth');
 
 // GET /api/clients - Get all clients
-router.get('/', async (req, res) => {
+router.get('/', checkPermission('clients', 'view'), async (req, res) => {
   try {
     const clients = await Client.find({}).sort({ createdAt: -1 });
     res.json(clients);
@@ -15,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/clients - Create a new client
-router.post('/', async (req, res) => {
+router.post('/', checkPermission('clients', 'create'), async (req, res) => {
   try {
     const {
       name,
@@ -88,7 +89,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/clients/:id - Update a client
-router.put('/:id', async (req, res) => {
+router.put('/:id', checkPermission('clients', 'edit'), async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
@@ -114,7 +115,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/clients/:id - Delete a client
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', checkPermission('clients', 'delete'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -132,7 +133,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // GET /api/clients/:id - Get a single client
-router.get('/:id', async (req, res) => {
+router.get('/:id', checkPermission('clients', 'view'), async (req, res) => {
   try {
     const { id } = req.params;
     const client = await Client.findById(id);

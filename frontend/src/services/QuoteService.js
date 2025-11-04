@@ -1,10 +1,33 @@
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
+// Helper function to make authenticated fetch calls
+const authenticatedFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` }),
+    ...options.headers
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  });
+
+  if (response.status === 401) {
+    localStorage.removeItem('token');
+    window.location.href = '/login';
+    throw new Error('Unauthorized');
+  }
+
+  return response;
+};
+
 class QuoteService {
   // Check if backend is available
   static async isBackendAvailable() {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes?limit=1`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes?limit=1`, {
         method: 'HEAD',
         mode: 'cors'
       });
@@ -34,7 +57,7 @@ class QuoteService {
       if (params.sortBy) queryParams.append('sortBy', params.sortBy);
       if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
 
-      const response = await fetch(`${API_BASE_URL}/quotes?${queryParams}`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes?${queryParams}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -50,7 +73,7 @@ class QuoteService {
   // Get quote by ID
   static async getQuoteById(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes/${id}`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/${id}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -66,7 +89,7 @@ class QuoteService {
   // Get quote by quotation number
   static async getQuoteByNumber(quotationNumber) {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes/number/${quotationNumber}`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/number/${quotationNumber}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -82,7 +105,7 @@ class QuoteService {
   // Create new quote
   static async createQuote(quoteData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -105,7 +128,7 @@ class QuoteService {
   // Update quote
   static async updateQuote(id, quoteData) {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +151,7 @@ class QuoteService {
   // Update quote status
   static async updateQuoteStatus(id, status, userId = 'System User') {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes/${id}/status`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -151,7 +174,7 @@ class QuoteService {
   // Submit quote
   static async submitQuote(id, userId = 'System User') {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes/${id}/submit`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/${id}/submit`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +205,7 @@ class QuoteService {
   // Duplicate quote
   static async duplicateQuote(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes/${id}/duplicate`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/${id}/duplicate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -204,7 +227,7 @@ class QuoteService {
   // Delete quote
   static async deleteQuote(id) {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes/${id}`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/${id}`, {
         method: 'DELETE',
       });
       
@@ -223,7 +246,7 @@ class QuoteService {
   // Get quotes summary/statistics
   static async getQuotesSummary() {
     try {
-      const response = await fetch(`${API_BASE_URL}/quotes/stats/summary`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/stats/summary`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -247,7 +270,7 @@ class QuoteService {
       if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
       if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
 
-      const response = await fetch(`${API_BASE_URL}/quotes/export/data?${queryParams}`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/export/data?${queryParams}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -404,7 +427,7 @@ class QuoteService {
       if (filters.dateFrom) queryParams.append('dateFrom', filters.dateFrom);
       if (filters.dateTo) queryParams.append('dateTo', filters.dateTo);
 
-      const response = await fetch(`${API_BASE_URL}/quotes/analytics?${queryParams}`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/analytics?${queryParams}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -495,7 +518,7 @@ class QuoteService {
         return { deletedCount: quoteIds.length };
       }
 
-      const response = await fetch(`${API_BASE_URL}/quotes/bulk/delete`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/bulk/delete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -538,7 +561,7 @@ class QuoteService {
         return { modifiedCount: quoteIds.length };
       }
 
-      const response = await fetch(`${API_BASE_URL}/quotes/bulk/status`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/bulk/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -574,7 +597,7 @@ class QuoteService {
         };
       }
 
-      const response = await fetch(`${API_BASE_URL}/quotes/compare`, {
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/compare`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -651,7 +674,7 @@ class QuoteService {
         return [];
       }
 
-      const response = await fetch(`${API_BASE_URL}/quotes/${quoteId}/revisions`);
+      const response = await authenticatedFetch(`${API_BASE_URL}/quotes/${quoteId}/revisions`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
