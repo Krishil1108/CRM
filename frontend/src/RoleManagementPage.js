@@ -17,6 +17,7 @@ function RoleManagementPage() {
       clients: {},
       inventory: {},
       quotation: {},
+      quoteHistory: {},
       meetings: {},
       notes: {},
       dashboard: {},
@@ -24,96 +25,101 @@ function RoleManagementPage() {
     }
   });
 
+  // Define permission groups based on ACTUAL implemented features in the system
   const permissionGroups = [
     {
       title: 'Module Access',
       key: 'modules',
+      description: 'Control which pages/modules users can access in the sidebar',
       permissions: [
-        { key: 'home', label: 'Home' },
-        { key: 'clients', label: 'Clients' },
-        { key: 'inventory', label: 'Inventory' },
-        { key: 'dashboard', label: 'Dashboard' },
-        { key: 'quotation', label: 'Quotation' },
-        { key: 'quoteHistory', label: 'Quote History' },
-        { key: 'settings', label: 'Settings' }
+        { key: 'home', label: 'Home', description: 'Access to home page', icon: '🏠', implemented: true },
+        { key: 'clients', label: 'Clients', description: 'Access to clients module', icon: '👥', implemented: true },
+        { key: 'inventory', label: 'Inventory', description: 'Access to inventory module', icon: '📦', implemented: true },
+        { key: 'dashboard', label: 'Dashboard', description: 'Access to dashboard and analytics', icon: '📊', implemented: true },
+        { key: 'quotation', label: 'Quotation', description: 'Access to quotation creation', icon: '📄', implemented: true },
+        { key: 'quoteHistory', label: 'Quote History', description: 'Access to quote history', icon: '📋', implemented: true },
+        { key: 'settings', label: 'Settings', description: 'Access to settings page', icon: '⚙️', implemented: true }
       ]
     },
     {
-      title: 'Client Permissions',
+      title: 'Clients Module Actions',
       key: 'clients',
+      description: 'Actions available in the Clients module',
       permissions: [
-        { key: 'view', label: 'View' },
-        { key: 'create', label: 'Create' },
-        { key: 'edit', label: 'Edit' },
-        { key: 'delete', label: 'Delete' },
-        { key: 'export', label: 'Export' },
-        { key: 'import', label: 'Import' }
+        { key: 'view', label: 'View', description: 'View client list and details', icon: '👁️', implemented: true },
+        { key: 'create', label: 'Add', description: 'Create new clients', icon: '➕', implemented: true },
+        { key: 'edit', label: 'Edit', description: 'Edit existing clients', icon: '✏️', implemented: true },
+        { key: 'delete', label: 'Delete', description: 'Delete clients', icon: '🗑️', implemented: true },
+        { key: 'export', label: 'Export', description: 'Export client data to Excel', icon: '📤', implemented: true },
+        { key: 'import', label: 'Import', description: 'Import clients from Excel', icon: '📥', implemented: true }
       ]
     },
     {
-      title: 'Inventory Permissions',
+      title: 'Inventory Module Actions',
       key: 'inventory',
+      description: 'Actions available in the Inventory module',
       permissions: [
-        { key: 'view', label: 'View' },
-        { key: 'create', label: 'Create' },
-        { key: 'edit', label: 'Edit' },
-        { key: 'delete', label: 'Delete' },
-        { key: 'manageStock', label: 'Manage Stock' },
-        { key: 'export', label: 'Export' }
+        { key: 'view', label: 'View', description: 'View inventory items', icon: '👁️', implemented: true },
+        { key: 'create', label: 'Add', description: 'Add new inventory items', icon: '➕', implemented: true },
+        { key: 'edit', label: 'Edit', description: 'Edit inventory items', icon: '✏️', implemented: true },
+        { key: 'delete', label: 'Delete', description: 'Delete inventory items', icon: '🗑️', implemented: true },
+        { key: 'manageStock', label: 'Manage Stock', description: 'Add/consume stock quantities', icon: '📦', implemented: true },
+        { key: 'export', label: 'Export', description: 'Export inventory data', icon: '📤', implemented: true }
       ]
     },
     {
-      title: 'Quotation Permissions',
+      title: 'Quotation Module Actions',
       key: 'quotation',
+      description: 'Actions available in the Quotation module',
       permissions: [
-        { key: 'view', label: 'View' },
-        { key: 'create', label: 'Create' },
-        { key: 'edit', label: 'Edit' },
-        { key: 'delete', label: 'Delete' },
-        { key: 'generatePdf', label: 'Generate PDF' },
-        { key: 'export', label: 'Export' }
+        { key: 'view', label: 'View', description: 'View quotations', icon: '👁️', implemented: true },
+        { key: 'create', label: 'Add', description: 'Create new quotations', icon: '➕', implemented: true },
+        { key: 'edit', label: 'Edit', description: 'Edit quotations', icon: '✏️', implemented: true },
+        { key: 'delete', label: 'Delete', description: 'Delete quotations', icon: '🗑️', implemented: true },
+        { key: 'generatePdf', label: 'Generate PDF', description: 'Generate PDF documents', icon: '📄', implemented: true }
       ]
     },
     {
-      title: 'Meeting Permissions',
-      key: 'meetings',
+      title: 'Quote History Module Actions',
+      key: 'quoteHistory',
+      description: 'Actions available in the Quote History module',
       permissions: [
-        { key: 'view', label: 'View' },
-        { key: 'create', label: 'Create' },
-        { key: 'edit', label: 'Edit' },
-        { key: 'delete', label: 'Delete' }
+        { key: 'view', label: 'View', description: 'View quote history', icon: '👁️', implemented: true },
+        { key: 'create', label: 'Add', description: 'Add new quotes', icon: '➕', implemented: false },
+        { key: 'edit', label: 'Edit', description: 'Edit existing quotes', icon: '✏️', implemented: false },
+        { key: 'delete', label: 'Delete', description: 'Delete quotes', icon: '🗑️', implemented: false },
+        { key: 'export', label: 'Export', description: 'Export quote data', icon: '📤', implemented: false }
       ]
     },
     {
-      title: 'Notes Permissions',
-      key: 'notes',
-      permissions: [
-        { key: 'view', label: 'View' },
-        { key: 'create', label: 'Create' },
-        { key: 'edit', label: 'Edit' },
-        { key: 'delete', label: 'Delete' }
-      ]
-    },
-    {
-      title: 'Dashboard Permissions',
+      title: 'Dashboard Module Actions',
       key: 'dashboard',
+      description: 'Actions available in the Dashboard module',
       permissions: [
-        { key: 'viewAnalytics', label: 'View Analytics' },
-        { key: 'viewReports', label: 'View Reports' },
-        { key: 'exportReports', label: 'Export Reports' }
+        { key: 'view', label: 'View Dashboard', description: 'Access dashboard page', icon: '👁️', implemented: true },
+        { key: 'viewAnalytics', label: 'View Analytics', description: 'View analytics data', icon: '📊', implemented: true },
+        { key: 'viewReports', label: 'View Reports', description: 'View reports', icon: '📈', implemented: true }
       ]
     },
     {
-      title: 'Settings Permissions',
+      title: 'Settings Module Actions',
       key: 'settings',
+      description: 'Actions available in the Settings module',
       permissions: [
-        { key: 'viewCompanySettings', label: 'View Company Settings' },
-        { key: 'editCompanySettings', label: 'Edit Company Settings' },
-        { key: 'manageUsers', label: 'Manage Users' },
-        { key: 'manageRoles', label: 'Manage Roles' }
+        { key: 'view', label: 'View Settings', description: 'Access settings page', icon: '👁️', implemented: true },
+        { key: 'viewCompanySettings', label: 'View Company Info', description: 'View company settings', icon: '🏢', implemented: true },
+        { key: 'editCompanySettings', label: 'Edit Company Info', description: 'Edit company settings', icon: '✏️', implemented: true },
+        { key: 'manageUsers', label: 'Manage Users', description: 'User management access', icon: '👥', implemented: true },
+        { key: 'manageRoles', label: 'Manage Roles', description: 'Role management access', icon: '🔐', implemented: true }
       ]
     }
   ];
+
+  // Filter to show only implemented permissions
+  const activePermissionGroups = permissionGroups.map(group => ({
+    ...group,
+    permissions: group.permissions.filter(p => p.implemented !== false)
+  }));
 
   useEffect(() => {
     fetchRoles();
@@ -143,10 +149,22 @@ function RoleManagementPage() {
   const handleOpenModal = (role = null) => {
     if (role) {
       setEditingRole(role);
+      // Ensure all permission groups are initialized, even if not in the role object
+      const initializedPermissions = {
+        modules: role.permissions?.modules || {},
+        clients: role.permissions?.clients || {},
+        inventory: role.permissions?.inventory || {},
+        quotation: role.permissions?.quotation || {},
+        quoteHistory: role.permissions?.quoteHistory || {},
+        meetings: role.permissions?.meetings || {},
+        notes: role.permissions?.notes || {},
+        dashboard: role.permissions?.dashboard || {},
+        settings: role.permissions?.settings || {}
+      };
       setFormData({
         name: role.name,
         description: role.description,
-        permissions: role.permissions
+        permissions: initializedPermissions
       });
     } else {
       setEditingRole(null);
@@ -158,6 +176,7 @@ function RoleManagementPage() {
           clients: {},
           inventory: {},
           quotation: {},
+          quoteHistory: {},
           meetings: {},
           notes: {},
           dashboard: {},
@@ -169,21 +188,70 @@ function RoleManagementPage() {
   };
 
   const handlePermissionChange = (group, permission) => {
-    setFormData(prev => ({
-      ...prev,
-      permissions: {
-        ...prev.permissions,
-        [group]: {
-          ...prev.permissions[group],
-          [permission]: !prev.permissions[group][permission]
-        }
+    // Validation: Check if trying to enable a module functionality without module access
+    if (group !== 'modules') {
+      const moduleEnabled = formData.permissions.modules?.[group] || false;
+      
+      if (!moduleEnabled) {
+        showMessage('warning', `Please enable access to the "${group.charAt(0).toUpperCase() + group.slice(1)}" module first before assigning its functionalities.`);
+        return;
       }
-    }));
+    }
+    
+    setFormData(prev => {
+      const currentValue = prev.permissions[group]?.[permission] || false;
+      const newValue = !currentValue;
+      
+      // If disabling a module, also disable all its functionalities
+      if (group === 'modules' && currentValue === true && newValue === false) {
+        const updatedPermissions = { ...prev.permissions };
+        
+        // Clear all permissions for this module
+        if (updatedPermissions[permission]) {
+          updatedPermissions[permission] = {};
+        }
+        
+        return {
+          ...prev,
+          permissions: {
+            ...updatedPermissions,
+            [group]: {
+              ...(prev.permissions[group] || {}),
+              [permission]: newValue
+            }
+          }
+        };
+      }
+      
+      return {
+        ...prev,
+        permissions: {
+          ...prev.permissions,
+          [group]: {
+            ...(prev.permissions[group] || {}),
+            [permission]: newValue
+          }
+        }
+      };
+    });
   };
 
   const handleSelectAllInGroup = (group) => {
-    const allPermissions = permissionGroups.find(g => g.key === group)?.permissions || [];
-    const allSelected = allPermissions.every(p => formData.permissions[group][p.key]);
+    // Validation: Check if trying to toggle functionalities without module access
+    if (group !== 'modules') {
+      const moduleEnabled = formData.permissions.modules?.[group] || false;
+      
+      if (!moduleEnabled) {
+        showMessage('warning', `Please enable access to the "${group.charAt(0).toUpperCase() + group.slice(1)}" module first before assigning its functionalities.`);
+        return;
+      }
+    }
+    
+    const groupPermissions = activePermissionGroups.find(g => g.key === group);
+    if (!groupPermissions) return;
+    
+    const allPermissions = groupPermissions.permissions;
+    const allSelected = allPermissions.every(p => formData.permissions[group]?.[p.key]);
     
     const newGroupPermissions = {};
     allPermissions.forEach(p => {
@@ -319,11 +387,19 @@ function RoleManagementPage() {
               </div>
 
               <div className="permissions-section">
-                <h3>Permissions</h3>
-                {permissionGroups.map(group => (
+                <h3>Permissions Configuration</h3>
+                <p className="permissions-help-text">
+                  Configure page access and action-level permissions for this role. 
+                  Users with this role will only see pages and actions they have permission to access.
+                  <strong> Only showing functionalities that exist in the live system.</strong>
+                </p>
+                {activePermissionGroups.map(group => (
                   <div key={group.key} className="permission-group">
                     <div className="permission-group-header">
-                      <h4>{group.title}</h4>
+                      <div className="group-title-section">
+                        <h4>{group.title}</h4>
+                        {group.description && <p className="group-description">{group.description}</p>}
+                      </div>
                       <button
                         type="button"
                         className="btn-select-all"
@@ -333,16 +409,52 @@ function RoleManagementPage() {
                       </button>
                     </div>
                     <div className="permission-checkboxes">
-                      {group.permissions.map(perm => (
-                        <label key={perm.key} className="checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={formData.permissions[group.key][perm.key] || false}
-                            onChange={() => handlePermissionChange(group.key, perm.key)}
-                          />
-                          {perm.label}
-                        </label>
-                      ))}
+                      {group.permissions.map(perm => {
+                        const isChecked = formData.permissions[group.key]?.[perm.key] || false;
+                        // Check if this is a module functionality group and if parent module is enabled
+                        const isModuleFunctionality = group.key !== 'modules';
+                        const moduleEnabled = isModuleFunctionality 
+                          ? (formData.permissions.modules?.[group.key] || false)
+                          : true; // Module access checkboxes are always enabled
+                        const isDisabled = isModuleFunctionality && !moduleEnabled;
+                        
+                        return (
+                          <label 
+                            key={perm.key} 
+                            className={`checkbox-label ${isDisabled ? 'disabled' : ''}`}
+                            title={isDisabled 
+                              ? `Enable "${group.key.charAt(0).toUpperCase() + group.key.slice(1)}" module access first`
+                              : (perm.description || perm.label)
+                            }
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              disabled={isDisabled}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handlePermissionChange(group.key, perm.key);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <span 
+                              className="permission-label-text"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (!isDisabled) {
+                                  handlePermissionChange(group.key, perm.key);
+                                }
+                              }}
+                            >
+                              {perm.icon && <span className="permission-icon">{perm.icon}</span>}
+                              {perm.label}
+                            </span>
+                            {isDisabled && (
+                              <span className="disabled-indicator" title="Module access required">🔒</span>
+                            )}
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

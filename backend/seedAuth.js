@@ -40,6 +40,7 @@ async function seedAdminData() {
             create: true,
             edit: true,
             delete: true,
+            duplicate: true,
             export: true,
             import: true
           },
@@ -48,15 +49,26 @@ async function seedAdminData() {
             create: true,
             edit: true,
             delete: true,
+            duplicate: true,
             manageStock: true,
-            export: true
+            export: true,
+            import: true
           },
           quotation: {
             view: true,
             create: true,
             edit: true,
             delete: true,
+            duplicate: true,
             generatePdf: true,
+            export: true
+          },
+          quoteHistory: {
+            view: true,
+            create: true,
+            edit: true,
+            delete: true,
+            duplicate: true,
             export: true
           },
           meetings: {
@@ -72,11 +84,13 @@ async function seedAdminData() {
             delete: true
           },
           dashboard: {
+            view: true,
             viewAnalytics: true,
             viewReports: true,
             exportReports: true
           },
           settings: {
+            view: true,
             viewCompanySettings: true,
             editCompanySettings: true,
             manageUsers: true,
@@ -128,7 +142,7 @@ async function seedAdminData() {
       
       staffRole = new Role({
         name: 'Staff',
-        description: 'Basic staff member with limited access',
+        description: 'Basic staff member with limited access - can view and add clients but cannot delete',
         permissions: {
           modules: {
             home: true,
@@ -144,6 +158,7 @@ async function seedAdminData() {
             create: true,
             edit: true,
             delete: false,
+            duplicate: true,
             export: false,
             import: false
           },
@@ -152,15 +167,26 @@ async function seedAdminData() {
             create: false,
             edit: false,
             delete: false,
+            duplicate: false,
             manageStock: false,
-            export: false
+            export: false,
+            import: false
           },
           quotation: {
             view: false,
             create: false,
             edit: false,
             delete: false,
+            duplicate: false,
             generatePdf: false,
+            export: false
+          },
+          quoteHistory: {
+            view: false,
+            create: false,
+            edit: false,
+            delete: false,
+            duplicate: false,
             export: false
           },
           meetings: {
@@ -176,11 +202,13 @@ async function seedAdminData() {
             delete: false
           },
           dashboard: {
+            view: false,
             viewAnalytics: false,
             viewReports: false,
             exportReports: false
           },
           settings: {
+            view: false,
             viewCompanySettings: false,
             editCompanySettings: false,
             manageUsers: false,

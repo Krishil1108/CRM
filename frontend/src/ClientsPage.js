@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from './contexts/AuthContext';
 import ClientService from './services/ClientService';
 import ExcelExportService from './services/ExcelExportService';
 import ExcelImport from './components/ExcelImport';
@@ -6,6 +7,7 @@ import { dataEventManager, DATA_TYPES } from './services/dataEventManager';
 import './PageContent.css';
 
 const ClientsPage = () => {
+  const { canCreate, canEdit, canDelete, canExport, canImport, canDuplicate } = useAuth();
   const [clients, setClients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -340,44 +342,50 @@ const ClientsPage = () => {
           <p>Manage and view all your clients</p>
         </div>
         <div className="header-actions">
-          <button 
-            className="export-btn enhanced-export-btn"
-            onClick={handleExportToExcel}
-            title="Export client data to Excel spreadsheet"
-          >
-            <div className="btn-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                <path d="M9,14H7V16H9V14M11,14H13V16H11V14M15,14H17V16H15V14M9,10H7V12H9V10M11,10H13V12H11V10M15,10H17V12H15V10" opacity="0.7"/>
+          {canExport('clients') && (
+            <button 
+              className="export-btn enhanced-export-btn"
+              onClick={handleExportToExcel}
+              title="Export client data to Excel spreadsheet"
+            >
+              <div className="btn-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                  <path d="M9,14H7V16H9V14M11,14H13V16H11V14M15,14H17V16H15V14M9,10H7V12H9V10M11,10H13V12H11V10M15,10H17V12H15V10" opacity="0.7"/>
+                </svg>
+              </div>
+              <div className="btn-content">
+                <span className="btn-text">Export to Excel</span>
+                <span className="btn-count">({filteredClients.length} clients)</span>
+              </div>
+            </button>
+          )}
+          {canImport('clients') && (
+            <button 
+              className="import-btn"
+              onClick={() => setShowImportModal(true)}
+              title="Import clients from Excel file"
+            >
+              <div className="btn-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                  <path d="M12,11L8,15H10.5V19H13.5V15H16L12,11Z" opacity="0.7"/>
+                </svg>
+              </div>
+              <span className="btn-text">Import from Excel</span>
+            </button>
+          )}
+          {canCreate('clients') && (
+            <button 
+              className="add-client-btn"
+              onClick={() => setShowAddPopup(true)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
               </svg>
-            </div>
-            <div className="btn-content">
-              <span className="btn-text">Export to Excel</span>
-              <span className="btn-count">({filteredClients.length} clients)</span>
-            </div>
-          </button>
-          <button 
-            className="import-btn"
-            onClick={() => setShowImportModal(true)}
-            title="Import clients from Excel file"
-          >
-            <div className="btn-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
-                <path d="M12,11L8,15H10.5V19H13.5V15H16L12,11Z" opacity="0.7"/>
-              </svg>
-            </div>
-            <span className="btn-text">Import from Excel</span>
-          </button>
-          <button 
-            className="add-client-btn"
-            onClick={() => setShowAddPopup(true)}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-            </svg>
-            Add New Client
-          </button>
+              Add New Client
+            </button>
+          )}
         </div>
       </div>
       
@@ -533,24 +541,28 @@ const ClientsPage = () => {
                     <td>{formatDate(client.createdAt)}</td>
                     <td>
                       <div className="action-buttons">
-                        <button
-                          className="edit-btn"
-                          onClick={() => handleEdit(client)}
-                          title="Edit Client"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-                          </svg>
-                        </button>
-                        <button
-                          className="delete-btn"
-                          onClick={() => handleDelete(client._id)}
-                          title="Delete Client"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                          </svg>
-                        </button>
+                        {canEdit('clients') && (
+                          <button
+                            className="edit-btn"
+                            onClick={() => handleEdit(client)}
+                            title="Edit Client"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                          </button>
+                        )}
+                        {canDelete('clients') && (
+                          <button
+                            className="delete-btn"
+                            onClick={() => handleDelete(client._id)}
+                            title="Delete Client"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

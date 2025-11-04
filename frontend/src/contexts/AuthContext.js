@@ -123,6 +123,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Refresh user permissions without logging out
+  const refreshPermissions = async () => {
+    if (!token) return { success: false, message: 'No token available' };
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        setPermissions(data.user.role.permissions);
+        return { success: true, message: 'Permissions refreshed' };
+      } else {
+        return { success: false, message: 'Failed to refresh permissions' };
+      }
+    } catch (error) {
+      console.error('Refresh permissions error:', error);
+      return { success: false, message: 'Network error. Please try again.' };
+    }
+  };
+
   // Check if user has access to a module
   const hasModuleAccess = (moduleName) => {
     if (!permissions) return false;
@@ -137,6 +162,15 @@ export const AuthProvider = ({ children }) => {
     return permissions[module]?.[action] === true;
   };
 
+  // Convenient action permission helpers
+  const canView = (module) => hasPermission(module, 'view');
+  const canCreate = (module) => hasPermission(module, 'create');
+  const canEdit = (module) => hasPermission(module, 'edit');
+  const canDelete = (module) => hasPermission(module, 'delete');
+  const canDuplicate = (module) => hasPermission(module, 'duplicate');
+  const canExport = (module) => hasPermission(module, 'export');
+  const canImport = (module) => hasPermission(module, 'import');
+
   // Check if user is admin
   const isAdmin = () => {
     return user?.role?.name === 'Admin';
@@ -150,8 +184,16 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     changePassword,
+    refreshPermissions,
     hasModuleAccess,
     hasPermission,
+    canView,
+    canCreate,
+    canEdit,
+    canDelete,
+    canDuplicate,
+    canExport,
+    canImport,
     isAdmin,
     isAuthenticated: !!user
   };

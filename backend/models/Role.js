@@ -29,6 +29,7 @@ const roleSchema = new mongoose.Schema({
       create: { type: Boolean, default: false },
       edit: { type: Boolean, default: false },
       delete: { type: Boolean, default: false },
+      duplicate: { type: Boolean, default: false },
       export: { type: Boolean, default: false },
       import: { type: Boolean, default: false }
     },
@@ -39,8 +40,10 @@ const roleSchema = new mongoose.Schema({
       create: { type: Boolean, default: false },
       edit: { type: Boolean, default: false },
       delete: { type: Boolean, default: false },
+      duplicate: { type: Boolean, default: false },
       manageStock: { type: Boolean, default: false },
-      export: { type: Boolean, default: false }
+      export: { type: Boolean, default: false },
+      import: { type: Boolean, default: false }
     },
     
     // Quotation module permissions
@@ -49,7 +52,18 @@ const roleSchema = new mongoose.Schema({
       create: { type: Boolean, default: false },
       edit: { type: Boolean, default: false },
       delete: { type: Boolean, default: false },
+      duplicate: { type: Boolean, default: false },
       generatePdf: { type: Boolean, default: false },
+      export: { type: Boolean, default: false }
+    },
+    
+    // Quote History module permissions
+    quoteHistory: {
+      view: { type: Boolean, default: false },
+      create: { type: Boolean, default: false },
+      edit: { type: Boolean, default: false },
+      delete: { type: Boolean, default: false },
+      duplicate: { type: Boolean, default: false },
       export: { type: Boolean, default: false }
     },
     
@@ -71,6 +85,7 @@ const roleSchema = new mongoose.Schema({
     
     // Dashboard permissions
     dashboard: {
+      view: { type: Boolean, default: false },
       viewAnalytics: { type: Boolean, default: false },
       viewReports: { type: Boolean, default: false },
       exportReports: { type: Boolean, default: false }
@@ -78,6 +93,7 @@ const roleSchema = new mongoose.Schema({
     
     // Settings permissions
     settings: {
+      view: { type: Boolean, default: false },
       viewCompanySettings: { type: Boolean, default: false },
       editCompanySettings: { type: Boolean, default: false },
       manageUsers: { type: Boolean, default: false },

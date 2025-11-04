@@ -68,30 +68,54 @@
 
 .permissions-section > h3 {
   font-size: 18px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   color: #333;
   border-bottom: 2px solid #dee2e6;
   padding-bottom: 10px;
 }
 
+.permissions-help-text {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+  background-color: #e8f4f8;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 4px solid #667eea;
+}
+
 .permission-group {
   background-color: #f8f9fa;
-  border-radius: 6px;
-  padding: 15px;
-  margin-bottom: 15px;
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 18px;
+  border: 1px solid #e0e0e0;
 }
 
 .permission-group-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.group-title-section {
+  flex: 1;
 }
 
 .permission-group-header h4 {
-  margin: 0;
+  margin: 0 0 5px 0;
   font-size: 16px;
-  color: #555;
+  color: #333;
+  font-weight: 600;
+}
+
+.group-description {
+  margin: 0;
+  font-size: 13px;
+  color: #777;
+  font-style: italic;
 }
 
 .btn-select-all {
@@ -116,24 +140,100 @@
 
 .checkbox-label {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   cursor: pointer;
   font-size: 14px;
   color: #555;
-  padding: 5px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  padding: 12px 14px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  background-color: white;
+  border: 1px solid #e0e0e0;
+  position: relative;
 }
 
 .checkbox-label:hover {
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: #f0f7ff;
+  border-color: #667eea;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Highlight label when checkbox is checked */
+.checkbox-label:has(input[type="checkbox"]:checked) {
+  background-color: #e8f4f8;
+  border-color: #667eea;
+  border-width: 2px;
+  padding: 11px 13px; /* Compensate for thicker border */
 }
 
 .checkbox-label input[type="checkbox"] {
   cursor: pointer;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin: 0;
+  accent-color: #667eea;
+  flex-shrink: 0;
+}
+
+/* Make checked checkbox text bold and colored */
+.checkbox-label:has(input[type="checkbox"]:checked) .permission-label-text {
+  font-weight: 600;
+  color: #667eea;
+}
+
+/* Disabled checkbox styles */
+.checkbox-label.disabled {
+  background-color: #f5f5f5;
+  border-color: #d0d0d0;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.checkbox-label.disabled:hover {
+  background-color: #f5f5f5;
+  border-color: #d0d0d0;
+  transform: none;
+  box-shadow: none;
+}
+
+.checkbox-label.disabled input[type="checkbox"] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.checkbox-label.disabled .permission-label-text {
+  color: #999;
+  cursor: not-allowed;
+}
+
+.disabled-indicator {
+  font-size: 14px;
+  margin-left: auto;
+  opacity: 0.7;
+}
+
+.permission-label-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+}
+
+.permission-icon {
+  font-size: 16px;
+}
+
+.permission-hint {
+  font-size: 11px;
+  color: #888;
+  line-height: 1.3;
+  margin-left: 26px;
 }
 
 textarea {
@@ -152,6 +252,155 @@ textarea:focus {
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  min-width: 500px;
+  max-width: 900px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideIn 0.3s ease-out;
+  position: relative;
+}
+
+.modal-large {
+  max-width: 900px;
+  width: 90vw;
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 2px solid #e5e7eb;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: white;
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.modal-content form {
+  padding: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 0 0 12px 12px;
+  margin-top: 20px;
+}
+
+/* Message/Alert Styles */
+.message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  max-width: 400px;
+  animation: slideInRight 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.message-success {
+  background-color: #d1fae5;
+  border-left: 4px solid #10b981;
+  color: #065f46;
+}
+
+.message-error {
+  background-color: #fee2e2;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+}
+
+.message-warning {
+  background-color: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  color: #92400e;
+}
+
 @media (max-width: 768px) {
   .role-management-page {
     padding: 20px;
@@ -163,5 +412,18 @@ textarea:focus {
 
   .permission-checkboxes {
     grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    min-width: 95vw;
+    max-width: 95vw;
+    max-height: 95vh;
+  }
+  
+  .message {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
   }
 }
