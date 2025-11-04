@@ -90,7 +90,6 @@ const QuoteHistory = () => {
   const [viewMode, setViewMode] = useState('table'); // 'table', 'grid', 'list'
   const [showFilters, setShowFilters] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(false);
 
   // Analytics and summary
   const [analytics, setAnalytics] = useState({
@@ -886,19 +885,6 @@ const QuoteHistory = () => {
     }
   };
 
-  // Auto-refresh functionality
-  useEffect(() => {
-    let intervalId;
-    if (autoRefresh) {
-      intervalId = setInterval(() => {
-        loadQuotes();
-      }, 30000); // Refresh every 30 seconds
-    }
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [autoRefresh, loadQuotes]);
-
   // Load quotes on component mount and filter changes
   useEffect(() => {
     loadQuotes();
@@ -1172,24 +1158,6 @@ const QuoteHistory = () => {
                 ☰
               </button>
             </div>
-
-            <label className="auto-refresh-toggle">
-              <input
-                type="checkbox"
-                checked={autoRefresh}
-                onChange={(e) => setAutoRefresh(e.target.checked)}
-              />
-              Auto Refresh
-            </label>
-
-            <button 
-              className="btn btn-primary"
-              onClick={loadQuotes}
-              disabled={loading}
-              title="Refresh Data"
-            >
-              🔄 Refresh
-            </button>
           </div>
         </div>
       </div>

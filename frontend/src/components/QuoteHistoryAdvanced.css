@@ -92,40 +92,43 @@
 }
 
 .quick-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  display: flex;
+  gap: 12px;
   margin-bottom: 0;
+  align-items: center;
 }
 
 .stat-item {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 12px;
-  border-radius: 10px;
+  padding: 10px 16px;
+  border-radius: 8px;
   text-align: center;
   border: 1px solid #dee2e6;
   transition: all 0.3s ease;
+  min-width: fit-content;
+  white-space: nowrap;
 }
 
 .stat-item:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
 }
 
 .stat-item strong {
-  display: block;
-  font-size: 24px;
+  display: inline-block;
+  font-size: 18px;
   font-weight: 700;
   color: #2c3e50;
-  margin-bottom: 4px;
+  margin-right: 6px;
 }
 
 .stat-item span:not(strong) {
   color: #6c757d;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .stat-item strong {
@@ -145,6 +148,14 @@
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
+}
+
+/* Make all checkboxes in header controls smaller */
+.header-controls input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  margin: 0;
 }
 
 .view-mode-selector {
@@ -173,6 +184,9 @@
 
 .auto-refresh-toggle input {
   margin: 0;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
 }
 
 /* Analytics Dashboard */
@@ -1375,11 +1389,12 @@
 }
 
 .quote-list-checkbox-header input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 2px solid #dee2e6;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1.5px solid #dee2e6;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .quote-list-column-header {
@@ -1438,11 +1453,12 @@
 }
 
 .quote-list-checkbox input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 2px solid #dee2e6;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1.5px solid #dee2e6;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .quote-list-checkbox input[type="checkbox"]:checked {
@@ -2124,8 +2140,13 @@
   }
 
   .quick-stats {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .stat-item {
+    width: 100%;
   }
 
   .quotes-table-container {
@@ -2721,4 +2742,20 @@
 [data-theme="dark"] .date-range-picker:focus {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+/* Table checkbox styling - make them smaller */
+.quotes-table input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+  margin: 0;
+  transform: scale(1);
+}
+
+.quotes-table th input[type="checkbox"],
+.quotes-table td input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
 }
