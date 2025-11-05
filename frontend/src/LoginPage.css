@@ -48,7 +48,8 @@
 }
 
 .login-form {
-  height: 520px;
+  height: auto;
+  min-height: 520px;
   width: 400px;
   background-color: rgba(255, 255, 255, 0.13);
   position: relative;
@@ -153,12 +154,35 @@ input:disabled {
   cursor: not-allowed;
 }
 
+.forgot-password-link {
+  text-align: center;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.forgot-password-link a {
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+.forgot-password-link a:hover {
+  color: #23a2f6;
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .contact-admin {
   text-align: center;
   font-size: 14px;
   font-weight: 400;
   color: rgba(255, 255, 255, 0.7);
-  margin-top: 25px;
+  margin-top: 15px;
+  margin-bottom: 0;
+  padding-bottom: 10px;
 }
 
 .admin-link {

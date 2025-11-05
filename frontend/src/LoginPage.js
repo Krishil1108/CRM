@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
 import './LoginPage.css';
 
@@ -21,13 +21,13 @@ function LoginPage() {
       const result = await login(username, password);
       
       if (result.success) {
-        navigate('/home');
+        navigate('/home', { replace: true });
       } else {
         setError(result.message || 'Login failed');
+        setLoading(false);
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
@@ -82,6 +82,10 @@ function LoginPage() {
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
+        
+        <div className="forgot-password-link">
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </div>
         
         <p className="contact-admin">
           Contact <a href="mailto:admin@company.com?subject=Account%20Access%20Request&body=Hello%20Administrator,%0D%0A%0D%0AI%20am%20requesting%20assistance%20with%20my%20CRM%20system%20account.%0D%0A%0D%0APlease%20help%20me%20with:%0D%0A%E2%98%90%20Forgot%20Password%0D%0A%E2%98%90%20Forgot%20Username%0D%0A%E2%98%90%20Account%20Access%20Issues%0D%0A%0D%0AThank%20you%20for%20your%20assistance.%0D%0A%0D%0ABest%20regards," className="admin-link">administrator</a> for account access

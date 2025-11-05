@@ -3,7 +3,12 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Role = require('../models/Role');
+const PasswordResetToken = require('../models/PasswordResetToken');
 const { generateToken, authenticate } = require('../middleware/auth');
+const emailService = require('../utils/emailService');
+const { authLimiter, strictLimiter } = require('../middleware/sanitization');
+const { ValidationError, NotFoundError } = require('../errors/AppError');
+const { asyncHandler } = require('../errors/asyncHandler');
 
 // @route   POST /api/auth/login
 // @desc    Login user
@@ -201,5 +206,246 @@ router.get('/permissions', authenticate, async (req, res) => {
     });
   }
 });
+
+// ============================================
+// PASSWORD RESET ROUTES
+// ============================================
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     description: Send password reset email to user
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: admin@example.com
+ *     responses:
+ *       200:
+ *         description: Password reset email sent
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       429:
+ *         description: Too many requests
+ */
+// @route   POST /api/auth/forgot-password
+// @desc    Request password reset email
+// @access  Public (with strict rate limiting)
+router.post('/forgot-password', strictLimiter, [
+  body('email')
+    .trim()
+    .isEmail()
+    .withMessage('Valid email is required')
+    .normalizeEmail()
+], asyncHandler(async (req, res) => {
+  // Check validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new ValidationError('Invalid email format', errors.array());
+  }
+
+  const { email } = req.body;
+
+  // Find user by email
+  const user = await User.findOne({ email: email.toLowerCase() });
+
+  // Always return success message (prevent email enumeration)
+  const successMessage = 'If an account with that email exists, a password reset link has been sent.';
+
+  if (!user) {
+    // Don't reveal that user doesn't exist
+    return res.sendSuccess({}, successMessage);
+  }
+
+  // Check if user is active
+  if (!user.isActive) {
+    // Don't reveal account status
+    return res.sendSuccess({}, successMessage);
+  }
+
+  // Delete any existing unused reset tokens for this user
+  await PasswordResetToken.deleteMany({ 
+    userId: user._id, 
+    used: false 
+  });
+
+  // Generate reset token
+  const { token, hashedToken, expiresAt } = PasswordResetToken.createToken(
+    user._id,
+    req.ip,
+    req.get('user-agent')
+  );
+
+  // Save hashed token to database
+  await PasswordResetToken.create({
+    userId: user._id,
+    token: hashedToken,
+    expiresAt,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent')
+  });
+
+  // Send reset email
+  try {
+    await emailService.sendPasswordResetEmail(
+      user.email,
+      token,
+      user.fullName || user.username
+    );
+  } catch (error) {
+    console.error('Failed to send password reset email:', error);
+    // Don't throw error - still return success to prevent email enumeration
+  }
+
+  res.sendSuccess({}, successMessage);
+}));
+
+/**
+ * @swagger
+ * /api/auth/verify-reset-token/{token}:
+ *   get:
+ *     summary: Verify password reset token
+ *     description: Check if reset token is valid
+ *     tags: [Authentication]
+ *     parameters:
+ *       - name: token
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Token is valid
+ *       400:
+ *         description: Invalid or expired token
+ */
+// @route   GET /api/auth/verify-reset-token/:token
+// @desc    Verify if reset token is valid
+// @access  Public
+router.get('/verify-reset-token/:token', asyncHandler(async (req, res) => {
+  const { token } = req.params;
+
+  // Verify token
+  const tokenDoc = await PasswordResetToken.verifyToken(token);
+
+  if (!tokenDoc) {
+    throw new ValidationError('Invalid or expired password reset token');
+  }
+
+  res.sendSuccess({
+    valid: true,
+    email: tokenDoc.userId.email,
+    expiresAt: tokenDoc.expiresAt
+  }, 'Token is valid');
+}));
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset password with token
+ *     description: Set new password using reset token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 minLength: 8
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ */
+// @route   POST /api/auth/reset-password
+// @desc    Reset password using valid token
+// @access  Public (with auth rate limiting)
+router.post('/reset-password', authLimiter, [
+  body('token')
+    .trim()
+    .notEmpty()
+    .withMessage('Reset token is required'),
+  body('newPassword')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number')
+], asyncHandler(async (req, res) => {
+  // Check validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    throw new ValidationError('Validation failed', errors.array());
+  }
+
+  const { token, newPassword } = req.body;
+
+  // Verify token
+  const tokenDoc = await PasswordResetToken.verifyToken(token);
+
+  if (!tokenDoc) {
+    throw new ValidationError('Invalid or expired password reset token');
+  }
+
+  // Get user
+  const user = await User.findById(tokenDoc.userId._id);
+
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+
+  if (!user.isActive) {
+    throw new ValidationError('Account is inactive. Please contact administrator.');
+  }
+
+  // Update password (will be hashed by pre-save hook)
+  user.password = newPassword;
+  await user.save();
+
+  // Mark token as used
+  await tokenDoc.markAsUsed();
+
+  // Delete all other reset tokens for this user
+  await PasswordResetToken.deleteMany({ 
+    userId: user._id,
+    _id: { $ne: tokenDoc._id }
+  });
+
+  // Send confirmation email
+  try {
+    await emailService.sendPasswordChangedEmail(
+      user.email,
+      user.fullName || user.username
+    );
+  } catch (error) {
+    console.error('Failed to send password changed email:', error);
+    // Don't throw - password was already changed
+  }
+
+  res.sendSuccess({
+    message: 'Password reset successful. You can now login with your new password.'
+  }, 'Password reset successful');
+}));
 
 module.exports = router;

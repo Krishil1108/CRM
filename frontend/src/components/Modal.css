@@ -93,6 +93,11 @@
   overflow-y: auto;
 }
 
+/* Exception for quote detail modal which needs more height */
+.quote-detail-modal .modal-content {
+  max-height: none !important;
+}
+
 .modal-message {
   font-size: 16px;
   line-height: 1.6;

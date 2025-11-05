@@ -331,7 +331,7 @@ function RoleManagementPage() {
       <div className="page-header">
         <h1>Role Management</h1>
         <button className="btn-primary" onClick={() => handleOpenModal()}>
-          + Add New Role
+          Add New Role
         </button>
       </div>
 

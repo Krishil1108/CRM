@@ -708,7 +708,8 @@
   border: 1px solid #e5e7eb;
   cursor: pointer;
   transition: background 0.2s ease;
-  margin: 0 2px;
+  margin: 0;
+  vertical-align: middle;
 }
 
 .action-btn:hover {
@@ -731,6 +732,8 @@
   gap: 4px;
   justify-content: center;
   align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
 /* WhatsApp Action Button */
@@ -749,6 +752,8 @@
   transition: all 0.2s;
   min-width: 32px;
   height: 32px;
+  vertical-align: middle;
+  margin: 0;
 }
 
 .whatsapp-action-btn:hover {
@@ -1747,14 +1752,15 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 2vh 20px;
 }
 
 .modal-content {
   background: white;
   border-radius: 12px;
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: 96vh;
+  height: auto;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1805,7 +1811,6 @@
 
 .modal-body {
   flex: 1;
-  max-height: 70vh;
   overflow-y: auto;
   padding: 25px;
 }
@@ -1820,13 +1825,16 @@
 }
 
 /* Quote Detail Modal */
-.quote-detail-modal .modal-content {
-  width: 1000px;
+.modal-content:has(.quote-detail-modal) {
+  width: 1200px !important;
+  max-width: 95vw !important;
+  height: 90vh !important;
+  max-height: 96vh !important;
 }
 
 .quote-details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 25px;
 }
 
@@ -2078,6 +2086,10 @@
   .quote-compare-modal .modal-content {
     width: 95vw;
   }
+  
+  .quote-details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -2089,6 +2101,10 @@
     flex-direction: column;
     gap: 20px;
     align-items: stretch;
+  }
+  
+  .quote-details-grid {
+    grid-template-columns: 1fr;
   }
   
   .header-controls {

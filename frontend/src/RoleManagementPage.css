@@ -93,6 +93,110 @@
   gap: 10px;
 }
 
+/* Button Styles */
+.role-management-page .btn-primary,
+.role-management-page .btn-secondary,
+.role-management-page .btn-edit,
+.role-management-page .btn-danger {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.role-management-page .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.role-management-page .btn-primary:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #653a8a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.5);
+}
+
+.role-management-page .btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+}
+
+.role-management-page .btn-secondary:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #4e555b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(108, 117, 125, 0.5);
+}
+
+.role-management-page .btn-edit {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  color: white;
+}
+
+.role-management-page .btn-edit:hover {
+  background: linear-gradient(135deg, #138496 0%, #117a8b 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(23, 162, 184, 0.5);
+}
+
+.role-management-page .btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.role-management-page .btn-danger:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.5);
+}
+
+/* Button active state */
+.role-management-page .btn-primary:active,
+.role-management-page .btn-secondary:active,
+.role-management-page .btn-edit:active,
+.role-management-page .btn-danger:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Shimmer effect on hover */
+.role-management-page .btn-primary::before,
+.role-management-page .btn-secondary::before,
+.role-management-page .btn-edit::before,
+.role-management-page .btn-danger::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.role-management-page .btn-primary:hover::before,
+.role-management-page .btn-secondary:hover::before,
+.role-management-page .btn-edit:hover::before,
+.role-management-page .btn-danger:hover::before {
+  left: 100%;
+}
+
 .role-management-page .modal-large {
   max-width: 900px;
 }

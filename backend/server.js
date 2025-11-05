@@ -1,14 +1,86 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
 require('dotenv').config();
+
+// Import error handling
+const { globalErrorHandler } = require('./middleware/errorHandler');
+const logger = require('./utils/logger');
+
+// Import response wrapper
+const { attachResponseHelpers } = require('./utils/responseWrapper');
+
+// Import Swagger configuration
+const { swaggerSpec, swaggerUi } = require('./config/swagger');
+
+// Import security middleware
+const { 
+  sanitizeInput, 
+  mongoSanitize, 
+  apiLimiter, 
+  authLimiter 
+} = require('./middleware/sanitization');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy - needed for rate limiting behind proxies/load balancers
+// Set to true if behind a proxy, or specify the number of hops
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Response compression middleware (use early for better performance)
+app.use(compression({
+  level: 6, // Compression level (0-9, 6 is default)
+  threshold: 1024, // Only compress responses larger than 1kb
+  filter: (req, res) => {
+    // Don't compress if explicitly disabled via header
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Use compression for all compressible content types
+    return compression.filter(req, res);
+  }
+}));
+
+// Security Middleware
+// Helmet helps secure Express apps by setting various HTTP headers
+app.use(helmet());
+
+// Data sanitization against NoSQL injection attacks
+app.use(mongoSanitize());
+
+// Data sanitization against XSS attacks
+app.use(sanitizeInput);
+
+// Attach response helper methods to res object
+app.use(attachResponseHelpers);
+
+// Rate limiting on all routes
+app.use(apiLimiter);
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  
+  // Log incoming request
+  logger.logRequest(req);
+  
+  // Override res.json to log response
+  const originalJson = res.json;
+  res.json = function(data) {
+    const duration = Date.now() - start;
+    logger.logResponse(req, res.statusCode, duration);
+    return originalJson.call(this, data);
+  };
+  
+  next();
+});
 
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/mern-app';
@@ -23,7 +95,48 @@ mongoose.connect(MONGODB_URI, {
 // Import authentication middleware
 const { authenticate } = require('./middleware/auth');
 
-// Routes
+// ============================================
+// API DOCUMENTATION (Swagger)
+// ============================================
+/**
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: Health check endpoint
+ *     description: Check if the API is running
+ *     tags: [System]
+ *     responses:
+ *       200:
+ *         description: API is running
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ */
+app.get('/api/health', (req, res) => {
+  res.sendSuccess({
+    status: 'healthy',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  }, 'API is running');
+});
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'CRM API Documentation',
+  customfavIcon: '/favicon.ico'
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+// ============================================
+// ROUTES
+// ============================================
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const roleRoutes = require('./routes/roles');
@@ -49,10 +162,29 @@ app.use('/api/activities', authenticate, activityRoutes);
 
 // Basic route
 app.get('/api/test', (req, res) => {
-  res.json({ message: 'Backend server is running!' });
+  res.sendSuccess({ message: 'Backend server is running!' }, 'Test endpoint');
 });
 
 // System Statistics Route (protected)
+/**
+ * @swagger
+ * /api/system/stats:
+ *   get:
+ *     summary: Get system statistics
+ *     description: Retrieve comprehensive system statistics including database info, uptime, and resource usage
+ *     tags: [System]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: System statistics retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
 app.get('/api/system/stats', authenticate, async (req, res) => {
   try {
     const Client = require('./models/Client');
@@ -92,7 +224,7 @@ app.get('/api/system/stats', authenticate, async (req, res) => {
     const memoryUsedMB = (memoryUsage.heapUsed / (1024 * 1024)).toFixed(2);
     const memoryTotalMB = (memoryUsage.heapTotal / (1024 * 1024)).toFixed(2);
 
-    res.json({
+    res.sendSuccess({
       totalClients: clientCount,
       totalInventory: inventoryCount,
       totalActivities: activityCount,
@@ -103,7 +235,7 @@ app.get('/api/system/stats', authenticate, async (req, res) => {
       systemHealth: 'Excellent',
       memoryUsage: `${memoryUsedMB} / ${memoryTotalMB} MB`,
       timestamp: new Date().toISOString()
-    });
+    }, 'System statistics retrieved successfully');
   } catch (error) {
     console.error('Error fetching system stats:', error);
     res.status(500).json({ error: 'Failed to fetch system statistics' });
@@ -130,6 +262,9 @@ function getTimeAgo(date) {
 app.get('*', (req, res) => {
   res.json({ message: 'API endpoint not found' });
 });
+
+// Global Error Handler Middleware (MUST be last)
+app.use(globalErrorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
