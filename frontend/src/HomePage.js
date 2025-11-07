@@ -1,17 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Calendar from './Calendar';
 import { useCompany } from './CompanyContext';
 import ActionModal from './components/ActionModal';
 import ActivitySection from './components/ActivitySection';
+import SearchService from './services/SearchService';
 import './CRMDashboard.css';
 
 const HomePage = () => {
   const { companyInfo } = useCompany();
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [activeTab, setActiveTab] = useState('Overview');
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [isEditingCompany, setIsEditingCompany] = useState(false);
+  const searchRef = useRef(null);
+
+  // Close search results when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSearchResults(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const data = await SearchService.searchAll(searchTerm);
+      setSearchResults(data.results || []);
+      setShowSearchResults(true);
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearchInputChange = (e) => {
+    setSearchTerm(e.target.value);
+    if (e.target.value.trim().length > 0) {
+      // Debounce search
+      const timeoutId = setTimeout(() => {
+        handleSearch();
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  };
+
+  const handleSearchKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleResultClick = (result) => {
+    setShowSearchResults(false);
+    setSearchTerm('');
+    navigate(result.link);
+  };
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      'Client': '#3b82f6',
+      'Quotation': '#8b5cf6',
+      'Meeting': '#10b981',
+      'Activity': '#f59e0b',
+      'Note': '#6366f1',
+      'Inventory': '#ec4899'
+    };
+    return colors[category] || '#6b7280';
+  };
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
@@ -248,23 +325,85 @@ const HomePage = () => {
           </div>
           
           {/* Search Bar */}
-          <div className="header-search">
+          <div className="header-search" ref={searchRef}>
             <div className="search-container">
               <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
               </svg>
               <input 
                 type="text" 
-                placeholder="Search clients, products, activities..."
+                placeholder="Search clients, quotations, inventory..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    alert(`Searching for: "${searchTerm}"`);
-                  }
-                }}
+                onChange={handleSearchInputChange}
+                onKeyPress={handleSearchKeyPress}
+                onFocus={() => searchResults.length > 0 && setShowSearchResults(true)}
               />
+              {isSearching && (
+                <div className="search-loading">
+                  <svg className="spinner" width="16" height="16" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" fill="none" strokeDasharray="50" strokeDashoffset="25">
+                      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                    </circle>
+                  </svg>
+                </div>
+              )}
             </div>
+
+            {/* Search Results Dropdown */}
+            {showSearchResults && searchResults.length > 0 && (
+              <div className="search-results-dropdown">
+                <div className="search-results-header">
+                  <span className="results-count">{searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found</span>
+                  <button 
+                    className="close-results-btn"
+                    onClick={() => setShowSearchResults(false)}
+                    title="Close"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="search-results-list">
+                  {searchResults.map((result, index) => (
+                    <div 
+                      key={index} 
+                      className="search-result-item"
+                      onClick={() => handleResultClick(result)}
+                    >
+                      <div className="result-icon">{result.icon}</div>
+                      <div className="result-content">
+                        <div className="result-header">
+                          <span className="result-title">{result.title}</span>
+                          <span 
+                            className="result-category-badge"
+                            style={{ backgroundColor: getCategoryColor(result.category) }}
+                          >
+                            {result.category}
+                          </span>
+                        </div>
+                        <div className="result-subtitle">{result.subtitle}</div>
+                        {result.details && (
+                          <div className="result-details">{result.details}</div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* No Results Message */}
+            {showSearchResults && searchResults.length === 0 && !isSearching && searchTerm.trim() && (
+              <div className="search-results-dropdown">
+                <div className="no-results">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                  </svg>
+                  <p>No results found for "{searchTerm}"</p>
+                  <span className="no-results-hint">Try different keywords or check spelling</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

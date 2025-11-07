@@ -146,6 +146,7 @@ const meetingRoutes = require('./routes/meetings');
 const noteRoutes = require('./routes/notes');
 const quoteRoutes = require('./routes/quotes');
 const activityRoutes = require('./routes/activities');
+const searchRoutes = require('./routes/search');
 
 // Public routes (no authentication required)
 app.use('/api/auth', authRoutes);
@@ -159,6 +160,7 @@ app.use('/api/meetings', authenticate, meetingRoutes);
 app.use('/api/notes', authenticate, noteRoutes);
 app.use('/api/quotes', authenticate, quoteRoutes);
 app.use('/api/activities', authenticate, activityRoutes);
+app.use('/api/search', authenticate, searchRoutes);
 
 // Basic route
 app.get('/api/test', (req, res) => {
