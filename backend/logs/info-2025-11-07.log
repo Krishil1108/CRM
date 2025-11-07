@@ -1,0 +1,2385 @@
+[2025-11-07T11:23:11.267Z] [INFO] Email service initialized successfully
+[2025-11-07T11:23:18.454Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:18.453Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:18.473Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:18.472Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 401,
+  "responseTime": "19ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:18.697Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:18.697Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:18.839Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:18.839Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 401,
+  "responseTime": "142ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:18.920Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:18.920Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:18.922Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:18.922Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:18.941Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:18.941Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:18.942Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:18.942Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:24.562Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:24.562Z",
+  "method": "POST",
+  "url": "/api/auth/login",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:24.877Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:24.877Z",
+  "method": "POST",
+  "url": "/api/auth/login",
+  "statusCode": 200,
+  "responseTime": "315ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:24.927Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:24.927Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:24.928Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:24.928Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:25.242Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:25.242Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:25.289Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:25.289Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "statusCode": 200,
+  "responseTime": "47ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:25.624Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:25.624Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:25.638Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:25.638Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "statusCode": 200,
+  "responseTime": "14ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:28.169Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.169Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:28.170Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.170Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:28.185Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.185Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:28.192Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.192Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:28.209Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.209Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "24ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:28.215Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.215Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:28.227Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.227Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "12ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:28.235Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.235Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "43ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:28.240Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.240Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:28.250Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.250Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "10ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:28.881Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.881Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:28.887Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.887Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:28.913Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.913Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "32ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:28.916Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.916Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "29ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:28.924Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.924Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:28.940Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.940Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "16ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:28.949Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.949Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:28.964Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:28.964Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:29.189Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:29.189Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:29.190Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:29.190Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:31.085Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.085Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:31.090Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.090Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:31.094Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.094Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:31.096Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.096Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:31.108Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.108Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "23ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:31.116Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.115Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "25ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:31.120Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.120Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:31.125Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.125Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:31.140Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.140Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "20ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:31.143Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:31.143Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "18ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:32.490Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:32.490Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:32.495Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:32.495Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:32.496Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:32.496Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:32.506Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:32.506Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "statusCode": 200,
+  "responseTime": "16ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:32.750Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:32.750Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:32.765Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:32.765Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:33.441Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.441Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:33.443Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.443Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:23:33.447Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.447Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:33.451Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.451Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:33.467Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.467Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "20ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:33.471Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.471Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "20ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:33.475Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.475Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:33.482Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.482Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:23:33.503Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.503Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "28ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:23:33.507Z] [INFO] {
+  "timestamp": "2025-11-07T11:23:33.507Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "25ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:24:38.877Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.877Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:24:38.880Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.880Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:24:38.890Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.890Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 200,
+  "responseTime": "13ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:24:38.894Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.894Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 200,
+  "responseTime": "14ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:24:38.933Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.933Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:24:38.937Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.937Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:24:38.941Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.941Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:24:38.946Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.946Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:24:38.978Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.978Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "45ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:24:38.981Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.980Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "43ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:24:38.983Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.983Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "42ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:24:38.989Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:38.989Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "43ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:24:39.028Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:39.028Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:24:39.030Z] [INFO] {
+  "timestamp": "2025-11-07T11:24:39.030Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:25:40.037Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.037Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:25:40.042Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.042Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:25:40.043Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.043Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:25:40.054Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.054Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 200,
+  "responseTime": "17ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:25:40.059Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.059Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:25:40.076Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.076Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 200,
+  "responseTime": "17ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:25:40.104Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.104Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:25:40.108Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.108Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:25:40.130Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.130Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "26ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:25:40.141Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.141Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:25:40.151Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.151Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "43ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:25:40.155Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.155Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:25:40.170Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.170Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "29ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:25:40.177Z] [INFO] {
+  "timestamp": "2025-11-07T11:25:40.177Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "22ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:21.304Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:21.304Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:21.314Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:21.314Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "10ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:21.323Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:21.323Z",
+  "method": "GET",
+  "url": "/api/quotes/number/Q-1003",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:21.331Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:21.331Z",
+  "method": "GET",
+  "url": "/api/quotes/number/Q-1003",
+  "statusCode": 404,
+  "responseTime": "8ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:21.339Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:21.339Z",
+  "method": "POST",
+  "url": "/api/quotes",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:21.363Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:21.363Z",
+  "method": "POST",
+  "url": "/api/quotes",
+  "statusCode": 201,
+  "responseTime": "24ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:21.370Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:21.370Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:21.382Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:21.382Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "12ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:22.763Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.763Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:22.767Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.767Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:22.777Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.777Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:22.778Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.778Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:26:22.783Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.783Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "20ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:22.785Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.785Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "18ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:22.793Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.793Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:22.802Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.802Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "9ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:22.809Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.809Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:22.819Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:22.819Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "10ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:29.508Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.508Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:29.512Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.512Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:29.528Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.528Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "20ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:29.532Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.532Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "20ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:29.535Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.535Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:29.540Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.540Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:29.558Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.558Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "23ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:29.565Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.564Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "24ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:29.829Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.829Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:29.830Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:29.830Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:26:56.792Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.792Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:56.797Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.797Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:56.798Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.798Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:26:56.810Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.810Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 200,
+  "responseTime": "18ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:56.816Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.816Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:56.829Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.829Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 200,
+  "responseTime": "13ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:56.884Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.884Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:56.890Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.890Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:56.912Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.912Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "28ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:56.915Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.915Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "25ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:56.924Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.924Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:56.929Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.929Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:26:56.953Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.953Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "29ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:26:56.958Z] [INFO] {
+  "timestamp": "2025-11-07T11:26:56.958Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "29ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:27:11.532Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.532Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:11.534Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.534Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:27:11.537Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.537Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:11.542Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.542Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:11.556Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.556Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "19ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:27:11.558Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.558Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "16ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:27:11.563Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.563Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:11.577Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.577Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "14ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:27:11.582Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.582Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:11.596Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:11.596Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "14ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:27:17.934Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:17.934Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:17.939Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:17.939Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:17.953Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:17.953Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "19ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:27:17.957Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:17.957Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "18ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:27:17.959Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:17.959Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:17.966Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:17.966Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:17.982Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:17.982Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "23ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:27:17.986Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:17.986Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "20ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:27:18.232Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:18.232Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:27:18.233Z] [INFO] {
+  "timestamp": "2025-11-07T11:27:18.233Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:29:09.024Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.024Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:09.046Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.046Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:09.048Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.048Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:29:09.071Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.071Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 200,
+  "responseTime": "47ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:09.078Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.078Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:09.093Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.093Z",
+  "method": "GET",
+  "url": "/api/auth/me",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:09.147Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.147Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:09.154Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.154Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:09.178Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.178Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "31ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:09.194Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.194Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:09.200Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.200Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "46ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:09.218Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.218Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:09.231Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.231Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "37ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:09.252Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:09.252Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "34ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:23.056Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.056Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:23.061Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.061Z",
+  "method": "GET",
+  "url": "/api/inventory/categories",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:23.066Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.066Z",
+  "method": "GET",
+  "url": "/api/inventory/dashboard/stats",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:23.104Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.104Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "48ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:23.107Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.107Z",
+  "method": "GET",
+  "url": "/api/inventory/categories",
+  "statusCode": 200,
+  "responseTime": "46ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:23.114Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.114Z",
+  "method": "GET",
+  "url": "/api/inventory/dashboard/stats",
+  "statusCode": 200,
+  "responseTime": "48ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:23.119Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.119Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:23.125Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.125Z",
+  "method": "GET",
+  "url": "/api/inventory/categories",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:23.135Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.135Z",
+  "method": "GET",
+  "url": "/api/inventory/dashboard/stats",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:23.177Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.176Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "57ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:23.179Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.179Z",
+  "method": "GET",
+  "url": "/api/inventory/categories",
+  "statusCode": 200,
+  "responseTime": "54ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:23.185Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.185Z",
+  "method": "GET",
+  "url": "/api/inventory/dashboard/stats",
+  "statusCode": 200,
+  "responseTime": "50ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:23.228Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.228Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:23.229Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:23.229Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:29:24.337Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:24.337Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:24.351Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:24.351Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:24.353Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:24.353Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:29:24.356Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:24.356Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "19ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:29:24.363Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:24.363Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:29:24.378Z] [INFO] {
+  "timestamp": "2025-11-07T11:29:24.378Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:04.294Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:04.293Z",
+  "method": "POST",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:04.321Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:04.321Z",
+  "method": "POST",
+  "url": "/api/clients",
+  "statusCode": 201,
+  "responseTime": "28ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:07.319Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.319Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:07.323Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.323Z",
+  "method": "GET",
+  "url": "/api/inventory/categories",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:07.328Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.328Z",
+  "method": "GET",
+  "url": "/api/inventory/dashboard/stats",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:07.338Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.338Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:07.339Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.339Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:07.358Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.358Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "39ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:07.362Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.362Z",
+  "method": "GET",
+  "url": "/api/inventory/categories",
+  "statusCode": 200,
+  "responseTime": "39ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:07.366Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.366Z",
+  "method": "GET",
+  "url": "/api/inventory/dashboard/stats",
+  "statusCode": 200,
+  "responseTime": "38ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:07.369Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.369Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:07.375Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.375Z",
+  "method": "GET",
+  "url": "/api/inventory/categories",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:07.385Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.385Z",
+  "method": "GET",
+  "url": "/api/inventory/dashboard/stats",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:07.403Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.403Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "34ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:07.405Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.405Z",
+  "method": "GET",
+  "url": "/api/inventory/categories",
+  "statusCode": 200,
+  "responseTime": "30ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:07.410Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:07.410Z",
+  "method": "GET",
+  "url": "/api/inventory/dashboard/stats",
+  "statusCode": 200,
+  "responseTime": "25ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:08.649Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.649Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:08.664Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.664Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:08.679Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.678Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "29ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:08.681Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.681Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "17ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:08.687Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.687Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:08.702Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.702Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:08.706Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.706Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:08.719Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.719Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "13ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:08.956Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.956Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:08.959Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:08.959Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:09.204Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.204Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:09.205Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.205Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:09.211Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.211Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:09.215Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.215Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:09.271Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.271Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "60ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:09.276Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.276Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "61ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:09.281Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.281Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:09.285Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.285Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:09.304Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.304Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "23ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:09.313Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:09.313Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "28ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:29.575Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:29.574Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:29.586Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:29.586Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "12ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:29.594Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:29.594Z",
+  "method": "GET",
+  "url": "/api/quotes/number/Q-1003",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:29.604Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:29.604Z",
+  "method": "GET",
+  "url": "/api/quotes/number/Q-1003",
+  "statusCode": 200,
+  "responseTime": "10ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:29.620Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:29.620Z",
+  "method": "PUT",
+  "url": "/api/quotes/690dd75d081e69d065ed7cb9",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:29.661Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:29.661Z",
+  "method": "PUT",
+  "url": "/api/quotes/690dd75d081e69d065ed7cb9",
+  "statusCode": 200,
+  "responseTime": "41ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:29.671Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:29.671Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:29.682Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:29.682Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "11ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:30.586Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.586Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:30.593Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.593Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:30.612Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.612Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "26ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:30.614Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.614Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "21ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:30.621Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.621Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:30.634Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.634Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "13ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:30.641Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.641Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:30.656Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.656Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:30.909Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.909Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:30.909Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:30.909Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "0ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:34.353Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.353Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:34.355Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.355Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:34.365Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.365Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:34.370Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.370Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:34.385Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.385Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "20ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:34.392Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.391Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "21ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:34.399Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.399Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:34.403Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.403Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:34.423Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.423Z",
+  "method": "GET",
+  "url": "/api/clients",
+  "statusCode": 200,
+  "responseTime": "24ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:34.429Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:34.429Z",
+  "method": "GET",
+  "url": "/api/inventory/items",
+  "statusCode": 200,
+  "responseTime": "26ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:44.439Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.439Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:44.443Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.443Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:44.455Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.455Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:44.457Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.457Z",
+  "method": "HEAD",
+  "url": "/api/quotes?limit=1",
+  "statusCode": 200,
+  "responseTime": "14ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:44.464Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.464Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:44.476Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.476Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "12ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:44.480Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.480Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:44.492Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.492Z",
+  "method": "GET",
+  "url": "/api/quotes?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+  "statusCode": 200,
+  "responseTime": "12ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:44.757Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.757Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:44.758Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:44.758Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:47.133Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:47.133Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:47.135Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:47.135Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:47.139Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:47.139Z",
+  "method": "GET",
+  "url": "/api/system/stats",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:47.154Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:47.154Z",
+  "method": "GET",
+  "url": "/api/system/stats",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:47.159Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:47.159Z",
+  "method": "GET",
+  "url": "/api/system/stats",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:47.174Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:47.174Z",
+  "method": "GET",
+  "url": "/api/system/stats",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:50.368Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.368Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:50.373Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.373Z",
+  "method": "GET",
+  "url": "/api/users",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:50.395Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.395Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "statusCode": 200,
+  "responseTime": "27ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:50.407Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.407Z",
+  "method": "GET",
+  "url": "/api/users",
+  "statusCode": 200,
+  "responseTime": "34ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:50.409Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.409Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:50.417Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.417Z",
+  "method": "GET",
+  "url": "/api/users",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:50.435Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.435Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "statusCode": 200,
+  "responseTime": "26ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:50.446Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.446Z",
+  "method": "GET",
+  "url": "/api/users",
+  "statusCode": 200,
+  "responseTime": "29ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:50.687Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.687Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:50.688Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:50.688Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:54.859Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:54.859Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:54.863Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:54.863Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:54.864Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:54.864Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:54.881Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:54.881Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "statusCode": 200,
+  "responseTime": "22ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:54.886Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:54.886Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:54.901Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:54.901Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "statusCode": 200,
+  "responseTime": "15ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:56.081Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.081Z",
+  "method": "GET",
+  "url": "/api/users",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:56.085Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.085Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:56.115Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.115Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "statusCode": 200,
+  "responseTime": "30ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:56.121Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.121Z",
+  "method": "GET",
+  "url": "/api/users",
+  "statusCode": 200,
+  "responseTime": "40ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:56.123Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.123Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:56.127Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.127Z",
+  "method": "GET",
+  "url": "/api/users",
+  "ip": "::1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:56.145Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.145Z",
+  "method": "GET",
+  "url": "/api/roles",
+  "statusCode": 200,
+  "responseTime": "22ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:56.150Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.150Z",
+  "method": "GET",
+  "url": "/api/users",
+  "statusCode": 200,
+  "responseTime": "23ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:56.394Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.394Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:56.396Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:56.396Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "2ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:57.051Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:57.051Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:57.053Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:57.052Z",
+  "method": "GET",
+  "url": "/favicon.ico",
+  "statusCode": 200,
+  "responseTime": "1ms",
+  "userId": "anonymous"
+}
+[2025-11-07T11:30:57.368Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:57.368Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:57.379Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:57.378Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "statusCode": 200,
+  "responseTime": "10ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}
+[2025-11-07T11:30:57.702Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:57.702Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "ip": "127.0.0.1",
+  "userId": "anonymous",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"
+}
+[2025-11-07T11:30:57.714Z] [INFO] {
+  "timestamp": "2025-11-07T11:30:57.714Z",
+  "method": "GET",
+  "url": "/api/activities/recent?limit=3",
+  "statusCode": 200,
+  "responseTime": "12ms",
+  "userId": "6909a7776ff32dad67e3682d"
+}

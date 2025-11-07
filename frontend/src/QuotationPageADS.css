@@ -270,6 +270,7 @@
   border-radius: 8px;
   font-size: 14px;
   background: white;
+  color: #1f2937;
   transition: all 0.3s ease;
   font-family: inherit;
 }
@@ -284,6 +285,15 @@
 .field-input:hover,
 .field-select:hover {
   border-color: #d1d5db;
+}
+
+/* Ensure text is visible when populated from database/autofill */
+.field-input:-webkit-autofill,
+.field-input:-webkit-autofill:hover,
+.field-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #1f2937 !important;
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .field-description {
@@ -885,6 +895,7 @@
   padding: 10px 12px;
   font-size: 13px;
   background: white;
+  color: #1f2937;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   width: 100%;
@@ -898,6 +909,15 @@
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   border-bottom: 2px solid #003366;
+}
+
+/* Fix for autofill and populated inputs in client section */
+.form-group input:-webkit-autofill,
+.form-group input:-webkit-autofill:hover,
+.form-group input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #1f2937 !important;
+  -webkit-box-shadow: 0 0 0px 1000px white inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Window Builder Section */
@@ -3197,6 +3217,14 @@ body.modal-open {
   color: var(--text-muted);
 }
 
+[data-theme="dark"] .field-input:-webkit-autofill,
+[data-theme="dark"] .field-input:-webkit-autofill:hover,
+[data-theme="dark"] .field-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-primary) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 [data-theme="dark"] .field-description {
   background: rgba(102, 126, 234, 0.15);
   border-color: #667eea;
@@ -3263,6 +3291,14 @@ body.modal-open {
 [data-theme="dark"] .form-group textarea:focus {
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+[data-theme="dark"] .form-group input:-webkit-autofill,
+[data-theme="dark"] .form-group input:-webkit-autofill:hover,
+[data-theme="dark"] .form-group input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text-primary) !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Window Builder Dark Mode */
